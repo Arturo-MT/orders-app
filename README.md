@@ -62,6 +62,8 @@ npx expo start
 ## 📂 Estructura
 
 - `/app`: lógica de rutas y pantallas
+- `/assets`: imágenes y recursos
+- `/features`: carpetas para ada feature con su lógica, componentes y estilos
 - `/components`: componentes reutilizables (como `OrderCard`)
 - `/hooks`: lógica personalizada para datos y utilidades
 - `/context`: `AuthContext` y `FetchContext` para manejo de sesión y API
