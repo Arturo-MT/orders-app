@@ -33,7 +33,11 @@ interface Props {
 
 export default function OrderCard({ order }: Props) {
   const [expanded, setExpanded] = useState(false)
-  const { data: orderData, isLoading } = useOrderQuery(order.id)
+  const { data: orderData, isLoading } = useOrderQuery(order.id, {
+    enabled: expanded,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false
+  })
 
   const toggle = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
