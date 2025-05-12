@@ -32,7 +32,7 @@ export default function DashboardScreen() {
   useFocusEffect(
     useCallback(() => {
       refetch()
-    }, [])
+    }, [refetch])
   )
 
   const summary = dashboardData?.results?.summary

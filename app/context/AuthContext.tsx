@@ -82,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         console.error('Login error:', error)
       }
     },
-    [router]
+    []
   )
 
   /*   const registerUser = useCallback(

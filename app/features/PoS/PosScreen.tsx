@@ -31,14 +31,6 @@ export default function PosScreen() {
     items: [] as OrderItem[]
   })
 
-  useFocusEffect(
-    useCallback(() => {
-      categoriesRefetch()
-      productsRefetch()
-      userRefecth()
-    }, [])
-  )
-
   useEffect(() => {
     const total = order.items.reduce((acc, item) => {
       return acc + item.basePrice * item.quantity
@@ -60,7 +52,7 @@ export default function PosScreen() {
     isRefetching: isProductsRefetching
   } = useProductsQuery()
 
-  const { data: userData, refetch: userRefecth } = useUserQuery()
+  const { data: userData, refetch: userRefetch } = useUserQuery()
 
   const { mutate: createOrder } = useOrdersMutation()
 
@@ -179,6 +171,14 @@ export default function PosScreen() {
     }
   }
 
+  useFocusEffect(
+    useCallback(() => {
+      categoriesRefetch()
+      productsRefetch()
+      userRefetch()
+    }, [categoriesRefetch, productsRefetch, userRefetch])
+  )
+
   return (
     <View style={styles.container}>
       <View style={styles.categorySelector}>
@@ -262,7 +262,7 @@ export default function PosScreen() {
             style={{
               flex: 1,
               backgroundColor:
-                order.items.length === 0 || order.customer_name == ''
+                order.items.length === 0 || order.customer_name === ''
                   ? '#ccc'
                   : '#6200ea',
               padding: 10,

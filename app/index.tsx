@@ -13,7 +13,7 @@ export default function Index() {
         router.replace(target)
       }, 0)
     }
-  }, [loading, user])
+  }, [loading, user, router])
 
   return null
 }
