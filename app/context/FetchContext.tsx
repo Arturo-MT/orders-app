@@ -1,11 +1,10 @@
 import React, { createContext, useContext, useMemo } from 'react'
-import axios, { AxiosInstance } from 'axios'
+import axios from 'axios'
 import { useAuth } from './AuthContext'
-
-const FetchContext = createContext<FetchContextType>({ client: axios.create() })
-
 import { ReactNode } from 'react'
 import { FetchContextType } from '@/types/types'
+
+const FetchContext = createContext<FetchContextType>({ client: axios.create() })
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL
 
