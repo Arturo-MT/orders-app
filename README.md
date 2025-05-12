@@ -1,50 +1,81 @@
-# Welcome to your Expo app 👋
+# 🧾 Punto de Venta Móvil
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicación móvil construida con [Expo](https://expo.dev), [React Native](https://reactnative.dev), y [TypeScript](https://www.typescriptlang.org/) para gestionar órdenes, productos y realizar impresión de tickets vía Bluetooth.
 
-## Get started
+## 🚀 Requisitos
 
-1. Install dependencies
+- Node.js `>=18`
+- [Expo CLI](https://docs.expo.dev/get-started/installation/)
+- Dispositivo físico con la app instalada desde `expo run:android` (necesario para impresión Bluetooth)
+- APK build con soporte para `react-native-bluetooth-escpos-printer`
+
+## 📦 Instalación
+
+1. Clona el proyecto:
+
+   ```bash
+   git clone "url del repo"
+   cd tu-repo
+   ```
+
+2. Instala dependencias:
 
    ```bash
    npm install
    ```
 
-2. Start the app
+3. Asegúrate de tener una `.env` configurada correctamente con la URL base de la API, por ejemplo:
 
-   ```bash
-    npx expo start
+   ```env
+   API_URL=http://{IP_ADDRESS}:8000/api
    ```
 
-In the output, you'll find options to open the app in a
+4. Aplica parches si es necesario:
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+   ```bash
+   npm run postinstall
+   ```
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 📱 Ejecución
 
-## Get a fresh project
-
-When you're ready, run:
+Primero asegúrate de tener tu dispositivo conectado y el APK instalado:
 
 ```bash
-npm run reset-project
+expo run:android
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Luego corre el servidor de desarrollo:
 
-## Learn more
+```bash
+npx expo start
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## 🛠️ Scripts
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- `npm run start`: inicia el proyecto con soporte para el cliente dev personalizado
+- `npm run android`: ejecuta en dispositivo/emulador Android
+- `npm run web`: ejecuta en navegador (sin soporte para Bluetooth)
+- `npm run test`: corre pruebas unitarias con Jest
+- `npm run lint`: analiza el código con ESLint
+- `npm run reset-project`: reinicia el proyecto (ver script en `/scripts/reset-project.js`)
 
-## Join the community
+## 📂 Estructura
 
-Join our community of developers creating universal apps.
+- `/app`: lógica de rutas y pantallas
+- `/components`: componentes reutilizables (como `OrderCard`)
+- `/hooks`: lógica personalizada para datos y utilidades
+- `/context`: `AuthContext` y `FetchContext` para manejo de sesión y API
+- `/printing`: lógica para imprimir tickets
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## ✨ Funcionalidades
+
+- Autenticación con JWT
+- Creación y manejo de órdenes
+- Filtrado por cliente
+- Impresión de órdenes por Bluetooth
+- Dashboard con estadísticas
+
+## 📋 Notas
+
+- Este proyecto usa [`react-native-bluetooth-escpos-printer`](https://github.com/detanx/react-native-bluetooth-escpos-printer), por lo que no es compatible con Expo Go.
+- Asegúrate de tener permisos Bluetooth habilitados en tu dispositivo Android.
