@@ -83,11 +83,13 @@ export default function OrderCard({ order }: Props) {
           </Text>
         </View>
 
-        <View style={styles.actions}>
-          <TouchableOpacity onPress={handlePrintOrder}>
-            <Ionicons name='print-outline' size={24} color='#6200ea' />
-          </TouchableOpacity>
-        </View>
+        {expanded && (
+          <View style={styles.actions}>
+            <TouchableOpacity onPress={handlePrintOrder}>
+              <Ionicons name='print-outline' size={24} color='#6200ea' />
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {expanded && (
