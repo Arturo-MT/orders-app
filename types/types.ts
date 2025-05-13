@@ -21,6 +21,26 @@ export interface Order {
   customer_name: string
   type: string
   items: OrderItem[]
+  order_number: string
+  status?: string
+}
+
+export interface OrderResponse {
+  id: number
+  customer_name: string
+  type: string
+  items: OrderItem[]
+  order_number: string
+  status: string
+  created_at: string
+}
+
+export interface OrderUpdate {
+  status?: string
+  customer_name?: string
+  type?: string
+  items?: OrderItem[]
+  order_number?: string
 }
 
 export interface Category {
