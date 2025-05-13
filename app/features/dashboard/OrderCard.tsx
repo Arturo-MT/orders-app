@@ -11,9 +11,11 @@ import {
   ToastAndroid
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { useOrderQuery } from '@/hooks/api/orders'
+import { useOrderQuery, useOrderUpdateMutation } from '@/hooks/api/orders'
 import { printOrder } from '../printing/print'
 import { Order, OrderItem } from '@/types/types'
+import CustomCheckbox from '@/app/components/CustomCheckbox'
+import { useInvalidateDashboard } from '@/hooks/api/dashboard'
 
 if (
   Platform.OS === 'android' &&
@@ -28,6 +30,8 @@ interface Props {
     customer_name: string
     total: number
     created_at: string
+    order_number: string
+    status: string
   }
 }
 
@@ -39,6 +43,14 @@ export default function OrderCard({ order }: Props) {
     refetchOnWindowFocus: false
   })
 
+  const invalidateDashboard = useInvalidateDashboard()
+
+  const { mutate } = useOrderUpdateMutation(order.id, {
+    onSuccess: () => {
+      invalidateDashboard()
+    }
+  })
+
   const toggle = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
     setExpanded((prev) => !prev)
@@ -48,6 +60,8 @@ export default function OrderCard({ order }: Props) {
     return {
       customer_name: apiOrder.customer_name,
       type: apiOrder.type,
+      order_number: apiOrder.order_number,
+      status: apiOrder.status,
       items: apiOrder.items.map(
         (item: any, index: number): OrderItem => ({
           id: index,
@@ -77,7 +91,9 @@ export default function OrderCard({ order }: Props) {
     <TouchableOpacity onPress={toggle} activeOpacity={0.8} style={styles.card}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.name}>{order.customer_name}</Text>
+          <Text style={styles.name}>
+            {order.customer_name} ({order.order_number})
+          </Text>
           <Text style={styles.date}>
             {new Date(order.created_at).toLocaleString()}
           </Text>
@@ -89,6 +105,18 @@ export default function OrderCard({ order }: Props) {
               <Ionicons name='print-outline' size={24} color='#6200ea' />
             </TouchableOpacity>
           </View>
+        )}
+
+        {!expanded && (
+          <CustomCheckbox
+            value={order.status === 'C'}
+            onChange={() => {
+              mutate({
+                payload: { status: 'C' }
+              })
+            }}
+            disabled={order.status === 'C'}
+          />
         )}
       </View>
 
