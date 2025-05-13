@@ -3,9 +3,15 @@ import { View, StyleSheet, ToastAndroid } from 'react-native'
 import { useCategoriesQuery } from '@/hooks/api/categories'
 import { useProductsQuery } from '@/hooks/api/products'
 import { useUserQuery } from '@/hooks/api/users'
-import { useOrdersMutation } from '@/hooks/api/orders'
+import { useOrdersMutation, useOrdersQuery } from '@/hooks/api/orders'
 import { useFocusEffect } from '@react-navigation/native'
-import { Category, Order, Product, ProductData } from '@/types/types'
+import {
+  Category,
+  Order,
+  OrderResponse,
+  Product,
+  ProductData
+} from '@/types/types'
 import { printOrder } from '../printing/print'
 import ProductsPanel from './ProductsPanel'
 import OrderPanel from './OrderPanel'
@@ -16,8 +22,11 @@ export default function PosScreen() {
   const [order, setOrder] = useState<Order>({
     customer_name: '',
     type: 'F',
-    items: []
+    items: [],
+    order_number: ''
   })
+
+  const { data: orders, refetch: ordersRefetch } = useOrdersQuery()
 
   const {
     data: categoriesData,
@@ -83,14 +92,37 @@ export default function PosScreen() {
     }))
   }
 
+  function generateOrderNumber() {
+    const todayOrders = orders?.filter((order: OrderResponse) => {
+      const createdAt = new Date(order.created_at)
+      const today = new Date()
+      return (
+        createdAt.getFullYear() === today.getFullYear() &&
+        createdAt.getMonth() === today.getMonth() &&
+        createdAt.getDate() === today.getDate()
+      )
+    })
+    const now = new Date()
+
+    const year = now.getFullYear().toString().slice(-2)
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+
+    const sequence = String(todayOrders.length + 1).padStart(3, '0')
+
+    return `${year}${month}${day}-${sequence}`
+  }
+
   const buildOrderPayload = (order: Order) => {
     const storeId = userData?.store
     if (!storeId || order.items.length === 0 || !order.customer_name)
       return null
+    const orderNumber = generateOrderNumber()
     return {
       customer_name: order.customer_name,
       type: order.type,
       store: storeId,
+      order_number: orderNumber,
       items: order.items.map((item) => ({
         id: item.id,
         name: item.name,
@@ -105,22 +137,28 @@ export default function PosScreen() {
 
   const handlePrintOrder = async () => {
     const orderPayload = buildOrderPayload(order)
+    if (orderPayload) {
+      createOrder(orderPayload, {
+        onSuccess: () => {
+          ToastAndroid.show('Orden creada correctamente', ToastAndroid.SHORT)
+          setOrder({
+            customer_name: '',
+            type: 'F',
+            items: [],
+            order_number: ''
+          })
+        },
+        onError: (error) => {
+          console.error('Error al crear la orden:', error)
+          ToastAndroid.show('Error al crear la orden', ToastAndroid.SHORT)
+        }
+      })
+    }
     const success = await printOrder(order)
     if (success) {
-      if (orderPayload) {
-        createOrder(orderPayload, {
-          onSuccess: () => {
-            ToastAndroid.show('Orden creada correctamente', ToastAndroid.SHORT)
-          },
-          onError: (error) => {
-            console.error('Error al crear la orden:', error)
-            ToastAndroid.show('Error al crear la orden', ToastAndroid.SHORT)
-          }
-        })
-      }
-      setOrder({ customer_name: '', type: 'F', items: [] })
       ToastAndroid.show('Orden impresa correctamente', ToastAndroid.SHORT)
     } else {
+      console.error('Error al imprimir la orden')
       ToastAndroid.show('Error al imprimir la orden', ToastAndroid.SHORT)
     }
   }
@@ -130,7 +168,8 @@ export default function PosScreen() {
       categoriesRefetch()
       productsRefetch()
       userRefetch()
-    }, [categoriesRefetch, productsRefetch, userRefetch])
+      ordersRefetch()
+    }, [categoriesRefetch, productsRefetch, userRefetch, ordersRefetch])
   )
 
   return (
