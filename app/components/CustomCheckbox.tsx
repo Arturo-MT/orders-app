@@ -5,11 +5,20 @@ import { Ionicons } from '@expo/vector-icons'
 interface Props {
   value: boolean
   onChange: (newValue: boolean) => void
+  disabled?: boolean
 }
 
-export default function CustomCheckbox({ value, onChange }: Props) {
+export default function CustomCheckbox({
+  value,
+  onChange,
+  disabled = false
+}: Props) {
   return (
-    <TouchableOpacity style={styles.container} onPress={() => onChange(!value)}>
+    <TouchableOpacity
+      style={!disabled ? styles.container : styles.disabledContainer}
+      onPress={() => onChange(!value)}
+      disabled={disabled}
+    >
       <Ionicons
         name={value ? 'checkbox-outline' : 'square-outline'}
         size={28}
@@ -22,5 +31,9 @@ export default function CustomCheckbox({ value, onChange }: Props) {
 const styles = StyleSheet.create({
   container: {
     padding: 0
+  },
+  disabledContainer: {
+    padding: 0,
+    opacity: 0.4
   }
 })
