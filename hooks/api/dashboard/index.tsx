@@ -1,4 +1,8 @@
-import { useQuery, keepPreviousData } from '@tanstack/react-query'
+import {
+  useQuery,
+  keepPreviousData,
+  useQueryClient
+} from '@tanstack/react-query'
 import { useFetch } from '@/app/context/FetchContext'
 import { dashboardQuery } from './queries'
 import { DASHBOARD_KEY } from './constants'
@@ -10,4 +14,12 @@ export function useDashboardQuery({ search = '', page = 1 } = {}) {
     queryFn: () => dashboardQuery({ client, search, page }),
     placeholderData: keepPreviousData
   })
+}
+
+export function useInvalidateDashboard() {
+  const queryClient = useQueryClient()
+
+  return () => {
+    queryClient.invalidateQueries({ queryKey: [DASHBOARD_KEY] })
+  }
 }
