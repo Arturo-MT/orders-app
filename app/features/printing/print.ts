@@ -108,9 +108,9 @@ export const printOrder = async (order: Order): Promise<boolean> => {
     })
 
     await BluetoothEscposPrinter.printText(
-      `Nombre: ${order.customer_name}\nTipo: ${
-        order.type === 'F' ? 'Para aqui' : 'Para llevar'
-      }\n\n`,
+      `Nombre: ${order.customer_name}\n${
+        order.order_number ? `Comanda: ${order.order_number}\n` : ''
+      }Tipo: ${order.type === 'F' ? 'Para aqui' : 'Para llevar'}\n\n`,
       fontConfig
     )
 
