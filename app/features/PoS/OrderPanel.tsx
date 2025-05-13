@@ -86,7 +86,12 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
                 {
                   text: 'Limpiar',
                   onPress: () => {
-                    onChange({ customer_name: '', type: 'F', items: [] })
+                    onChange({
+                      customer_name: '',
+                      type: 'F',
+                      items: [],
+                      order_number: ''
+                    })
                     ToastAndroid.show('Orden limpiada', ToastAndroid.SHORT)
                   },
                   style: 'destructive'
