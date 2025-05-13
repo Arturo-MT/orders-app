@@ -68,7 +68,7 @@ export default function PosScreen() {
 
   useEffect(() => {
     const total = order.items.reduce(
-      (acc, item) => acc + item.basePrice * item.quantity,
+      (acc, item) => acc + parseFloat(item.price.toString()) || 0,
       0
     )
     setTotal(total)

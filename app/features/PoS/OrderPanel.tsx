@@ -115,8 +115,8 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
             <OrderItemComponent
               key={index}
               item={item}
-              onUpdate={handleUpdateItem}
-              onRemove={() => handleRemoveItem(item.id)}
+              onUpdate={(updates) => handleUpdateItem(index, updates)}
+              onRemove={() => handleRemoveItem(index)}
             />
           ))}
         </ScrollView>

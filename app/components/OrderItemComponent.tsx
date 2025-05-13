@@ -1,4 +1,3 @@
-// components/OrderItemComponent.tsx
 import React, { useState } from 'react'
 import {
   View,
@@ -11,15 +10,14 @@ import { Ionicons } from '@expo/vector-icons'
 
 interface Props {
   item: {
-    id: number
     name: string
     quantity: number
     price: number
     basePrice: number
     description?: string
   }
-  onUpdate: (id: number, updates: Partial<Props['item']>) => void
-  onRemove: (id: number) => void
+  onUpdate: (updates: Partial<Props['item']>) => void
+  onRemove: () => void
 }
 
 export default function OrderItemComponent({
@@ -36,7 +34,7 @@ export default function OrderItemComponent({
       <View style={styles.quantityWrapper}>
         <TouchableOpacity
           onPress={() =>
-            onUpdate(item.id, {
+            onUpdate({
               quantity: item.quantity - 1,
               price: item.basePrice * (item.quantity - 1)
             })
@@ -51,13 +49,15 @@ export default function OrderItemComponent({
           keyboardType='numeric'
           value={String(item.quantity)}
           onChangeText={(value) =>
-            onUpdate(item.id, { quantity: parseInt(value) || 0 })
+            onUpdate({
+              quantity: parseInt(value) || 0
+            })
           }
           placeholder='Cantidad'
         />
         <TouchableOpacity
           onPress={() =>
-            onUpdate(item.id, {
+            onUpdate({
               quantity: item.quantity + 1,
               price: item.basePrice * (item.quantity + 1)
             })
@@ -74,9 +74,10 @@ export default function OrderItemComponent({
           style={[styles.input, styles.priceInput]}
           keyboardType='numeric'
           value={String(item.price)}
-          onChangeText={(value) =>
-            onUpdate(item.id, { price: parseFloat(value) || 0 })
-          }
+          onChangeText={(value) => {
+            const newPrice = parseInt(value) || 0
+            onUpdate({ price: newPrice })
+          }}
           placeholder='Precio'
         />
       </View>
@@ -85,7 +86,7 @@ export default function OrderItemComponent({
         <Ionicons name='chatbubble-outline' size={22} color='#007bff' />
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => onRemove(item.id)}>
+      <TouchableOpacity onPress={onRemove}>
         <Ionicons name='trash-outline' size={22} color='#e53935' />
       </TouchableOpacity>
 
@@ -93,7 +94,7 @@ export default function OrderItemComponent({
         <TextInput
           style={[styles.input, styles.commentInput]}
           value={item.description}
-          onChangeText={(value) => onUpdate(item.id, { description: value })}
+          onChangeText={(value) => onUpdate({ description: value })}
           placeholder='Especificaciones'
         />
       )}
