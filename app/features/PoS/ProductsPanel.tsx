@@ -36,30 +36,32 @@ export default function ProductsPanel({
   return (
     <>
       <View style={styles.categorySelector}>
-        {(isCategoriesLoading || isCategoriesRefetching) && (
-          <ActivityIndicator size='large' color='#6200ea' />
-        )}
-        {!isCategoriesLoading &&
-          !isCategoriesRefetching &&
-          categoriesList.map((category) => (
-            <TouchableOpacity
-              key={category}
-              style={[
-                styles.categoryButton,
-                selectedCategory === category && styles.selectedCategory
-              ]}
-              onPress={() => setSelectedCategory(category)}
-            >
-              <Text
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {(isCategoriesLoading || isCategoriesRefetching) && (
+            <ActivityIndicator size='large' color='#6200ea' />
+          )}
+          {!isCategoriesLoading &&
+            !isCategoriesRefetching &&
+            categoriesList.map((category) => (
+              <TouchableOpacity
+                key={category}
                 style={[
-                  styles.categoryText,
-                  selectedCategory === category && styles.selectedCategoryText
+                  styles.categoryButton,
+                  selectedCategory === category && styles.selectedCategory
                 ]}
+                onPress={() => setSelectedCategory(category)}
               >
-                {category}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  style={[
+                    styles.categoryText,
+                    selectedCategory === category && styles.selectedCategoryText
+                  ]}
+                >
+                  {category}
+                </Text>
+              </TouchableOpacity>
+            ))}
+        </ScrollView>
       </View>
 
       <View style={styles.productsWrapper}>
