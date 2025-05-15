@@ -18,6 +18,12 @@
         "buildType": "app-bundle",
         "gradleCommand": ":app:assembleRelease"
       }
+    },
+    "apk": {
+      "android": {
+        "buildType": "apk"
+      },
+      "distribution": "internal"
     }
   },
   "submit": {
