@@ -118,9 +118,9 @@ export const printOrder = async (order: Order): Promise<boolean> => {
     const normalizedName = normalizeTextForPrinter(order.customer_name)
 
     await BluetoothEscposPrinter.printText(
-      `Nombre: ${normalizedName}\n${
-        order.order_number ? `Comanda: ${order.order_number}\n` : ''
-      }Tipo: ${order.type === 'F' ? 'Para aqui' : 'Para llevar'}\n\n`,
+      `Nombre: ${normalizedName}\nComanda: ${order.order_number}\nTipo: ${
+        order.type === 'F' ? 'Para aqui' : 'Para llevar'
+      }\n\n`,
       fontConfig
     )
 

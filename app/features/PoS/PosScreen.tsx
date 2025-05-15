@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { View, StyleSheet, ToastAndroid } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useCategoriesQuery } from '@/hooks/api/categories'
 import { useProductsQuery } from '@/hooks/api/products'
 import { useUserQuery } from '@/hooks/api/users'
@@ -92,37 +93,43 @@ export default function PosScreen() {
     }))
   }
 
-  function generateOrderNumber() {
-    const todayOrders = orders?.filter((order: OrderResponse) => {
-      const createdAt = new Date(order.created_at)
-      const today = new Date()
-      return (
-        createdAt.getFullYear() === today.getFullYear() &&
-        createdAt.getMonth() === today.getMonth() &&
-        createdAt.getDate() === today.getDate()
-      )
-    })
+  async function generateOrderNumber(): Promise<string> {
     const now = new Date()
 
     const year = now.getFullYear().toString().slice(-2)
     const month = String(now.getMonth() + 1).padStart(2, '0')
     const day = String(now.getDate()).padStart(2, '0')
+    const datePrefix = `${year}${month}${day}`
 
-    const sequence = String(todayOrders.length + 1).padStart(3, '0')
+    const todayOrders =
+      orders?.filter((order: OrderResponse) => {
+        const createdAt = new Date(order.created_at)
+        return (
+          createdAt.getFullYear() === now.getFullYear() &&
+          createdAt.getMonth() === now.getMonth() &&
+          createdAt.getDate() === now.getDate()
+        )
+      }) ?? []
 
-    return `${year}${month}${day}-${sequence}`
+    const keys = await AsyncStorage.getAllKeys()
+    const localKeys = keys.filter((key) =>
+      key.startsWith(`pending-order-${datePrefix}`)
+    )
+
+    const totalToday = todayOrders.length + localKeys.length
+    const sequence = String(totalToday + 1).padStart(3, '0')
+
+    return `${datePrefix}-${sequence}`
   }
 
   const buildOrderPayload = (order: Order) => {
     const storeId = userData?.store
     if (!storeId || order.items.length === 0 || !order.customer_name)
       return null
-    const orderNumber = generateOrderNumber()
     return {
       customer_name: order.customer_name,
       type: order.type,
       store: storeId,
-      order_number: orderNumber,
       items: order.items.map((item) => ({
         id: item.id,
         name: item.name,
@@ -136,31 +143,50 @@ export default function PosScreen() {
   }
 
   const handlePrintOrder = async () => {
-    const orderPayload = buildOrderPayload(order)
-    if (orderPayload) {
-      createOrder(orderPayload, {
-        onSuccess: () => {
-          ToastAndroid.show('Orden creada correctamente', ToastAndroid.SHORT)
-          setOrder({
-            customer_name: '',
-            type: 'F',
-            items: [],
-            order_number: ''
-          })
-        },
-        onError: (error) => {
-          console.error('Error al crear la orden:', error)
-          ToastAndroid.show('Error al crear la orden', ToastAndroid.SHORT)
-        }
-      })
+    const orderNumber = await generateOrderNumber()
+    const fullOrder = {
+      ...order,
+      order_number: orderNumber
     }
-    const success = await printOrder(order)
-    if (success) {
+
+    let printed = false
+    try {
+      printed = await printOrder(fullOrder)
+      if (!printed) throw new Error('Error al imprimir')
       ToastAndroid.show('Orden impresa correctamente', ToastAndroid.SHORT)
-    } else {
-      console.error('Error al imprimir la orden')
-      ToastAndroid.show('Error al imprimir la orden', ToastAndroid.SHORT)
+    } catch (err) {
+      console.warn('Error al imprimir:', err)
+      ToastAndroid.show('⚠️ No se pudo imprimir el ticket', ToastAndroid.SHORT)
     }
+
+    const payload = buildOrderPayload(fullOrder)
+
+    if (!payload) {
+      ToastAndroid.show(
+        'Datos incompletos para guardar la orden',
+        ToastAndroid.SHORT
+      )
+      return
+    }
+
+    try {
+      await new Promise((resolve, reject) =>
+        createOrder(payload, {
+          onSuccess: resolve,
+          onError: reject
+        })
+      )
+      ToastAndroid.show('Orden enviada correctamente', ToastAndroid.SHORT)
+    } catch (err) {
+      console.error('Fallo al enviar orden:', err)
+    }
+
+    setOrder({
+      customer_name: '',
+      type: 'F',
+      items: [],
+      order_number: ''
+    })
   }
 
   useFocusEffect(

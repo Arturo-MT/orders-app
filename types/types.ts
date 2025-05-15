@@ -21,7 +21,7 @@ export interface Order {
   customer_name: string
   type: string
   items: OrderItem[]
-  order_number: string
+  order_number?: string
   status?: string
 }
 
