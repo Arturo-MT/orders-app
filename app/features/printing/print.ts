@@ -89,6 +89,14 @@ export const connectToPrinter = async (address: string): Promise<void> => {
   }
 }
 
+const normalizeTextForPrinter = (text: string): string => {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\x20-\x7E]/g, '')
+    .replace(/\s+/g, ' ')
+}
+
 export const printOrder = async (order: Order): Promise<boolean> => {
   const hasPermission = await requestBluetoothPermissions()
   if (!hasPermission) return false
@@ -107,8 +115,10 @@ export const printOrder = async (order: Order): Promise<boolean> => {
       left: 0
     })
 
+    const normalizedName = normalizeTextForPrinter(order.customer_name)
+
     await BluetoothEscposPrinter.printText(
-      `Nombre: ${order.customer_name}\n${
+      `Nombre: ${normalizedName}\n${
         order.order_number ? `Comanda: ${order.order_number}\n` : ''
       }Tipo: ${order.type === 'F' ? 'Para aqui' : 'Para llevar'}\n\n`,
       fontConfig
@@ -117,7 +127,8 @@ export const printOrder = async (order: Order): Promise<boolean> => {
     await BluetoothEscposPrinter.printText('-------------------------\n\n', {})
 
     for (const item of order.items) {
-      const line = `${item.quantity}x ${item.name}\n`
+      const normalizedName = normalizeTextForPrinter(item.name)
+      const line = `${item.quantity}x ${normalizedName}\n`
       await BluetoothEscposPrinter.printText(line, fontConfig)
 
       if (item.description && item.description.trim() !== '') {
