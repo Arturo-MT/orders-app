@@ -1,5 +1,5 @@
-package com.donnytang.myapp
-import cn.jystudio.bluetooth.RNBluetoothEscposPrinterPackage
+package com.signemammoth.tacoloco
+
 import android.app.Application
 import android.content.res.Configuration
 

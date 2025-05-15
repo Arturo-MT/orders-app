@@ -1,4 +1,4 @@
-package com.donnytang.myapp
+package com.signemammoth.tacoloco
 
 import android.os.Build
 import android.os.Bundle
