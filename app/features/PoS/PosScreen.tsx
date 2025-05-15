@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { View, StyleSheet, ToastAndroid } from 'react-native'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useCategoriesQuery } from '@/hooks/api/categories'
 import { useProductsQuery } from '@/hooks/api/products'
 import { useUserQuery } from '@/hooks/api/users'
@@ -93,7 +92,7 @@ export default function PosScreen() {
     }))
   }
 
-  async function generateOrderNumber(): Promise<string> {
+  function generateOrderNumber(): string {
     const now = new Date()
 
     const year = now.getFullYear().toString().slice(-2)
@@ -111,12 +110,7 @@ export default function PosScreen() {
         )
       }) ?? []
 
-    const keys = await AsyncStorage.getAllKeys()
-    const localKeys = keys.filter((key) =>
-      key.startsWith(`pending-order-${datePrefix}`)
-    )
-
-    const totalToday = todayOrders.length + localKeys.length
+    const totalToday = todayOrders.length
     const sequence = String(totalToday + 1).padStart(3, '0')
 
     return `${datePrefix}-${sequence}`
