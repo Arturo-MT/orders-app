@@ -110,12 +110,14 @@ export const printOrder = async (order: Order): Promise<boolean> => {
   try {
     await BluetoothManager.connect(savedAddress)
 
+    const normalizedName = normalizeTextForPrinter(order.customer_name)
+
     await BluetoothEscposPrinter.printPic(logoBase64, {
-      width: 384,
-      left: 0
+      width: 576,
+      left: 80
     })
 
-    const normalizedName = normalizeTextForPrinter(order.customer_name)
+    await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT)
 
     await BluetoothEscposPrinter.printText(
       `Nombre: ${normalizedName}\nComanda: ${order.order_number}\nTipo: ${
@@ -123,8 +125,11 @@ export const printOrder = async (order: Order): Promise<boolean> => {
       }\n\n`,
       fontConfig
     )
-
+    await BluetoothEscposPrinter.printerAlign(
+      BluetoothEscposPrinter.ALIGN.CENTER
+    )
     await BluetoothEscposPrinter.printText('-------------------------\n\n', {})
+    await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT)
 
     for (const item of order.items) {
       const normalizedName = normalizeTextForPrinter(item.name)
@@ -138,9 +143,14 @@ export const printOrder = async (order: Order): Promise<boolean> => {
 
       await BluetoothEscposPrinter.printText('\n', {})
     }
-
-    await BluetoothEscposPrinter.printText('-------------------------\n\n', {})
-    await BluetoothManager.disconnect(savedAddress)
+    await BluetoothEscposPrinter.printerAlign(
+      BluetoothEscposPrinter.ALIGN.CENTER
+    )
+    await BluetoothEscposPrinter.printText(
+      '-------------------------\n\n\n\n\n\n',
+      {}
+    )
+    await BluetoothEscposPrinter.cutOnePoint()
     return true
   } catch (error) {
     console.error('Error al imprimir comanda:', error)
