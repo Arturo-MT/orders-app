@@ -147,7 +147,7 @@ export const printOrder = async (order: Order): Promise<boolean> => {
       BluetoothEscposPrinter.ALIGN.CENTER
     )
     await BluetoothEscposPrinter.printText(
-      '-------------------------\n\n\n\n\n\n',
+      '-------------------------\n\n\n\n\n',
       {}
     )
     await BluetoothEscposPrinter.cutOnePoint()
