@@ -11,12 +11,19 @@ import {
 } from 'react-native'
 import { useAuth } from '../../context/AuthContext'
 import { Href, router } from 'expo-router'
+import { useWindowDimensions } from 'react-native'
 
 export default function LoginScreen() {
   const { loginWithPassword } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const { width, height } = useWindowDimensions()
+  const isPortrait = height > width
+  const containerStyle = [
+    styles.container,
+    { flexDirection: isPortrait ? ('column' as const) : ('row' as const) }
+  ]
 
   const handleLogin = async () => {
     try {
@@ -34,44 +41,46 @@ export default function LoginScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={containerStyle}>
       <Image
         source={require('../../../assets/images/icon.png')}
         style={styles.headerImage}
         resizeMode='contain'
       />
 
-      <Text style={styles.label}>Correo electrónico</Text>
-      <TextInput
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize='none'
-        style={styles.input}
-        placeholder='ejemplo@correo.com'
-        placeholderTextColor='#aaa'
-      />
+      <View style={styles.formContainer}>
+        <Text style={styles.label}>Correo electrónico</Text>
+        <TextInput
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize='none'
+          style={styles.input}
+          placeholder='ejemplo@correo.com'
+          placeholderTextColor='#aaa'
+        />
 
-      <Text style={styles.label}>Contraseña</Text>
-      <TextInput
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        style={styles.input}
-        placeholder='********'
-        placeholderTextColor='#aaa'
-      />
+        <Text style={styles.label}>Contraseña</Text>
+        <TextInput
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          style={styles.input}
+          placeholder='********'
+          placeholderTextColor='#aaa'
+        />
 
-      <TouchableOpacity
-        onPress={handleLogin}
-        style={[styles.button, loading && styles.buttonDisabled]}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color='#fff' />
-        ) : (
-          <Text style={styles.buttonText}>Ingresar</Text>
-        )}
-      </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleLogin}
+          style={[styles.button, loading && styles.buttonDisabled]}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color='#fff' />
+          ) : (
+            <Text style={styles.buttonText}>Ingresar</Text>
+          )}
+        </TouchableOpacity>
+      </View>
     </View>
   )
 }
@@ -82,9 +91,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff'
   },
+  formContainer: {
+    flex: 1,
+    justifyContent: 'center'
+  },
   headerImage: {
-    width: '100%',
-    height: 500,
+    height: 400,
+    width: 400,
+    alignSelf: 'center',
+    backgroundColor: '#f0f0f0',
     marginBottom: 30
   },
   title: {
