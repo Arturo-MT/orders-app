@@ -9,6 +9,7 @@ import {
 } from 'react-native'
 import Card from '@/app/components/Card'
 import { Product } from '@/types/types'
+import { useWindowDimensions } from 'react-native'
 
 export default function ProductsPanel({
   categoriesList,
@@ -33,10 +34,28 @@ export default function ProductsPanel({
   isProductsRefetching: boolean
   handlePress: (product: Product) => void
 }) {
+  const { height, width } = useWindowDimensions()
+  const isPortrait = height >= width
+  const containerStyle = [
+    styles.categorySelector,
+    { flexDirection: isPortrait ? ('row' as const) : ('column' as const) }
+  ]
+  const cardStyle = [
+    styles.card,
+    { width: isPortrait ? ('25%' as const) : ('48%' as const) }
+  ]
+  const CategorySelectorScrollViewStyle = {
+    flexDirection: isPortrait ? ('row' as const) : ('column' as const),
+    gap: 10,
+    padding: 10
+  }
   return (
     <>
-      <View style={styles.categorySelector}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <View style={containerStyle}>
+        <ScrollView
+          horizontal={isPortrait}
+          contentContainerStyle={CategorySelectorScrollViewStyle}
+        >
           {(isCategoriesLoading || isCategoriesRefetching) && (
             <ActivityIndicator size='large' color='#6200ea' />
           )}
@@ -79,7 +98,7 @@ export default function ProductsPanel({
             filteredProducts.length > 0 &&
             productsList.length > 0 &&
             filteredProducts.map((item) => (
-              <View key={item.id} style={styles.card}>
+              <View key={item.id} style={cardStyle}>
                 <Card
                   data={item}
                   onPress={() => handlePress(item)}
@@ -95,7 +114,6 @@ export default function ProductsPanel({
 
 const styles = StyleSheet.create({
   categorySelector: {
-    flexDirection: 'row',
     gap: 10,
     padding: 10
   },
@@ -103,7 +121,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: '#e0e0e0'
+    backgroundColor: '#e0e0e0',
+    width: 'auto',
+    alignItems: 'center'
   },
   selectedCategory: {
     backgroundColor: '#6200ea'
@@ -116,14 +136,16 @@ const styles = StyleSheet.create({
     color: '#fff'
   },
   productsWrapper: {
-    flex: 1
+    flex: 2
   },
   productsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 10,
     padding: 10
   },
   card: {
-    flexBasis: '25%'
+    width: '48%',
+    overflow: 'hidden'
   }
 })
