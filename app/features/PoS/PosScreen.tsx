@@ -3,18 +3,13 @@ import { View, StyleSheet, ToastAndroid } from 'react-native'
 import { useCategoriesQuery } from '@/hooks/api/categories'
 import { useProductsQuery } from '@/hooks/api/products'
 import { useUserQuery } from '@/hooks/api/users'
-import { useOrdersMutation, useOrdersQuery } from '@/hooks/api/orders'
+import { useOrdersMutation } from '@/hooks/api/orders'
 import { useFocusEffect } from '@react-navigation/native'
-import {
-  Category,
-  Order,
-  OrderResponse,
-  Product,
-  ProductData
-} from '@/types/types'
+import { Category, Order, Product, ProductData } from '@/types/types'
 import { printOrder } from '../printing/print'
 import ProductsPanel from './ProductsPanel'
 import OrderPanel from './OrderPanel'
+import { useWindowDimensions } from 'react-native'
 
 export default function PosScreen() {
   const [selectedCategory, setSelectedCategory] = useState('Todos')
@@ -25,8 +20,6 @@ export default function PosScreen() {
     items: [],
     order_number: ''
   })
-
-  const { data: orders, refetch: ordersRefetch } = useOrdersQuery()
 
   const {
     data: categoriesData,
@@ -66,6 +59,14 @@ export default function PosScreen() {
       ? productsList
       : productsList.filter((p) => p.category === selectedCategory)
 
+  const { width, height } = useWindowDimensions()
+
+  const isPortrait = height >= width
+  const containerStyle = [
+    styles.container,
+    { flexDirection: isPortrait ? ('column' as const) : ('row' as const) }
+  ]
+
   useEffect(() => {
     const total = order.items.reduce(
       (acc, item) => acc + parseFloat(item.price.toString()) || 0,
@@ -92,30 +93,6 @@ export default function PosScreen() {
     }))
   }
 
-  function generateOrderNumber(): string {
-    const now = new Date()
-
-    const year = now.getFullYear().toString().slice(-2)
-    const month = String(now.getMonth() + 1).padStart(2, '0')
-    const day = String(now.getDate()).padStart(2, '0')
-    const datePrefix = `${year}${month}${day}`
-
-    const todayOrders =
-      orders?.filter((order: OrderResponse) => {
-        const createdAt = new Date(order.created_at)
-        return (
-          createdAt.getFullYear() === now.getFullYear() &&
-          createdAt.getMonth() === now.getMonth() &&
-          createdAt.getDate() === now.getDate()
-        )
-      }) ?? []
-
-    const totalToday = todayOrders.length
-    const sequence = String(totalToday + 1).padStart(3, '0')
-
-    return `${datePrefix}-${sequence}`
-  }
-
   const buildOrderPayload = (order: Order) => {
     const storeId = userData?.store
     if (!storeId || order.items.length === 0 || !order.customer_name)
@@ -137,23 +114,7 @@ export default function PosScreen() {
   }
 
   const handlePrintOrder = async () => {
-    const orderNumber = await generateOrderNumber()
-    const fullOrder = {
-      ...order,
-      order_number: orderNumber
-    }
-
-    let printed = false
-    try {
-      printed = await printOrder(fullOrder)
-      if (!printed) throw new Error('Error al imprimir')
-      ToastAndroid.show('Orden impresa correctamente', ToastAndroid.SHORT)
-    } catch (err) {
-      console.warn('Error al imprimir:', err)
-      ToastAndroid.show('⚠️ No se pudo imprimir el ticket', ToastAndroid.SHORT)
-    }
-
-    const payload = buildOrderPayload(fullOrder)
+    const payload = buildOrderPayload(order)
 
     if (!payload) {
       ToastAndroid.show(
@@ -164,23 +125,38 @@ export default function PosScreen() {
     }
 
     try {
-      await new Promise((resolve, reject) =>
+      const responseData = await new Promise((resolve, reject) =>
         createOrder(payload, {
           onSuccess: resolve,
           onError: reject
         })
       )
-      ToastAndroid.show('Orden enviada correctamente', ToastAndroid.SHORT)
-    } catch (err) {
-      console.error('Fallo al enviar orden:', err)
-    }
 
-    setOrder({
-      customer_name: '',
-      type: 'F',
-      items: [],
-      order_number: ''
-    })
+      ToastAndroid.show('✅ Orden enviada correctamente', ToastAndroid.SHORT)
+
+      try {
+        const printed = await printOrder(responseData as Order)
+        if (!printed) throw new Error('Error al imprimir')
+
+        ToastAndroid.show('🖨 Orden impresa correctamente', ToastAndroid.SHORT)
+      } catch (err) {
+        console.warn('Error al imprimir:', err)
+        ToastAndroid.show(
+          '⚠️ No se pudo imprimir el ticket',
+          ToastAndroid.SHORT
+        )
+      }
+
+      setOrder({
+        customer_name: '',
+        type: 'F',
+        items: [],
+        order_number: ''
+      })
+    } catch (err) {
+      console.error('🚫 Fallo al enviar orden:', err)
+      ToastAndroid.show('❌ Fallo al enviar orden', ToastAndroid.SHORT)
+    }
   }
 
   useFocusEffect(
@@ -188,12 +164,11 @@ export default function PosScreen() {
       categoriesRefetch()
       productsRefetch()
       userRefetch()
-      ordersRefetch()
-    }, [categoriesRefetch, productsRefetch, userRefetch, ordersRefetch])
+    }, [categoriesRefetch, productsRefetch, userRefetch])
   )
 
   return (
-    <View style={styles.container}>
+    <View style={containerStyle}>
       <ProductsPanel
         categoriesList={categoriesList}
         selectedCategory={selectedCategory}
