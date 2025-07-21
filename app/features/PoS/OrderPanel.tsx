@@ -35,6 +35,12 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
 
   return (
     <View style={styles.wrapper}>
+      <TextInput
+        placeholder='Nombre del cliente'
+        style={styles.customerNameInput}
+        onChangeText={(text) => onChange({ ...order, customer_name: text })}
+        value={order.customer_name}
+      />
       <View style={styles.typeOrderWrapper}>
         <Text>Para llevar:</Text>
         <CustomCheckbox
@@ -47,13 +53,6 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
           onChange={() => onChange({ ...order, type: 'F' })}
         />
       </View>
-
-      <TextInput
-        placeholder='Nombre del cliente'
-        style={styles.customerNameInput}
-        onChangeText={(text) => onChange({ ...order, customer_name: text })}
-        value={order.customer_name}
-      />
 
       <Text style={styles.orderTitle}>Total: ${total}</Text>
 
@@ -141,8 +140,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 5,
-    padding: 10,
-    marginBottom: 10
+    padding: 8,
+    backgroundColor: '#fff'
   },
   orderTitle: {
     fontSize: 18,
