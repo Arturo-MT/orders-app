@@ -16,6 +16,7 @@ import { printOrder } from '../printing/print'
 import { Order, OrderItem } from '@/types/types'
 import CustomCheckbox from '@/app/components/CustomCheckbox'
 import { useInvalidateDashboard } from '@/hooks/api/dashboard'
+import { useStoreQuery } from '@/hooks/api/store'
 
 if (
   Platform.OS === 'android' &&
@@ -42,6 +43,8 @@ export default function OrderCard({ order }: Props) {
     refetchOnMount: false,
     refetchOnWindowFocus: false
   })
+
+  const { data: storeData } = useStoreQuery()
 
   const invalidateDashboard = useInvalidateDashboard()
 
@@ -78,7 +81,7 @@ export default function OrderCard({ order }: Props) {
 
   const handlePrintOrder = async () => {
     const order = mapApiOrderToClientOrder(orderData)
-    const success = await printOrder(order)
+    const success = await printOrder(order, storeData?.printer_address)
     if (success) {
       ToastAndroid.show('Orden impresa correctamente', ToastAndroid.SHORT)
     } else {
@@ -130,7 +133,7 @@ export default function OrderCard({ order }: Props) {
                 <View key={i} style={styles.detailRow}>
                   <View>
                     <Text style={styles.productName}>
-                      {item.quantity} × {item.product.name}
+                      {item.quantity} × {item.name}
                     </Text>
                     {item.description ? (
                       <Text style={styles.productDescription}>
