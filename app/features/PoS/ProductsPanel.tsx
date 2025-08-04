@@ -16,7 +16,6 @@ export default function ProductsPanel({
   categoriesList,
   selectedCategory,
   setSelectedCategory,
-  filteredProducts,
   productsList,
   isCategoriesLoading,
   isCategoriesRefetching,
