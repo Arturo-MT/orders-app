@@ -44,7 +44,10 @@ export default function PosScreen() {
 
   const { data: userData, refetch: userRefetch } = useUserQuery()
   const { data: storeData } = useStoreQuery()
-  const { mutate: createOrder } = useOrdersMutation()
+  const { mutate: createOrder } = useOrdersMutation({
+    retry: 1,
+    retryDelay: 1000
+  })
 
   const categoriesList: string[] = [
     'Todos',
@@ -133,21 +136,14 @@ export default function PosScreen() {
     }
 
     try {
-      const responseData: OrderResponse = await new Promise((resolve, reject) =>
-        createOrder(payload, {
-          onSuccess: resolve,
-          onError: reject
-        })
+      const responseData: OrderResponse = await new Promise(() =>
+        createOrder(payload)
       )
 
       ToastAndroid.show('Orden enviada correctamente', ToastAndroid.SHORT)
 
       try {
-        const printed = await printOrder(
-          responseData as Order,
-          storeData.printer_address
-        )
-        if (!printed) throw new Error('Error al imprimir')
+        await printOrder(responseData as Order, storeData.printer_address)
 
         ToastAndroid.show('🖨 Orden impresa correctamente', ToastAndroid.SHORT)
       } catch (err) {
@@ -166,7 +162,10 @@ export default function PosScreen() {
       })
     } catch (err) {
       console.error('🚫 Fallo al enviar orden:', err)
-      ToastAndroid.show('❌ Fallo al enviar orden', ToastAndroid.SHORT)
+      ToastAndroid.show(
+        '❌ Fallo al enviar orden, reintente si es posible',
+        ToastAndroid.SHORT
+      )
     }
   }
 
