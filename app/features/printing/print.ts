@@ -1,5 +1,4 @@
 import { PermissionsAndroid, Platform } from 'react-native'
-import EncryptedStorage from 'react-native-encrypted-storage'
 import {
   BluetoothEscposPrinter,
   BluetoothManager
@@ -7,36 +6,10 @@ import {
 import { logoBase64 } from '@/assets/images/logoBase64'
 import { Order } from '@/types/types'
 
-const PRINTER_KEY = 'selected_printer'
 const fontConfig = {
   widthtimes: 1,
   heigthtimes: 1,
   fonttype: 1
-}
-
-export const savePrinter = async (address: string) => {
-  try {
-    await EncryptedStorage.setItem(PRINTER_KEY, address)
-  } catch (error) {
-    console.error('Error guardando impresora:', error)
-  }
-}
-
-export const getSavedPrinter = async (): Promise<string | null> => {
-  try {
-    return await EncryptedStorage.getItem(PRINTER_KEY)
-  } catch (error) {
-    console.error('Error obteniendo impresora guardada:', error)
-    return null
-  }
-}
-
-export const clearSavedPrinter = async () => {
-  try {
-    await EncryptedStorage.removeItem(PRINTER_KEY)
-  } catch (error) {
-    console.error('Error eliminando impresora guardada:', error)
-  }
 }
 
 export const requestBluetoothPermissions = async (): Promise<boolean> => {
@@ -97,18 +70,20 @@ const normalizeTextForPrinter = (text: string): string => {
     .replace(/\s+/g, ' ')
 }
 
-export const printOrder = async (order: Order): Promise<boolean> => {
+export const printOrder = async (
+  order: Order,
+  printerAddress: string
+): Promise<boolean> => {
   const hasPermission = await requestBluetoothPermissions()
   if (!hasPermission) return false
 
-  const savedAddress = await getSavedPrinter()
-  if (!savedAddress) {
+  if (!printerAddress) {
     console.warn('No hay impresora guardada.')
     return false
   }
 
   try {
-    await BluetoothManager.connect(savedAddress)
+    await BluetoothManager.connect(printerAddress)
 
     const normalizedName = normalizeTextForPrinter(order.customer_name)
 
@@ -154,7 +129,6 @@ export const printOrder = async (order: Order): Promise<boolean> => {
     return true
   } catch (error) {
     console.error('Error al imprimir comanda:', error)
-    await clearSavedPrinter()
     return false
   }
 }
