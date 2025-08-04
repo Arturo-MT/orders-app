@@ -7,6 +7,11 @@ export interface Product {
   price: number
 }
 
+export interface StoreConfig {
+  printer_name: string
+  printer_address: string
+}
+
 export interface OrderItem {
   id: number
   product: number
