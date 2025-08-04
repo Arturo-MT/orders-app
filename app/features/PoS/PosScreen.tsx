@@ -5,11 +5,18 @@ import { useProductsQuery } from '@/hooks/api/products'
 import { useUserQuery } from '@/hooks/api/users'
 import { useOrdersMutation } from '@/hooks/api/orders'
 import { useFocusEffect } from '@react-navigation/native'
-import { Category, Order, Product, ProductData } from '@/types/types'
+import {
+  Category,
+  Order,
+  OrderResponse,
+  Product,
+  ProductData
+} from '@/types/types'
 import { printOrder } from '../printing/print'
 import ProductsPanel from './ProductsPanel'
 import OrderPanel from './OrderPanel'
 import { useWindowDimensions } from 'react-native'
+import { useStoreQuery } from '@/hooks/api/store'
 
 export default function PosScreen() {
   const [selectedCategory, setSelectedCategory] = useState('Todos')
@@ -36,6 +43,7 @@ export default function PosScreen() {
   } = useProductsQuery()
 
   const { data: userData, refetch: userRefetch } = useUserQuery()
+  const { data: storeData } = useStoreQuery()
   const { mutate: createOrder } = useOrdersMutation()
 
   const categoriesList: string[] = [
@@ -125,17 +133,20 @@ export default function PosScreen() {
     }
 
     try {
-      const responseData = await new Promise((resolve, reject) =>
+      const responseData: OrderResponse = await new Promise((resolve, reject) =>
         createOrder(payload, {
           onSuccess: resolve,
           onError: reject
         })
       )
 
-      ToastAndroid.show('✅ Orden enviada correctamente', ToastAndroid.SHORT)
+      ToastAndroid.show('Orden enviada correctamente', ToastAndroid.SHORT)
 
       try {
-        const printed = await printOrder(responseData as Order)
+        const printed = await printOrder(
+          responseData as Order,
+          storeData.printer_address
+        )
         if (!printed) throw new Error('Error al imprimir')
 
         ToastAndroid.show('🖨 Orden impresa correctamente', ToastAndroid.SHORT)
