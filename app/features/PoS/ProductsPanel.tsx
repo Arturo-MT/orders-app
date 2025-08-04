@@ -68,8 +68,7 @@ export default function ProductsPanel({
       new Set([...categoriesFromName, ...categoriesFromProducts])
     )
 
-    const productsToShow =
-      productsMatching.length > 0 ? productsMatching : filteredProducts
+    const productsToShow = productsMatching.length > 0 ? productsMatching : []
 
     const finalProducts =
       !selectedCategory || selectedCategory === 'Todos'
@@ -80,13 +79,7 @@ export default function ProductsPanel({
       filteredCategories: allMatchingCategories,
       filteredProductsBySearch: finalProducts
     }
-  }, [
-    searchText,
-    categoriesList,
-    productsList,
-    filteredProducts,
-    selectedCategory
-  ])
+  }, [searchText, categoriesList, productsList, selectedCategory])
 
   const containerStyle = [
     styles.categorySelector,
