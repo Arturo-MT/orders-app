@@ -126,6 +126,7 @@ export const printOrder = async (
       {}
     )
     await BluetoothEscposPrinter.cutOnePoint()
+    console.log('Comanda impresa correctamente')
     return true
   } catch (error) {
     console.error('Error al imprimir comanda:', error)
