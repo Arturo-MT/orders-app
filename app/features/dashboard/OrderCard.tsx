@@ -68,11 +68,11 @@ export default function OrderCard({ order }: Props) {
       items: apiOrder.items.map(
         (item: any, index: number): OrderItem => ({
           id: index,
-          product: item.product.id,
-          name: item.product.name,
+          product: item.name,
+          name: item.name,
           quantity: item.quantity,
           price: parseFloat(item.price),
-          basePrice: parseFloat(item.product.price),
+          basePrice: parseFloat(item.price),
           description: item.description || ''
         })
       )
@@ -105,7 +105,7 @@ export default function OrderCard({ order }: Props) {
         {expanded && (
           <View style={styles.actions}>
             <TouchableOpacity onPress={handlePrintOrder}>
-              <Ionicons name='print-outline' size={24} color='#6200ea' />
+              <Ionicons name='print-outline' size={40} color='#6200ea' />
             </TouchableOpacity>
           </View>
         )}
@@ -181,7 +181,11 @@ const styles = StyleSheet.create({
     color: '#888'
   },
   actions: {
-    justifyContent: 'center'
+    justifyContent: 'center',
+    borderColor: '#6200ea',
+    borderWidth: 2,
+    padding: 4,
+    borderRadius: 8
   },
   details: {
     marginTop: 8
