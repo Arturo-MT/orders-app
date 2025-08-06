@@ -81,12 +81,18 @@ export default function OrderCard({ order }: Props) {
 
   const handlePrintOrder = async () => {
     const order = mapApiOrderToClientOrder(orderData)
-    const success = await printOrder(order, storeData?.printer_address)
+    const { success, error } = await printOrder(
+      order,
+      storeData?.printer_address
+    )
     if (success) {
       ToastAndroid.show('Orden impresa correctamente', ToastAndroid.SHORT)
     } else {
-      console.error('Error al imprimir la orden')
-      ToastAndroid.show('Error al imprimir la orden', ToastAndroid.SHORT)
+      console.error('Error al imprimir la orden:', error)
+      ToastAndroid.show(
+        `Error al imprimir la orden: ${error}`,
+        ToastAndroid.SHORT
+      )
     }
   }
 

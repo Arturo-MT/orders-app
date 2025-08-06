@@ -146,15 +146,21 @@ export default function PosScreen() {
       ToastAndroid.show('Orden enviada correctamente', ToastAndroid.SHORT)
 
       try {
-        await printOrder(responseData as Order, storeData.printer_address)
-
-        ToastAndroid.show('🖨 Orden impresa correctamente', ToastAndroid.SHORT)
-      } catch (err) {
-        console.warn('Error al imprimir:', err)
-        ToastAndroid.show(
-          '⚠️ No se pudo imprimir el ticket',
-          ToastAndroid.SHORT
+        const { success, error } = await printOrder(
+          responseData as Order,
+          storeData.printer_address
         )
+        if (success) {
+          ToastAndroid.show('Orden impresa correctamente', ToastAndroid.SHORT)
+        } else {
+          console.error('Error al imprimir la orden:', error)
+          ToastAndroid.show(
+            `Error al imprimir la orden: ${error}`,
+            ToastAndroid.SHORT
+          )
+        }
+      } catch (printError) {
+        console.error('Error al imprimir la orden:', printError)
       }
 
       setOrder({
