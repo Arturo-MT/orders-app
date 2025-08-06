@@ -73,14 +73,10 @@ const normalizeTextForPrinter = (text: string): string => {
 export const printOrder = async (
   order: Order,
   printerAddress: string
-): Promise<boolean> => {
+): Promise<{ success: boolean; error?: string }> => {
   const hasPermission = await requestBluetoothPermissions()
-  if (!hasPermission) return false
-
-  if (!printerAddress) {
-    console.warn('No hay impresora guardada.')
-    return false
-  }
+  if (!hasPermission)
+    return { success: false, error: 'Permisos de Bluetooth no concedidos' }
 
   try {
     await BluetoothManager.connect(printerAddress)
@@ -126,10 +122,13 @@ export const printOrder = async (
       {}
     )
     await BluetoothEscposPrinter.cutOnePoint()
-    console.log('Comanda impresa correctamente')
-    return true
-  } catch (error) {
-    console.error('Error al imprimir comanda:', error)
-    return false
+    console.log('✅ Successfully printed order')
+    return { success: true }
+  } catch (error: any) {
+    console.error(error)
+    return {
+      success: false,
+      error: error.message || 'Error desconocido al imprimir'
+    }
   }
 }
