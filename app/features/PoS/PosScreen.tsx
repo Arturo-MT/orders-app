@@ -136,8 +136,11 @@ export default function PosScreen() {
     }
 
     try {
-      const responseData: OrderResponse = await new Promise(() =>
-        createOrder(payload)
+      const responseData: OrderResponse = await new Promise((resolve, reject) =>
+        createOrder(payload, {
+          onSuccess: resolve,
+          onError: reject
+        })
       )
 
       ToastAndroid.show('Orden enviada correctamente', ToastAndroid.SHORT)
