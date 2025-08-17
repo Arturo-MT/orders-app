@@ -25,7 +25,8 @@ export default function PosScreen() {
     customer_name: '',
     type: 'F',
     items: [],
-    order_number: ''
+    order_number: '',
+    status: 'P'
   })
 
   const {
@@ -112,6 +113,7 @@ export default function PosScreen() {
       customer_name: order.customer_name,
       type: order.type,
       store: storeId,
+      status: order.status || 'P',
       items: order.items.map((item) => ({
         id: item.id,
         name: item.name,
@@ -167,7 +169,8 @@ export default function PosScreen() {
         customer_name: '',
         type: 'F',
         items: [],
-        order_number: ''
+        order_number: '',
+        status: 'P'
       })
     } catch (err) {
       console.error('🚫 Fallo al enviar orden:', err)

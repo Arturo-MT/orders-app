@@ -27,7 +27,7 @@ export interface Order {
   type: string
   items: OrderItem[]
   order_number?: string
-  status?: string
+  status: string
 }
 
 export interface OrderResponse {

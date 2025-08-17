@@ -93,7 +93,11 @@ export const printOrder = async (
     await BluetoothEscposPrinter.printText(
       `Nombre: ${normalizedName}\nComanda: ${order.order_number}\nTipo: ${
         order.type === 'F' ? 'Para aqui' : 'Para llevar'
-      }\n\n`,
+      }`,
+      fontConfig
+    )
+    await BluetoothEscposPrinter.printText(
+      `Estado: ${order.status === 'C' ? 'Pagado' : 'Pendiente'}\n\n`,
       fontConfig
     )
     await BluetoothEscposPrinter.printerAlign(

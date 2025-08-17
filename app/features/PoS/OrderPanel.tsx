@@ -52,6 +52,16 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
           value={order.type === 'F'}
           onChange={() => onChange({ ...order, type: 'F' })}
         />
+        <Text>Pagado:</Text>
+        <CustomCheckbox
+          value={order.status === 'C'}
+          onChange={() =>
+            onChange({
+              ...order,
+              status: order.status === 'C' ? 'P' : 'C'
+            })
+          }
+        />
       </View>
 
       <Text style={styles.orderTitle}>Total: ${total}</Text>
@@ -89,7 +99,8 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
                       customer_name: '',
                       type: 'F',
                       items: [],
-                      order_number: ''
+                      order_number: '',
+                      status: 'P'
                     })
                     ToastAndroid.show('Orden limpiada', ToastAndroid.SHORT)
                   },
