@@ -203,14 +203,13 @@ const styles = StyleSheet.create({
     flex: 2
   },
   productsContainer: {
-    gap: 10,
     padding: 10,
     flexDirection: 'row',
     flexWrap: 'wrap'
   },
   card: {
-    width: '48%',
-    overflow: 'hidden'
+    overflow: 'hidden',
+    flexGrow: 1
   },
   searchInput: {
     borderWidth: 1,
