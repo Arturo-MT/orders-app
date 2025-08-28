@@ -24,7 +24,14 @@ interface Props {
 export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
   const handleUpdateItem = (index: number, updates: Partial<OrderItem>) => {
     const updatedItems = [...order.items]
-    updatedItems[index] = { ...updatedItems[index], ...updates }
+    const safeUpdates = {
+      ...updates,
+      price:
+        updates.price !== undefined
+          ? Number(updates.price)
+          : updatedItems[index].price
+    }
+    updatedItems[index] = { ...updatedItems[index], ...safeUpdates }
     onChange({ ...order, items: updatedItems })
   }
 
@@ -123,7 +130,7 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
         <ScrollView contentContainerStyle={styles.orderItemContainer}>
           {order.items.map((item, index) => (
             <OrderItemComponent
-              key={index}
+              key={item.id}
               item={item}
               onUpdate={(updates) => handleUpdateItem(index, updates)}
               onRemove={() => handleRemoveItem(index)}
