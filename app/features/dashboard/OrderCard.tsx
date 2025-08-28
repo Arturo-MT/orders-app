@@ -135,6 +135,12 @@ export default function OrderCard({ order }: Props) {
             <ActivityIndicator size='small' color='#6200ea' />
           ) : (
             <>
+              <Text style={styles.orderData}>
+                Estado: {orderData?.status === 'C' ? 'Pagado' : 'Pendiente'}
+              </Text>
+              <Text style={styles.orderData}>
+                {orderData?.type === 'F' ? 'Para aqui' : 'Para llevar'}
+              </Text>
               {orderData?.items?.map((item: any, i: number) => (
                 <View key={i} style={styles.detailRow}>
                   <View>
@@ -206,6 +212,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     color: '#333'
+  },
+  orderData: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#6200ea',
+    marginBottom: 6
   },
   productDescription: {
     fontSize: 13,
