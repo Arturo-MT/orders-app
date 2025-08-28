@@ -121,6 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     if (!parsedUser?.refresh) {
       console.warn('❌ No refresh token available')
+      dispatch({ type: 'REMOVE_USER' })
       throw new Error('No refresh token available')
     }
 
