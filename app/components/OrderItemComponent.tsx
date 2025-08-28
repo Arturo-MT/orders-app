@@ -28,67 +28,72 @@ export default function OrderItemComponent({
   const [showComment, setShowComment] = useState(false)
 
   return (
-    <View style={styles.row}>
-      <Text style={styles.name}>{item.name}</Text>
+    <View style={styles.column}>
+      <View style={styles.row}>
+        <Text style={styles.name}>{item.name}</Text>
+        <View style={styles.iconsWrapper}>
+          <TouchableOpacity onPress={() => setShowComment(!showComment)}>
+            <Ionicons name='chatbubble-outline' size={22} color='#007bff' />
+          </TouchableOpacity>
 
-      <View style={styles.quantityWrapper}>
-        <TouchableOpacity
-          onPress={() =>
-            onUpdate({
-              quantity: item.quantity - 1,
-              price: item.basePrice * (item.quantity - 1)
-            })
-          }
-          style={{ marginLeft: 8 }}
-          disabled={item.quantity <= 1}
-        >
-          <Ionicons name='remove-circle-outline' size={22} color='#e53935' />
-        </TouchableOpacity>
-        <TextInput
-          style={styles.input}
-          keyboardType='numeric'
-          value={String(item.quantity)}
-          onChangeText={(value) =>
-            onUpdate({
-              quantity: parseInt(value) || 0
-            })
-          }
-          placeholder='Cantidad'
-        />
-        <TouchableOpacity
-          onPress={() =>
-            onUpdate({
-              quantity: item.quantity + 1,
-              price: item.basePrice * (item.quantity + 1)
-            })
-          }
-          style={{ marginLeft: 8 }}
-        >
-          <Ionicons name='add-circle-outline' size={22} color='#007bff' />
-        </TouchableOpacity>
+          <TouchableOpacity onPress={onRemove}>
+            <Ionicons name='trash-outline' size={22} color='#e53935' />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <View style={styles.priceWrapper}>
-        <Text style={styles.currency}>$</Text>
-        <TextInput
-          style={[styles.input, styles.priceInput]}
-          keyboardType='numeric'
-          value={String(item.price)}
-          onChangeText={(value) => {
-            const newPrice = parseInt(value) || 0
-            onUpdate({ price: newPrice })
-          }}
-          placeholder='Precio'
-        />
+      <View style={styles.row}>
+        <View style={styles.quantityWrapper}>
+          <TouchableOpacity
+            onPress={() =>
+              onUpdate({
+                quantity: item.quantity - 1,
+                price: item.basePrice * (item.quantity - 1)
+              })
+            }
+            style={{ marginLeft: 8 }}
+            disabled={item.quantity <= 1}
+          >
+            <Ionicons name='remove-circle-outline' size={22} color='#e53935' />
+          </TouchableOpacity>
+          <TextInput
+            style={[styles.input, { width: 40 }]}
+            keyboardType='numeric'
+            value={String(item.quantity)}
+            onChangeText={(value) =>
+              onUpdate({
+                quantity: parseInt(value) || 0
+              })
+            }
+            placeholder='Cantidad'
+          />
+          <TouchableOpacity
+            onPress={() =>
+              onUpdate({
+                quantity: item.quantity + 1,
+                price: item.basePrice * (item.quantity + 1)
+              })
+            }
+            style={{ marginLeft: 8 }}
+          >
+            <Ionicons name='add-circle-outline' size={22} color='#007bff' />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.priceWrapper}>
+          <Text style={styles.currency}>$</Text>
+          <TextInput
+            style={[styles.input, styles.priceInput]}
+            keyboardType='numeric'
+            value={String(item.price)}
+            onChangeText={(value) => {
+              const newPrice = parseInt(value) || 0
+              onUpdate({ price: newPrice })
+            }}
+            placeholder='Precio'
+          />
+        </View>
       </View>
-
-      <TouchableOpacity onPress={() => setShowComment(!showComment)}>
-        <Ionicons name='chatbubble-outline' size={22} color='#007bff' />
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={onRemove}>
-        <Ionicons name='trash-outline' size={22} color='#e53935' />
-      </TouchableOpacity>
 
       {showComment && (
         <TextInput
@@ -106,12 +111,19 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingRight: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    padding: 10,
     gap: 24,
     flexWrap: 'wrap'
+  },
+  iconsWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12
+  },
+  column: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    paddingBottom: 10
   },
   name: {
     fontSize: 16,
@@ -121,7 +133,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
-    padding: 6,
+    padding: 2,
     borderRadius: 5,
     minWidth: 50,
     textAlign: 'center'
