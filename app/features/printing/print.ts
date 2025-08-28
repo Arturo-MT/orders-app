@@ -83,49 +83,85 @@ export const printOrder = async (
 
     const normalizedName = normalizeTextForPrinter(order.customer_name)
 
-    await BluetoothEscposPrinter.printPic(logoBase64, {
-      width: 576,
-      left: 80
-    })
+    // Imprime logo si quieres
+    await BluetoothEscposPrinter.printPic(logoBase64, { width: 576, left: 80 })
 
     await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT)
 
     await BluetoothEscposPrinter.printText(
       `Nombre: ${normalizedName}\nComanda: ${order.order_number}\nTipo: ${
         order.type === 'F' ? 'Para aqui' : 'Para llevar'
-      }`,
+      }\nEstado: ${order.status === 'C' ? 'Pagado' : 'Pendiente'}\n\n`,
       fontConfig
     )
+
     await BluetoothEscposPrinter.printText(
-      `Estado: ${order.status === 'C' ? 'Pagado' : 'Pendiente'}\n\n`,
-      fontConfig
-    )
-    await BluetoothEscposPrinter.printerAlign(
-      BluetoothEscposPrinter.ALIGN.CENTER
-    )
-    await BluetoothEscposPrinter.printText('-------------------------\n\n', {})
-    await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT)
-
-    for (const item of order.items) {
-      const normalizedName = normalizeTextForPrinter(item.name)
-      const line = `${item.quantity}x ${normalizedName}\n`
-      await BluetoothEscposPrinter.printText(line, fontConfig)
-
-      if (item.description && item.description.trim() !== '') {
-        const commentLine = ` - ${item.description.trim()}\n`
-        await BluetoothEscposPrinter.printText(commentLine, fontConfig)
-      }
-
-      await BluetoothEscposPrinter.printText('\n', {})
-    }
-    await BluetoothEscposPrinter.printerAlign(
-      BluetoothEscposPrinter.ALIGN.CENTER
-    )
-    await BluetoothEscposPrinter.printText(
-      '-------------------------\n\n\n\n\n',
+      '------------------------------------------------\n',
       {}
     )
+
+    const columnWidths = [18, 6, 8]
+
+    await BluetoothEscposPrinter.printColumn(
+      columnWidths,
+      [
+        BluetoothEscposPrinter.ALIGN.LEFT,
+        BluetoothEscposPrinter.ALIGN.CENTER,
+        BluetoothEscposPrinter.ALIGN.RIGHT
+      ],
+      ['Producto', 'Cant', 'Precio'],
+      fontConfig
+    )
+
+    await BluetoothEscposPrinter.printText(
+      '------------------------------------------------\n',
+      {}
+    )
+
+    for (const item of order.items) {
+      const name = normalizeTextForPrinter(item.name)
+      const quantity = item.quantity.toString()
+      const price = parseFloat(item.price.toString()).toFixed(2)
+
+      await BluetoothEscposPrinter.printColumn(
+        columnWidths,
+        [
+          BluetoothEscposPrinter.ALIGN.LEFT,
+          BluetoothEscposPrinter.ALIGN.CENTER,
+          BluetoothEscposPrinter.ALIGN.RIGHT
+        ],
+        [name, quantity, price],
+        fontConfig
+      )
+
+      if (item.description && item.description.trim() !== '') {
+        await BluetoothEscposPrinter.printText(
+          `  - ${item.description.trim()}\n`,
+          fontConfig
+        )
+      }
+    }
+
+    await BluetoothEscposPrinter.printText(
+      '------------------------------------------------\n',
+      {}
+    )
+
+    const total = order.items.reduce((acc, item) => {
+      return acc + item.quantity * parseFloat(item.price.toString())
+    }, 0)
+
+    await BluetoothEscposPrinter.printerAlign(
+      BluetoothEscposPrinter.ALIGN.RIGHT
+    )
+
+    await BluetoothEscposPrinter.printText(`Total: ${total.toFixed(2)}\n\n`, {
+      ...fontConfig
+    })
+    await BluetoothEscposPrinter.printText('\n\n\n\n', {})
+
     await BluetoothEscposPrinter.cutOnePoint()
+
     console.log('✅ Successfully printed order')
     return { success: true }
   } catch (error: any) {
