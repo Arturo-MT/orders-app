@@ -137,7 +137,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       return { access: result.data.access }
     } catch (error) {
       console.error('❌ Failed to refresh token:', error)
-      dispatch({ type: 'REMOVE_USER' })
       throw error
     }
   }, [dispatch])
