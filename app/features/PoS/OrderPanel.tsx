@@ -71,9 +71,8 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
         />
       </View>
 
-      <Text style={styles.orderTitle}>Total: ${total}</Text>
-
       <View style={styles.buttonsWrapper}>
+        <Text style={styles.orderTitle}>Total: ${total}</Text>
         <TouchableOpacity
           onPress={onPrint}
           style={[
@@ -174,14 +173,14 @@ const styles = StyleSheet.create({
   printButton: {
     flex: 1,
     backgroundColor: '#6200ea',
-    padding: 10,
     borderRadius: 5,
+    padding: 4,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center'
   },
   clearButton: {
-    padding: 10,
+    padding: 4,
     backgroundColor: '#e53935',
     borderRadius: 5,
     alignItems: 'center',
