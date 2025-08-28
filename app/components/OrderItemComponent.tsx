@@ -4,7 +4,9 @@ import {
   Text,
   TextInput,
   StyleSheet,
-  TouchableOpacity
+  TouchableOpacity,
+  Modal,
+  Dimensions
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 
@@ -26,13 +28,26 @@ export default function OrderItemComponent({
   onRemove
 }: Props) {
   const [showComment, setShowComment] = useState(false)
+  const [modalVisible, setModalVisible] = useState(false)
+  const [tempComment, setTempComment] = useState(item.description)
+
+  const isSmallDevice = Dimensions.get('window').width < 768
 
   return (
     <View style={styles.column}>
       <View style={styles.row}>
         <Text style={styles.name}>{item.name}</Text>
         <View style={styles.iconsWrapper}>
-          <TouchableOpacity onPress={() => setShowComment(!showComment)}>
+          <TouchableOpacity
+            onPress={() => {
+              if (isSmallDevice) {
+                setTempComment(item.description || '')
+                setModalVisible(true)
+              } else {
+                setShowComment(!showComment)
+              }
+            }}
+          >
             <Ionicons name='chatbubble-outline' size={22} color='#007bff' />
           </TouchableOpacity>
 
@@ -40,6 +55,12 @@ export default function OrderItemComponent({
             <Ionicons name='trash-outline' size={22} color='#e53935' />
           </TouchableOpacity>
         </View>
+      </View>
+
+      <View style={styles.descriptionWrapper}>
+        <Text style={styles.especification}>
+          {item.description || 'Con todo'}
+        </Text>
       </View>
 
       <View style={styles.row}>
@@ -95,13 +116,53 @@ export default function OrderItemComponent({
         </View>
       </View>
 
-      {showComment && (
+      {showComment && !isSmallDevice && (
         <TextInput
           style={[styles.input, styles.commentInput]}
           value={item.description}
           onChangeText={(value) => onUpdate({ description: value })}
           placeholder='Especificaciones'
         />
+      )}
+
+      {isSmallDevice && (
+        <Modal
+          visible={modalVisible}
+          animationType='slide'
+          transparent={true}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Especificaciones</Text>
+              <TextInput
+                style={styles.modalInput}
+                value={tempComment}
+                onChangeText={setTempComment}
+                placeholder='Escribe aquí...'
+                multiline
+                autoFocus
+              />
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  onPress={() => setModalVisible(false)}
+                  style={[styles.modalButton, { backgroundColor: '#ccc' }]}
+                >
+                  <Text>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    onUpdate({ description: tempComment })
+                    setModalVisible(false)
+                  }}
+                  style={[styles.modalButton, { backgroundColor: '#6200ea' }]}
+                >
+                  <Text style={{ color: '#fff' }}>Guardar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       )}
     </View>
   )
@@ -158,5 +219,46 @@ const styles = StyleSheet.create({
   commentInput: {
     flexBasis: '100%',
     marginTop: 8
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.5)'
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 10,
+    minHeight: 80,
+    textAlignVertical: 'top',
+    marginBottom: 12
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8
+  },
+  modalButton: {
+    padding: 10,
+    borderRadius: 6
+  },
+  especification: {
+    fontSize: 14,
+    color: '#888'
+  },
+  descriptionWrapper: {
+    paddingLeft: 8
   }
 })
