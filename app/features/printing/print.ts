@@ -83,7 +83,6 @@ export const printOrder = async (
 
     const normalizedName = normalizeTextForPrinter(order.customer_name)
 
-    // Imprime logo si quieres
     await BluetoothEscposPrinter.printPic(logoBase64, { width: 576, left: 80 })
 
     await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT)
@@ -148,7 +147,7 @@ export const printOrder = async (
     )
 
     const total = order.items.reduce((acc, item) => {
-      return acc + item.quantity * parseFloat(item.price.toString())
+      return acc + parseFloat(item.price.toString())
     }, 0)
 
     await BluetoothEscposPrinter.printerAlign(
