@@ -57,9 +57,9 @@ const styles = StyleSheet.create({
     margin: 8,
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    minHeight: 100,
-    flexGrow: 1,
-    gap: 8
+    gap: 8,
+    width: '100%',
+    height: 120
   },
   cardText: {
     fontSize: 14,
