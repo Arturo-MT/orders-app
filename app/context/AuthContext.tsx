@@ -17,27 +17,31 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL
 const reducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
     case 'FETCH_USER':
-      return { ...state, user: null, loading: true }
+      return { ...state, loading: true }
     case 'SET_USER':
-      return { ...state, user: action.payload.user, loading: false }
+      return {
+        ...state,
+        user: action.payload.user,
+        loading: false,
+        loginError: null
+      }
     case 'REMOVE_USER':
-      EncryptedStorage.removeItem(USER_STORAGE_KEY)
-      return { ...state, user: null, loading: false }
+      return { ...state, user: null, loading: false, loginError: null }
     case 'SET_LOGIN_ERROR':
       return { ...state, loginError: action.payload.loginError, loading: false }
     default:
-      throw new Error('Action not supported')
+      return state
   }
 }
 
 const initialState = {
   user: null,
-  loginWithPassword: async () => {},
+  loginWithPassword: async () => ({} as any),
   logout: () => {},
   loading: true,
-  renewToken: async () => {},
+  renewToken: async () => ({} as any),
   loginError: null,
-  registerUser: async () => {}
+  registerUser: async () => ({} as any)
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -46,100 +50,91 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const router = useRouter()
   const [state, dispatch] = useReducer(reducer, initialState)
 
-  const handleUser = async (res: { data: UserResponseData | null }) => {
-    if (!res.data) {
-      console.error('Response is null')
-      return
-    }
-
-    const storedUser = await EncryptedStorage.getItem(USER_STORAGE_KEY)
-    const parsedUser: UserResponseData = storedUser
-      ? JSON.parse(storedUser)
-      : {}
-
-    const user: UserResponseData = { ...parsedUser, ...res.data }
-
-    await EncryptedStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user))
-    dispatch({ type: 'SET_USER', payload: { user } })
-  }
-
-  const loginWithPassword = useCallback(
-    async ({ email, password }: { email: string; password: string }) => {
-      dispatch({ type: 'FETCH_USER' })
-
+  const handleUser = useCallback(
+    async (res: { data: Partial<UserResponseData> | null }) => {
       try {
-        const result = await axios.post(`${API_URL}/auth/token/`, {
-          email,
-          password
-        })
-        await handleUser(result)
-        dispatch({ type: 'SET_LOGIN_ERROR', payload: { loginError: null } })
-      } catch (error) {
-        const detail =
-          (axios.isAxiosError(error) && error.response?.data?.detail) ??
-          'Error desconocido'
-        dispatch({ type: 'SET_LOGIN_ERROR', payload: { loginError: detail } })
-        console.error('Login error:', error)
+        if (!res?.data) return
+        const stored = await EncryptedStorage.getItem(USER_STORAGE_KEY)
+        const parsed = stored ? JSON.parse(stored) : {}
+        const user: UserResponseData = {
+          ...parsed,
+          ...res.data
+        } as UserResponseData
+        await EncryptedStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user))
+        dispatch({ type: 'SET_USER', payload: { user } })
+      } catch (e) {
+        console.error('handleUser error', e)
       }
     },
     []
   )
 
-  /*   const registerUser = useCallback(
-    async ({
-      username,
-      email,
-      password
-    }: {
-      username: string
-      email: string
-      password: string
-    }) => {
+  const loginWithPassword = useCallback(
+    async ({ email, password }: { email: string; password: string }) => {
       dispatch({ type: 'FETCH_USER' })
-
       try {
-        const result = await axios.post(`${API_URL}/users/create/`, {
-          username,
+        const result = await axios.post(`${API_URL}/auth/token/`, {
           email,
           password
         })
+        if (result.data?.access && result.data?.refresh) {
+          const userFromStorage = {
+            access: result.data.access,
+            refresh: result.data.refresh
+          }
+          await EncryptedStorage.setItem(
+            USER_STORAGE_KEY,
+            JSON.stringify(userFromStorage)
+          )
+          if (result.data.user) {
+            await handleUser({ data: result.data.user })
+          } else {
+            dispatch({ type: 'SET_LOGIN_ERROR', payload: { loginError: null } })
+          }
+          return
+        }
         await handleUser(result)
         dispatch({ type: 'SET_LOGIN_ERROR', payload: { loginError: null } })
-        router.replace('/tabs/new-order')
-      } catch (error) {
+      } catch (err) {
         const detail =
-          (error as any)?.response?.data?.detail ?? 'Error desconocido'
-        dispatch({ type: 'SET_LOGIN_ERROR', payload: { loginError: detail } })
+          (axios.isAxiosError(err) &&
+            (err.response?.data?.detail ?? err.response?.data)) ??
+          'Error desconocido'
+        dispatch({
+          type: 'SET_LOGIN_ERROR',
+          payload: { loginError: String(detail) }
+        })
+        console.error('Login error:', err)
       }
     },
-    [router]
-  ) */
+    [handleUser]
+  )
 
   const renewToken = useCallback(async () => {
-    const storedUser = await EncryptedStorage.getItem(USER_STORAGE_KEY)
-    const parsedUser = storedUser ? JSON.parse(storedUser) : null
-
-    if (!parsedUser?.refresh) {
-      console.warn('❌ No refresh token available')
-      dispatch({ type: 'REMOVE_USER' })
-      throw new Error('No refresh token available')
-    }
-
     try {
+      const stored = await EncryptedStorage.getItem(USER_STORAGE_KEY)
+      const parsed = stored ? JSON.parse(stored) : null
+      if (!parsed?.refresh) {
+        await EncryptedStorage.removeItem(USER_STORAGE_KEY)
+        dispatch({ type: 'REMOVE_USER' })
+        throw new Error('No refresh token available')
+      }
       const result = await axios.post(`${API_URL}/auth/token/refresh/`, {
-        refresh: parsedUser.refresh
+        refresh: parsed.refresh
       })
-
-      await handleUser(result)
-
-      console.log('✅ Token refreshed successfully')
-
+      const newUser = { ...parsed, access: result.data.access }
+      await EncryptedStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser))
+      dispatch({ type: 'SET_USER', payload: { user: newUser } })
       return { access: result.data.access }
     } catch (error) {
-      console.error('❌ Failed to refresh token:', error)
+      console.error('Failed to refresh token:', error)
+      try {
+        await EncryptedStorage.removeItem(USER_STORAGE_KEY)
+      } catch {}
+      dispatch({ type: 'REMOVE_USER' })
       throw error
     }
-  }, [dispatch])
+  }, [])
 
   const verifyToken = useCallback(async (token: string) => {
     if (!token) return false
@@ -152,32 +147,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [])
 
   const validateUser = useCallback(async () => {
-    const storedUserString = await EncryptedStorage.getItem(USER_STORAGE_KEY)
-    if (!storedUserString) {
+    try {
+      const stored = await EncryptedStorage.getItem(USER_STORAGE_KEY)
+      if (!stored) {
+        dispatch({ type: 'REMOVE_USER' })
+        return
+      }
+      const user = JSON.parse(stored)
+      const accessValid = await verifyToken(user.access)
+      if (accessValid) {
+        dispatch({ type: 'SET_USER', payload: { user } })
+        return
+      }
+      const refreshValid = await verifyToken(user.refresh)
+      if (refreshValid) {
+        await renewToken()
+        return
+      }
+      try {
+        await EncryptedStorage.removeItem(USER_STORAGE_KEY)
+      } catch {}
       dispatch({ type: 'REMOVE_USER' })
-      return
+    } catch (e) {
+      console.error(e)
+      dispatch({ type: 'REMOVE_USER' })
     }
-
-    const user = JSON.parse(storedUserString)
-    const isAccessTokenValid = await verifyToken(user.access)
-    if (isAccessTokenValid) {
-      dispatch({ type: 'SET_USER', payload: { user } })
-      return
-    }
-
-    const isRefreshTokenValid = await verifyToken(user.refresh)
-    if (isRefreshTokenValid) {
-      return renewToken()
-    }
-
-    dispatch({ type: 'REMOVE_USER' })
   }, [renewToken, verifyToken])
 
   useEffect(() => {
     validateUser()
   }, [validateUser])
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await EncryptedStorage.removeItem(USER_STORAGE_KEY)
+    } catch {}
     dispatch({ type: 'REMOVE_USER' })
     router.replace('/auth/login')
   }, [router])
@@ -190,16 +194,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       renewToken,
       loading: state.loading,
       loginError: state.loginError
-      // registerUser
     }),
     [
       state.user,
       state.loading,
-      renewToken,
-      logout,
+      state.loginError,
       loginWithPassword,
-      state.loginError
-      // registerUser
+      logout,
+      renewToken
     ]
   )
 
