@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef, useEffect } from 'react'
 import {
   View,
   Text,
@@ -22,6 +22,21 @@ interface Props {
 }
 
 export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
+  // refs para auto-scroll
+  const scrollRef = useRef<ScrollView | null>(null)
+  const prevCountRef = useRef<number>(order.items.length)
+  const shouldScrollRef = useRef<boolean>(false)
+
+  useEffect(() => {
+    const prev = prevCountRef.current
+    const curr = order.items.length
+    if (curr > prev) {
+      // marcamos que queremos scrollear en el siguiente reflow del contenido
+      shouldScrollRef.current = true
+    }
+    prevCountRef.current = curr
+  }, [order.items.length])
+
   const handleUpdateItem = (index: number, updates: Partial<OrderItem>) => {
     const updatedItems = [...order.items]
     const safeUpdates = {
@@ -126,7 +141,21 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
       </View>
 
       <View style={styles.scrollWrapper}>
-        <ScrollView contentContainerStyle={styles.orderItemContainer}>
+        <ScrollView
+          ref={(r) => {
+            // asignación segura del ref (puede ser null)
+            // @ts-ignore
+            scrollRef.current = r
+          }}
+          contentContainerStyle={styles.orderItemContainer}
+          // cuando el contenido cambie de tamaño, si marcamos scroll hacemos scrollToEnd
+          onContentSizeChange={() => {
+            if (shouldScrollRef.current) {
+              scrollRef.current?.scrollToEnd({ animated: true })
+              shouldScrollRef.current = false
+            }
+          }}
+        >
           {order.items.map((item, index) => (
             <OrderItemComponent
               key={item.id}
