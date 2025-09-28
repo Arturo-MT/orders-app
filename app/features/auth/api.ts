@@ -2,7 +2,7 @@ import axios from 'axios'
 import EncryptedStorage from 'react-native-encrypted-storage'
 
 const api = axios.create({
-  baseURL: 'http:192.168.50.163:8000/api'
+  baseURL: process.env.EXPO_PUBLIC_API_URL
 })
 
 let isRefreshing = false
