@@ -85,10 +85,8 @@ export default function ProductsPanel({
     { flexDirection: isPortrait ? ('row' as const) : ('column' as const) }
   ]
 
-  const cardStyle = [
-    styles.card,
-    { width: isPortrait ? ('25%' as const) : ('48%' as const) }
-  ]
+  const columns = isPortrait ? 3 : 4
+  const columnWidth = 100 / columns
 
   const CategorySelectorScrollViewStyle = {
     flexDirection: isPortrait ? ('row' as const) : ('column' as const),
@@ -147,21 +145,40 @@ export default function ProductsPanel({
           </ScrollView>
         </View>
 
-        <View style={styles.productsWrapper}>
-          <ScrollView contentContainerStyle={styles.productsContainer}>
+        <View style={{ flex: 1 }}>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={[
+              styles.productsContainer,
+              {
+                alignItems: 'flex-start'
+              }
+            ]}
+            showsVerticalScrollIndicator
+          >
             {(isProductsLoading || isProductsRefetching) && (
               <ActivityIndicator size='large' color='#6200ea' />
             )}
+
             {!isProductsLoading && filteredProductsBySearch.length === 0 && (
               <Text style={{ fontSize: 16, color: '#000' }}>
                 No hay productos en esta búsqueda
               </Text>
             )}
+
             {!isProductsLoading &&
               !isProductsRefetching &&
               filteredProductsBySearch.length > 0 &&
               filteredProductsBySearch.map((item) => (
-                <View key={item.id} style={cardStyle}>
+                <View
+                  key={item.id}
+                  style={{
+                    flexBasis: `${columnWidth}%`,
+                    maxWidth: `${columnWidth}%`,
+                    paddingHorizontal: 6,
+                    paddingVertical: 6
+                  }}
+                >
                   <Card
                     data={item}
                     onPress={() => handlePress(item)}
@@ -199,16 +216,12 @@ const styles = StyleSheet.create({
   selectedCategoryText: {
     color: '#fff'
   },
-  productsWrapper: {
-    flex: 2
-  },
   productsContainer: {
-    padding: 10,
     flexDirection: 'row',
-    flexWrap: 'wrap'
+    flexWrap: 'wrap',
+    paddingRight: 10
   },
   card: {
-    overflow: 'hidden',
     flexGrow: 1
   },
   searchInput: {
