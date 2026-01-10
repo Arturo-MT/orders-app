@@ -44,7 +44,7 @@ if (getRNMinorVersion() >= 75) {
   }
 }
 
-rootProject.name = 'TacoLoco'
+rootProject.name = 'Taco Loco'
 
 dependencyResolutionManagement {
   versionCatalogs {
