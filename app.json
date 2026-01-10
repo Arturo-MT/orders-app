@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ece2d0fff"
+      "backgroundColor": "#ECE2D0"
     },
     "ios": {
       "bundleIdentifier": "com.signemammoth.tacoloco",
@@ -22,7 +22,7 @@
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon_foreground.png",
-        "backgroundColor": "#ece2d0"
+        "backgroundColor": "#ECE2D0"
       }
     },
     "web": {
