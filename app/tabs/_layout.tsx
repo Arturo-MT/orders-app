@@ -5,16 +5,16 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#6200ea',
+        tabBarActiveTintColor: '#130918',
         tabBarInactiveTintColor: '#888',
         tabBarStyle: {
-          backgroundColor: '#fff',
+          backgroundColor: '#ece2d0',
           borderTopColor: '#eee'
         },
         headerStyle: {
-          backgroundColor: '#6200ea'
+          backgroundColor: '#f1aa1c'
         },
-        headerTintColor: '#fff'
+        headerTintColor: '#130918'
       }}
     >
       <Tabs.Screen
@@ -32,6 +32,15 @@ export default function TabLayout() {
           title: 'Dashboard',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name='bar-chart-outline' size={size} color={color} />
+          )
+        }}
+      />
+      <Tabs.Screen
+        name='summary'
+        options={{
+          title: 'Resumen',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name='list-outline' size={size} color={color} />
           )
         }}
       />
