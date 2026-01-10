@@ -100,7 +100,7 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
           <Ionicons
             name='print'
             size={22}
-            color='#fff'
+            color='#130918'
             style={{ marginRight: 6 }}
           />
           <Text style={styles.printButtonText}>Imprimir</Text>
@@ -136,7 +136,7 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
           ]}
           disabled={order.items.length === 0}
         >
-          <Ionicons name='trash' size={22} color='#fff' />
+          <Ionicons name='trash' size={22} style={styles.buttonTrashIcon} />
         </TouchableOpacity>
       </View>
 
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   wrapper: {
     flex: 2,
     padding: 10,
-    backgroundColor: '#f0f0f0'
+    backgroundColor: '#ece2d0'
   },
   typeOrderWrapper: {
     flexDirection: 'row',
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
   },
   printButton: {
     flex: 1,
-    backgroundColor: '#6200ea',
+    backgroundColor: '#f1aa1c',
     borderRadius: 5,
     padding: 4,
     flexDirection: 'row',
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     padding: 4,
-    backgroundColor: '#e53935',
+    backgroundColor: '#F56A57',
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center'
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     opacity: 0.6
   },
   printButtonText: {
-    color: '#fff',
+    color: '#130918',
     fontWeight: 'bold'
   },
   scrollWrapper: {
@@ -228,8 +228,10 @@ const styles = StyleSheet.create({
   },
   orderItemContainer: {
     padding: 10,
-    backgroundColor: '#fff',
-    borderRadius: 5,
+    backgroundColor: '#ece2d0',
     flexGrow: 1
+  },
+  buttonTrashIcon: {
+    color: '#130918'
   }
 })

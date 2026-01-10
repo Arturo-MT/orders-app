@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 12,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: '#130918',
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 4,
@@ -72,15 +72,15 @@ const styles = StyleSheet.create({
   },
   priceText: {
     fontSize: 14,
-    color: '#6200ea',
-    backgroundColor: '#f3e8ff',
+    color: '#130918',
+    backgroundColor: '#ece2d0',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
     fontWeight: '600'
   },
   badge: {
-    backgroundColor: '#e0e0e0',
+    backgroundColor: '#ece2d0',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,

@@ -339,7 +339,7 @@ const styles = {
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#fff'
+    backgroundColor: '#ece2d0'
   },
   bluetoothStatusContainer: {
     marginBottom: 10

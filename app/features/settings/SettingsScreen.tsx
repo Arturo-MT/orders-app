@@ -4,7 +4,7 @@ import BluetoothSettings from './BluetoothSettings'
 
 export default function SettingsScreen() {
   return (
-    <View style={{ padding: 20 }}>
+    <View style={{ padding: 20, flex: 1, backgroundColor: '#ece2d0' }}>
       <BluetoothSettings />
     </View>
   )

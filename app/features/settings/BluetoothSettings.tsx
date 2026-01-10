@@ -57,10 +57,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 10
+    marginBottom: 10,
+    color: '#130918'
   },
   text: {
     fontSize: 16,
-    marginBottom: 10
+    marginBottom: 10,
+    color: '#130918'
   }
 })

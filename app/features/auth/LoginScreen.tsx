@@ -7,7 +7,10 @@ import {
   Alert,
   Image,
   TouchableOpacity,
-  ActivityIndicator
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView
 } from 'react-native'
 import { useAuth } from '../../context/AuthContext'
 import { Href, router } from 'expo-router'
@@ -20,20 +23,13 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false)
   const { width, height } = useWindowDimensions()
   const isPortrait = height > width
-  const containerStyle = [
-    styles.container,
-    { flexDirection: isPortrait ? ('column' as const) : ('row' as const) }
-  ]
 
   const handleLogin = async () => {
     try {
       setLoading(true)
       await loginWithPassword({ email, password })
-      setTimeout(() => {
-        router.replace('/tabs/pos' as Href)
-      }, 0)
+      router.replace('/tabs/pos' as Href)
     } catch (err) {
-      console.error('Login error:', err)
       Alert.alert('Login fallido', 'Verifica tus credenciales')
     } finally {
       setLoading(false)
@@ -41,99 +37,113 @@ export default function LoginScreen() {
   }
 
   return (
-    <View style={containerStyle}>
-      <Image
-        source={require('../../../assets/images/icon.png')}
-        style={styles.headerImage}
-        resizeMode='contain'
-      />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps='handled'
+      >
+        <View style={styles.container}>
+          <Image
+            source={require('../../../assets/images/icon.png')}
+            style={styles.headerImage}
+            resizeMode='contain'
+          />
 
-      <View style={styles.formContainer}>
-        <Text style={styles.label}>Correo electrónico</Text>
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize='none'
-          style={styles.input}
-          placeholder='ejemplo@correo.com'
-          placeholderTextColor='#aaa'
-        />
+          <View style={styles.formContainer}>
+            <Text style={styles.label}>Correo electrónico</Text>
+            <TextInput
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize='none'
+              style={styles.input}
+              placeholder='ejemplo@correo.com'
+              placeholderTextColor='#aaa'
+            />
 
-        <Text style={styles.label}>Contraseña</Text>
-        <TextInput
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          style={styles.input}
-          placeholder='********'
-          placeholderTextColor='#aaa'
-        />
+            <Text style={styles.label}>Contraseña</Text>
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              style={styles.input}
+              placeholder='********'
+              placeholderTextColor='#aaa'
+            />
 
-        <TouchableOpacity
-          onPress={handleLogin}
-          style={[styles.button, loading && styles.buttonDisabled]}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color='#fff' />
-          ) : (
-            <Text style={styles.buttonText}>Ingresar</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </View>
+            <TouchableOpacity
+              onPress={handleLogin}
+              style={[styles.button, loading && styles.buttonDisabled]}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color='#ece2d0' />
+              ) : (
+                <Text style={styles.buttonText}>Ingresar</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     padding: 20,
-    flex: 1,
-    backgroundColor: '#fff'
-  },
-  formContainer: {
-    flex: 1,
+    backgroundColor: '#ECE2D0',
     justifyContent: 'center'
   },
+
   headerImage: {
-    height: 400,
-    width: 400,
+    height: 220,
+    width: 220,
     alignSelf: 'center',
-    backgroundColor: '#f0f0f0',
-    marginBottom: 30
+    marginBottom: 24
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#6200ea',
-    textAlign: 'center',
-    marginBottom: 30
+
+  formContainer: {
+    width: '100%',
+    alignSelf: 'center'
   },
+
   label: {
     fontSize: 16,
-    marginBottom: 5,
-    color: '#333'
+    marginBottom: 6,
+    color: '#130918',
+    fontWeight: '600'
   },
+
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 6,
-    padding: 12,
-    marginBottom: 15,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 16,
     fontSize: 16,
-    color: '#000'
+    color: '#130918',
+    backgroundColor: '#fff'
   },
+
   button: {
-    backgroundColor: '#6200ea',
+    backgroundColor: '#f1aa1c',
     paddingVertical: 14,
     borderRadius: 6,
-    alignItems: 'center'
+    alignItems: 'center',
+    marginTop: 8
   },
+
   buttonDisabled: {
-    backgroundColor: '#aaa'
+    opacity: 0.6
   },
+
   buttonText: {
-    color: '#fff',
+    color: '#130918',
     fontSize: 16,
     fontWeight: 'bold'
   }

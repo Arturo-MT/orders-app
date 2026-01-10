@@ -48,11 +48,11 @@ export default function OrderItemComponent({
               }
             }}
           >
-            <Ionicons name='chatbubble-outline' size={22} color='#007bff' />
+            <Ionicons name='chatbubble-outline' size={22} color='#130918' />
           </TouchableOpacity>
 
           <TouchableOpacity onPress={onRemove}>
-            <Ionicons name='trash-outline' size={22} color='#e53935' />
+            <Ionicons name='trash-outline' size={22} color='#130918' />
           </TouchableOpacity>
         </View>
       </View>
@@ -75,7 +75,7 @@ export default function OrderItemComponent({
             style={{ marginLeft: 8 }}
             disabled={item.quantity <= 1}
           >
-            <Ionicons name='remove-circle-outline' size={22} color='#e53935' />
+            <Ionicons name='remove-circle-outline' size={22} color='#130918' />
           </TouchableOpacity>
           <TextInput
             style={[styles.input, { width: 40 }]}
@@ -97,7 +97,7 @@ export default function OrderItemComponent({
             }
             style={{ marginLeft: 8 }}
           >
-            <Ionicons name='add-circle-outline' size={22} color='#007bff' />
+            <Ionicons name='add-circle-outline' size={22} color='#130918' />
           </TouchableOpacity>
         </View>
 
@@ -155,9 +155,9 @@ export default function OrderItemComponent({
                     onUpdate({ description: tempComment })
                     setModalVisible(false)
                   }}
-                  style={[styles.modalButton, { backgroundColor: '#6200ea' }]}
+                  style={[styles.modalButton, { backgroundColor: '#f1aa1c' }]}
                 >
-                  <Text style={{ color: '#fff' }}>Guardar</Text>
+                  <Text style={{ color: '#130918' }}>Guardar</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -197,7 +197,8 @@ const styles = StyleSheet.create({
     padding: 2,
     borderRadius: 5,
     minWidth: 50,
-    textAlign: 'center'
+    textAlign: 'center',
+    backgroundColor: '#fff'
   },
   quantityWrapper: {
     flexDirection: 'row',
@@ -223,10 +224,10 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)'
+    backgroundColor: 'rgba(0, 0, 0, 0.5)'
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: '#ece2d0',
     padding: 16,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12
@@ -256,7 +257,7 @@ const styles = StyleSheet.create({
   },
   especification: {
     fontSize: 14,
-    color: '#888'
+    color: '#130918'
   },
   descriptionWrapper: {
     paddingLeft: 8

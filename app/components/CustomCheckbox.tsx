@@ -22,7 +22,7 @@ export default function CustomCheckbox({
       <Ionicons
         name={value ? 'checkbox-outline' : 'square-outline'}
         size={28}
-        color={value ? '#6200ea' : '#aaa'}
+        color={'#130918'}
       />
     </TouchableOpacity>
   )

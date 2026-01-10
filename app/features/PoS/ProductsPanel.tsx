@@ -117,7 +117,7 @@ export default function ProductsPanel({
             contentContainerStyle={CategorySelectorScrollViewStyle}
           >
             {(isCategoriesLoading || isCategoriesRefetching) && (
-              <ActivityIndicator size='large' color='#6200ea' />
+              <ActivityIndicator size='large' color='#130918' />
             )}
 
             {!isCategoriesLoading &&
@@ -157,11 +157,11 @@ export default function ProductsPanel({
             showsVerticalScrollIndicator
           >
             {(isProductsLoading || isProductsRefetching) && (
-              <ActivityIndicator size='large' color='#6200ea' />
+              <ActivityIndicator size='large' color='#130918' />
             )}
 
             {!isProductsLoading && filteredProductsBySearch.length === 0 && (
-              <Text style={{ fontSize: 16, color: '#000' }}>
+              <Text style={{ fontSize: 16, color: '#130918' }}>
                 No hay productos en esta búsqueda
               </Text>
             )}
@@ -202,19 +202,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: '#ece2d0',
     width: 'auto',
     alignItems: 'center'
   },
   selectedCategory: {
-    backgroundColor: '#6200ea'
+    backgroundColor: '#f1aa1c'
   },
   categoryText: {
     fontSize: 16,
-    color: '#000'
+    color: '#130918'
   },
   selectedCategoryText: {
-    color: '#fff'
+    color: '#130918'
   },
   productsContainer: {
     flexDirection: 'row',
@@ -239,6 +239,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row'
   },
   wrapper: {
-    flex: 2
+    flex: 2,
+    backgroundColor: '#ece2d0'
   }
 })

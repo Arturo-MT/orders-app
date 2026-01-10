@@ -35,70 +35,18 @@ export default function DashboardScreen() {
     }, [refetch])
   )
 
-  const summary = dashboardData?.results?.summary
   const orders = dashboardData?.results?.orders || []
 
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size='large' color='#6200ea' />
+        <ActivityIndicator size='large' color='#130918' />
       </View>
     )
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.summary}>
-        <Text style={styles.summaryTitle}>Resumen</Text>
-
-        <View style={styles.summaryGrid}>
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Hoy</Text>
-            {isFetching ? (
-              <>
-                <View style={styles.skeleton} />
-                <View style={styles.skeleton} />
-              </>
-            ) : (
-              <>
-                <Text>{summary?.today.total_orders} órdenes</Text>
-                <Text>${summary?.today.total_revenue}</Text>
-              </>
-            )}
-          </View>
-
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Mes</Text>
-            {isFetching ? (
-              <>
-                <View style={styles.skeleton} />
-                <View style={styles.skeleton} />
-              </>
-            ) : (
-              <>
-                <Text>{summary?.month.total_orders} órdenes</Text>
-                <Text>${summary?.month.total_revenue}</Text>
-              </>
-            )}
-          </View>
-
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Año</Text>
-            {isFetching ? (
-              <>
-                <View style={styles.skeleton} />
-                <View style={styles.skeleton} />
-              </>
-            ) : (
-              <>
-                <Text>{summary?.year.total_orders} órdenes</Text>
-                <Text>${summary?.year.total_revenue}</Text>
-              </>
-            )}
-          </View>
-        </View>
-      </View>
-
       <TextInput
         placeholder='Buscar por cliente'
         style={styles.input}
@@ -142,7 +90,7 @@ export default function DashboardScreen() {
           disabled={page <= 1}
           style={[styles.pageButton, page <= 1 && styles.disabledButton]}
         >
-          <Ionicons name='chevron-back' size={20} color='#fff' />
+          <Ionicons name='chevron-back' size={20} color='#130918' />
         </TouchableOpacity>
 
         <Text style={styles.pageText}>Página {page}</Text>
@@ -155,7 +103,7 @@ export default function DashboardScreen() {
             !dashboardData?.next && styles.disabledButton
           ]}
         >
-          <Ionicons name='chevron-forward' size={20} color='#fff' />
+          <Ionicons name='chevron-forward' size={20} color='#130918' />
         </TouchableOpacity>
       </View>
     </View>
@@ -165,12 +113,14 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16
+    padding: 16,
+    backgroundColor: '#ece2d0'
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 16
+    marginBottom: 16,
+    color: '#130918'
   },
   input: {
     borderWidth: 1,
@@ -178,7 +128,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
-    marginBottom: 16
+    marginBottom: 16,
+    backgroundColor: '#fff'
   },
   summary: {
     marginBottom: 20
@@ -198,7 +149,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 10,
     marginBottom: 10,
-    shadowColor: '#000',
+    shadowColor: '#130918',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -209,10 +160,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 4,
-    color: '#6200ea'
+    color: '#130918'
   },
   orderItem: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
     padding: 12,
     borderRadius: 8,
     marginBottom: 10
@@ -222,14 +173,15 @@ const styles = StyleSheet.create({
     fontWeight: '500'
   },
   total: {
-    color: '#333'
+    color: '#130918'
   },
   date: {
     fontSize: 12,
-    color: '#888'
+    color: '#130918',
+    opacity: 0.7
   },
   pageButton: {
-    backgroundColor: '#6200ea',
+    backgroundColor: '#f1aa1c',
     padding: 10,
     borderRadius: 8,
     alignItems: 'center',
@@ -253,12 +205,12 @@ const styles = StyleSheet.create({
   },
   skeleton: {
     height: 16,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: '#ece2d0',
     borderRadius: 4,
     marginBottom: 8
   },
   orderSkeleton: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
     padding: 12,
     borderRadius: 8,
     marginBottom: 10

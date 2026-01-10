@@ -111,7 +111,7 @@ export default function OrderCard({ order }: Props) {
         {expanded && (
           <View style={styles.actions}>
             <TouchableOpacity onPress={handlePrintOrder}>
-              <Ionicons name='print-outline' size={40} color='#6200ea' />
+              <Ionicons name='print-outline' size={40} color='#130918' />
             </TouchableOpacity>
           </View>
         )}
@@ -132,7 +132,7 @@ export default function OrderCard({ order }: Props) {
       {expanded && (
         <View style={styles.details}>
           {isLoading ? (
-            <ActivityIndicator size='small' color='#6200ea' />
+            <ActivityIndicator size='small' color='#130918' />
           ) : (
             <>
               <Text style={styles.orderData}>
@@ -167,7 +167,7 @@ export default function OrderCard({ order }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
     padding: 12,
     borderRadius: 8,
     marginBottom: 10
@@ -179,11 +179,11 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#6200ea'
+    color: '#130918'
   },
   total: {
     fontWeight: '600',
-    color: '#6200ea',
+    color: '#130918',
     fontSize: 14,
     marginBottom: 4,
     textAlign: 'right'
@@ -194,10 +194,9 @@ const styles = StyleSheet.create({
   },
   actions: {
     justifyContent: 'center',
-    borderColor: '#6200ea',
-    borderWidth: 2,
     padding: 4,
-    borderRadius: 8
+    borderRadius: 8,
+    backgroundColor: '#f1aa1c'
   },
   details: {
     marginTop: 8
@@ -216,7 +215,7 @@ const styles = StyleSheet.create({
   orderData: {
     fontSize: 15,
     fontWeight: '500',
-    color: '#6200ea',
+    color: '#130918',
     marginBottom: 6
   },
   productDescription: {
