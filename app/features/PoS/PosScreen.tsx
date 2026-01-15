@@ -5,13 +5,7 @@ import { useProductsQuery } from '@/hooks/api/products'
 import { useUserQuery } from '@/hooks/api/users'
 import { useOrdersMutation } from '@/hooks/api/orders'
 import { useFocusEffect } from '@react-navigation/native'
-import {
-  Category,
-  Order,
-  OrderResponse,
-  Product,
-  ProductData
-} from '@/types/types'
+import { Category, Order, OrderResponse, Product } from '@/types/types'
 import { printOrder } from '../printing/print'
 import ProductsPanel from './ProductsPanel'
 import OrderPanel from './OrderPanel'
@@ -57,14 +51,14 @@ export default function PosScreen() {
   ]
 
   const productsList: Product[] =
-    productsData?.map((product: ProductData) => ({
+    productsData?.map((product) => ({
       id: product.id,
       name: product.name,
       category:
-        categoriesData?.find((c: Category) => c.id === product.category)
-          ?.name || '',
+        categoriesData?.find((c: Category) => c.id === product.category_id)
+          ?.name ?? '',
       price: product.price
-    })) || []
+    })) ?? []
 
   const filteredProducts =
     selectedCategory === 'Todos'
@@ -93,7 +87,7 @@ export default function PosScreen() {
       items: [
         ...prev.items,
         {
-          id: prev.items.length,
+          id: `${Date.now()}-${product.id}`,
           name: product.name,
           product: product.id,
           quantity: 1,
