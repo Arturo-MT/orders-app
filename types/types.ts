@@ -1,7 +1,7 @@
-import { AxiosInstance } from 'axios'
+import { SupabaseClient } from '@supabase/supabase-js'
 
 export interface Product {
-  id: number
+  id: string
   name: string
   category: string
   price: number
@@ -13,8 +13,8 @@ export interface StoreConfig {
 }
 
 export interface OrderItem {
-  id: number
-  product: number
+  id: string
+  product: string
   name: string
   quantity: number
   price: number
@@ -31,7 +31,7 @@ export interface Order {
 }
 
 export interface OrderResponse {
-  id: number
+  id: string
   customer_name: string
   type: string
   items: OrderItem[]
@@ -49,14 +49,14 @@ export interface OrderUpdate {
 }
 
 export interface Category {
-  id: number
+  id: string
   name: string
 }
 
 export interface ProductData {
-  id: number
+  id: string
   name: string
-  category: number
+  category: string
   price: number
 }
 
@@ -72,7 +72,6 @@ export interface AuthContextType {
     password: string
   }) => Promise<void>
   logout: () => void
-  renewToken: () => Promise<{ access: string }>
   loading: boolean
   loginError: string | null
   registerUser?: (details: {
@@ -101,5 +100,5 @@ export interface UserResponseData {
 }
 
 export interface FetchContextType {
-  client: AxiosInstance
+  client: SupabaseClient
 }
