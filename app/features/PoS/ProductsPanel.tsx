@@ -11,6 +11,8 @@ import {
 import Card from '@/app/components/Card'
 import { Product } from '@/types/types'
 import { useWindowDimensions } from 'react-native'
+import CategorySkeleton from './CategorySkeleton'
+import ProductGridSkeleton from './ProductGridSkeleton'
 
 export default function ProductsPanel({
   categoriesList,
@@ -117,7 +119,7 @@ export default function ProductsPanel({
             contentContainerStyle={CategorySelectorScrollViewStyle}
           >
             {(isCategoriesLoading || isCategoriesRefetching) && (
-              <ActivityIndicator size='large' color='#130918' />
+              <CategorySkeleton />
             )}
 
             {!isCategoriesLoading &&
@@ -157,7 +159,7 @@ export default function ProductsPanel({
             showsVerticalScrollIndicator
           >
             {(isProductsLoading || isProductsRefetching) && (
-              <ActivityIndicator size='large' color='#130918' />
+              <ProductGridSkeleton columns={columns} />
             )}
 
             {!isProductsLoading && filteredProductsBySearch.length === 0 && (
@@ -195,8 +197,7 @@ export default function ProductsPanel({
 
 const styles = StyleSheet.create({
   categorySelector: {
-    gap: 10,
-    padding: 10
+    gap: 10
   },
   categoryButton: {
     paddingHorizontal: 15,

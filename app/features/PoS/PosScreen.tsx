@@ -51,14 +51,17 @@ export default function PosScreen() {
   ]
 
   const productsList: Product[] =
-    productsData?.map((product) => ({
-      id: product.id,
-      name: product.name,
-      category:
-        categoriesData?.find((c: Category) => c.id === product.category_id)
-          ?.name ?? '',
-      price: product.price
-    })) ?? []
+    productsData
+      ?.filter((product) =>
+        categoriesData?.some((c) => c.id === product.category_id)
+      )
+      .map((product) => ({
+        id: product.id,
+        name: product.name,
+        category:
+          categoriesData?.find((c) => c.id === product.category_id)?.name ?? '',
+        price: product.price
+      })) ?? []
 
   const filteredProducts =
     selectedCategory === 'Todos'
