@@ -14,8 +14,6 @@ export async function categoriesQuery({
     .eq('store_id', storeId)
     .order('name', { ascending: true })
 
-  console.log('Categories data:', data, 'Store ID:', storeId)
-
   if (error) {
     throw error
   }
