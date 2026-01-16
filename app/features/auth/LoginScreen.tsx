@@ -14,15 +14,12 @@ import {
 } from 'react-native'
 import { useAuth } from '../../context/AuthContext'
 import { Href, router } from 'expo-router'
-import { useWindowDimensions } from 'react-native'
 
 export default function LoginScreen() {
   const { loginWithPassword } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const { width, height } = useWindowDimensions()
-  const isPortrait = height > width
 
   const handleLogin = async () => {
     try {

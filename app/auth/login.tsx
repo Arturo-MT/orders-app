@@ -1,6 +1,6 @@
 import React from 'react'
-import LoginScreen from '../features/auth/LoginScreen'
+import SupabaseLoginScreen from '../features/auth/SupabaseLoginScreen'
 
 export default function LoginContainer() {
-  return <LoginScreen />
+  return <SupabaseLoginScreen />
 }
