@@ -2,17 +2,24 @@ import { SupabaseClient } from '@supabase/supabase-js'
 
 export async function categoriesQuery({
   client,
-  storeId
+  storeId,
+  showAll = false
 }: {
   client: SupabaseClient
   storeId: string
+  showAll?: boolean
 }) {
-  const { data, error } = await client
+  let query = client
     .from('product_category')
     .select('*')
-    .eq('is_active', true)
     .eq('store_id', storeId)
     .order('name', { ascending: true })
+
+  if (!showAll) {
+    query = query.eq('is_active', true)
+  }
+
+  const { data, error } = await query
 
   if (error) {
     throw error
