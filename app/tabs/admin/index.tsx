@@ -31,6 +31,13 @@ export default function AdminHomeScreen() {
           <Ionicons name='restaurant-outline' size={36} color='#130918' />
           <Text style={styles.title}>Mesas</Text>
         </Pressable>
+        <Pressable
+          style={styles.card}
+          onPress={() => router.push('/tabs/admin/users')}
+        >
+          <Ionicons name='people-outline' size={36} color='#130918' />
+          <Text style={styles.title}>Usuarios</Text>
+        </Pressable>
       </View>
     </View>
   )
