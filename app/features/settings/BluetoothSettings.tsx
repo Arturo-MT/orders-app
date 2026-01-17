@@ -1,16 +1,17 @@
 import React from 'react'
+import { View, Text, StyleSheet, ToastAndroid } from 'react-native'
 import PrinterSelector from '../printing/PrinterSelector'
-import { ToastAndroid, StyleSheet } from 'react-native'
 import {
   useInvalidateStore,
   useStoreQuery,
   useStoreUpdateMutation
 } from '@/hooks/api/store'
-import { Text } from 'react-native'
 
 export default function BluetoothSettings() {
   const { data: storeData, isLoading: isLoadingStoreConfig } = useStoreQuery()
+
   const invalidate = useInvalidateStore()
+
   const { mutate: saveStoreConfig } = useStoreUpdateMutation({
     onSuccess: () => {
       invalidate()
@@ -19,50 +20,51 @@ export default function BluetoothSettings() {
         ToastAndroid.SHORT
       )
     },
-    onError: (error: any) => {
-      console.error(
-        'Error guardando configuración:',
-        error?.response?.data || error
-      )
+    onError: () => {
       ToastAndroid.show('Error al guardar la configuración', ToastAndroid.SHORT)
     }
   })
 
-  const handleSelectPrinter = async (device: {
-    name: string
-    address: string
-  }) => {
-    const payload = {
+  const handleSelectPrinter = (device: { name: string; address: string }) => {
+    saveStoreConfig({
       printer_name: device.name,
       printer_address: device.address
-    }
-    console.log('Guardando configuración de impresora:', payload)
-    await saveStoreConfig(payload)
+    })
   }
 
   return (
-    <>
-      <Text style={styles.title}>Configuración de Bluetooth</Text>
-      <Text style={styles.text}>
+    <View style={styles.container}>
+      <Text style={styles.title}>Bluetooth</Text>
+
+      <Text style={styles.subtitle}>
         {isLoadingStoreConfig
           ? 'Cargando configuración...'
           : `Impresora actual: ${storeData?.printer_name || 'No configurada'}`}
       </Text>
-      <PrinterSelector onSelect={handleSelectPrinter} />
-    </>
+
+      <View style={styles.selectorWrapper}>
+        <PrinterSelector onSelect={handleSelectPrinter} />
+      </View>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
+  container: {
+    gap: 6
+  },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
+    fontSize: 18,
+    fontWeight: '600',
     color: '#130918'
   },
-  text: {
-    fontSize: 16,
-    marginBottom: 10,
+  subtitle: {
+    fontSize: 14,
     color: '#130918'
+  },
+  selectorWrapper: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    maxHeight: 150
   }
 })

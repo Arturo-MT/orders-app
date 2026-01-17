@@ -10,6 +10,7 @@ import {
 import { BluetoothManager } from 'react-native-bluetooth-escpos-printer'
 import { requestBluetoothPermissions } from './print'
 import { Device } from '@/types/types'
+import Skeleton from '@/app/components/Skeleton'
 
 interface Props {
   onSelect: (device: Device) => void
@@ -78,9 +79,8 @@ export default function PrinterSelector({ onSelect }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Selecciona una impresora:</Text>
       {loading ? (
-        <ActivityIndicator size='large' />
+        <Skeleton width={'100%'} height={40} />
       ) : (
         <FlatList
           data={devices}
@@ -93,9 +93,7 @@ export default function PrinterSelector({ onSelect }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20
-  },
+  container: {},
   title: {
     fontSize: 18,
     fontWeight: 'bold',

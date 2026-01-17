@@ -1,12 +1,25 @@
 import React from 'react'
-import { View, Text, StyleSheet } from 'react-native'
+import { View, Text, StyleSheet, ScrollView } from 'react-native'
 import BluetoothSettings from './BluetoothSettings'
 import { useUserQuery } from '@/hooks/api/users'
 import { useAuth } from '@/app/context/AuthContext'
+import { Pressable } from 'react-native'
 
 export default function SettingsScreen() {
   const { data, isLoading, error } = useUserQuery()
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
+  const [loadingLogout, setLoadingLogout] = React.useState(false)
+
+  const handleLogout = async () => {
+    setLoadingLogout(true)
+    try {
+      await logout()
+    } catch (err) {
+      console.error('Error during logout:', err)
+    } finally {
+      setLoadingLogout(false)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -41,8 +54,24 @@ export default function SettingsScreen() {
         <Text style={styles.value}>{store_member_data?.role ?? '—'}</Text>
       </View>
 
-      <View style={styles.section}>
+      <View style={[styles.section, styles.bluetoothSection]}>
         <BluetoothSettings />
+      </View>
+
+      <View style={styles.section}>
+        <Pressable
+          style={
+            loadingLogout
+              ? [styles.logoutButton, { opacity: 0.6 }]
+              : styles.logoutButton
+          }
+          onPress={handleLogout}
+          disabled={loadingLogout}
+        >
+          <Text style={styles.logoutText}>
+            {loadingLogout ? 'Cerrando sesión...' : 'Cerrar sesión'}
+          </Text>
+        </Pressable>
       </View>
     </View>
   )
@@ -75,5 +104,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#111827',
     marginBottom: 8
+  },
+  logoutButton: {
+    backgroundColor: '#F56A57',
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center'
+  },
+  logoutText: {
+    color: '#130918',
+    fontSize: 16,
+    fontWeight: '600'
+  },
+  bluetoothSection: {
+    maxHeight: 300
   }
 })
