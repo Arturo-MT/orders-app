@@ -1,7 +1,15 @@
 import { Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
+import { useAuth } from '@/app/context/AuthContext'
+import { useUserQuery } from '@/hooks/api/users'
 
 export default function TabLayout() {
+  const { isSuperAdmin } = useAuth()
+  const { data } = useUserQuery()
+  const role = data?.[0]?.role
+
+  const canSeeAdmin = isSuperAdmin || role === 'admin'
+
   return (
     <Tabs
       screenOptions={{
@@ -51,6 +59,7 @@ export default function TabLayout() {
         name='admin'
         options={{
           title: 'Administrar',
+          href: canSeeAdmin ? undefined : null,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name='construct-outline' size={size} color={color} />
           )
