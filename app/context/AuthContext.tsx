@@ -12,26 +12,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const router = useRouter()
 
   const [user, setUser] = useState<User | null>(null)
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loginError, setLoginError] = useState<string | null>(null)
 
-  // 🔹 bootstrap sesión
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null)
+      const currentUser = data.session?.user ?? null
+      setUser(currentUser)
+      setIsSuperAdmin(currentUser?.user_metadata?.role === 'super_admin')
       setLoading(false)
     })
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        setUser(session?.user ?? null)
+        const currentUser = session?.user ?? null
+        setUser(currentUser)
+        setIsSuperAdmin(currentUser?.user_metadata?.role === 'super_admin')
       }
     )
 
     return () => listener.subscription.unsubscribe()
   }, [])
 
-  // 🔹 API COMPATIBLE
   const loginWithPassword = useCallback(
     async ({ email, password }: { email: string; password: string }) => {
       setLoading(true)
@@ -59,12 +62,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const value = useMemo(
     () => ({
       user,
+      isSuperAdmin,
       loading,
       loginError,
       loginWithPassword,
       logout
     }),
-    [user, loading, loginError, loginWithPassword, logout]
+    [user, isSuperAdmin, loading, loginError, loginWithPassword, logout]
   )
 
   if (loading) return null
