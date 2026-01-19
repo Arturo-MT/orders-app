@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, StyleSheet, ScrollView } from 'react-native'
+import { View, Text, StyleSheet } from 'react-native'
 import BluetoothSettings from './BluetoothSettings'
 import { useUserQuery } from '@/hooks/api/users'
 import { useAuth } from '@/app/context/AuthContext'
@@ -7,7 +7,7 @@ import { Pressable } from 'react-native'
 
 export default function SettingsScreen() {
   const { data, isLoading, error } = useUserQuery()
-  const { user, logout } = useAuth()
+  const { user, logout, isSuperAdmin } = useAuth()
   const [loadingLogout, setLoadingLogout] = React.useState(false)
 
   const handleLogout = async () => {
@@ -39,6 +39,8 @@ export default function SettingsScreen() {
 
   const store_member_data = data[0]
 
+  const role = isSuperAdmin ? 'super admin' : store_member_data?.role
+
   return (
     <View style={styles.container}>
       <View style={styles.section}>
@@ -51,7 +53,7 @@ export default function SettingsScreen() {
         <Text style={styles.label}>Email</Text>
         <Text style={styles.value}>{user?.email ?? '—'}</Text>
         <Text style={styles.label}>Rol</Text>
-        <Text style={styles.value}>{store_member_data?.role ?? '—'}</Text>
+        <Text style={styles.value}>{role ?? '—'}</Text>
       </View>
 
       <View style={[styles.section, styles.bluetoothSection]}>
