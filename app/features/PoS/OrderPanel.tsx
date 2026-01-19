@@ -22,7 +22,6 @@ interface Props {
 }
 
 export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
-  // refs para auto-scroll
   const scrollRef = useRef<ScrollView | null>(null)
   const prevCountRef = useRef<number>(order.items.length)
   const shouldScrollRef = useRef<boolean>(false)
@@ -31,7 +30,6 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
     const prev = prevCountRef.current
     const curr = order.items.length
     if (curr > prev) {
-      // marcamos que queremos scrollear en el siguiente reflow del contenido
       shouldScrollRef.current = true
     }
     prevCountRef.current = curr
@@ -143,12 +141,10 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
       <View style={styles.scrollWrapper}>
         <ScrollView
           ref={(r) => {
-            // asignación segura del ref (puede ser null)
             // @ts-ignore
             scrollRef.current = r
           }}
           contentContainerStyle={styles.orderItemContainer}
-          // cuando el contenido cambie de tamaño, si marcamos scroll hacemos scrollToEnd
           onContentSizeChange={() => {
             if (shouldScrollRef.current) {
               scrollRef.current?.scrollToEnd({ animated: true })
