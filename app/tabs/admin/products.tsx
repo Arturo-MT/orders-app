@@ -1,6 +1,6 @@
+import ProductsScreen from '@/app/features/products/ProductsScreen'
 import React from 'react'
-import { Text } from 'react-native'
 
 export default function ProductsContainer() {
-  return <Text>Products Screen</Text>
+  return <ProductsScreen />
 }
