@@ -65,8 +65,27 @@ export interface Device {
   address: string
 }
 
+export type ProductInput = {
+  name: string
+  category_id: string
+  price: number
+}
+
+export type ProductUpdatePayload = {
+  name?: string
+  category_id?: string
+  price?: number
+  is_active?: boolean
+}
+
+export type ProductUpdateInput = {
+  id: string
+  data: ProductUpdatePayload
+}
+
 export interface AuthContextType {
   user: any | null
+  isSuperAdmin: boolean
   loginWithPassword: (credentials: {
     email: string
     password: string

@@ -1,15 +1,21 @@
 import { StoreConfig } from '@/types/types'
-import { AxiosInstance } from 'axios'
+import { SupabaseClient } from '@supabase/supabase-js'
 
 export async function storeUpdateMutation({
   client,
   payload,
   id
 }: {
-  client: AxiosInstance
+  client: SupabaseClient
   payload: StoreConfig
-  id: number
+  id: string
 }) {
-  const { data } = await client.patch<StoreConfig>(`/stores/${id}/`, payload)
+  const { data, error } = await client
+    .from('stores')
+    .update(payload)
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
   return data
 }

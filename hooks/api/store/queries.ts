@@ -1,12 +1,17 @@
-import { AxiosInstance } from 'axios'
+import { SupabaseClient } from '@supabase/supabase-js'
 
 export async function storeQuery({
   id,
   client
 }: {
-  id: number
-  client: AxiosInstance
+  id: string
+  client: SupabaseClient
 }) {
-  const { data } = await client.get(`/stores/${id}/`)
+  const { data, error } = await client
+    .from('stores')
+    .select('*')
+    .eq('id', id)
+    .single()
+  if (error) throw error
   return data
 }

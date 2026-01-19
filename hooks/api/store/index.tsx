@@ -10,8 +10,9 @@ export function useStoreQuery(config = {}) {
   const { client } = useFetch()
   const { data: userData } = useUserQuery()
   return useQuery({
-    queryKey: [STORE_KEY],
-    queryFn: () => storeQuery({ id: userData?.store, client }),
+    queryKey: [STORE_KEY, userData?.store],
+    enabled: !!userData?.store,
+    queryFn: () => storeQuery({ client, id: userData?.store_id }),
     ...config
   })
 }
