@@ -11,17 +11,24 @@ type Product = {
 
 export async function productsQuery({
   client,
-  storeId
+  storeId,
+  showAll = false
 }: {
   client: SupabaseClient
   storeId: string
+  showAll?: boolean
 }): Promise<Product[]> {
-  const { data, error } = await client
+  let query = client
     .from('product')
     .select('*')
     .eq('store_id', storeId)
-    .eq('is_active', true)
-    .order('name')
+    .order('name', { ascending: true })
+
+  if (!showAll) {
+    query = query.eq('is_active', true)
+  }
+
+  const { data, error } = await query
 
   if (error) {
     throw error
