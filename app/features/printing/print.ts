@@ -4,13 +4,37 @@ import {
   BluetoothManager
 } from 'react-native-bluetooth-escpos-printer'
 import { logoBase64 } from '@/assets/images/logoBase64'
-import { Order } from '@/types/types'
+
+/* =========================
+   TIPOS EXCLUSIVOS DE PRINT
+   ========================= */
+
+export type PrintOrder = {
+  order_number: string
+  type: 'DINE_IN' | 'TAKEAWAY'
+  customer_name: string | null
+  table_name?: string | null
+  items: {
+    name: string
+    quantity: number
+    price: number
+    notes?: string
+  }[]
+}
+
+/* =========================
+   CONFIGURACIÓN IMPRESORA
+   ========================= */
 
 const fontConfig = {
   widthtimes: 1,
   heigthtimes: 1,
   fonttype: 1
 }
+
+/* =========================
+   PERMISOS BLUETOOTH
+   ========================= */
 
 export const requestBluetoothPermissions = async (): Promise<boolean> => {
   if (Platform.OS !== 'android') return true
@@ -22,83 +46,85 @@ export const requestBluetoothPermissions = async (): Promise<boolean> => {
       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
     ])
 
-    const allGranted = Object.values(granted).every(
+    return Object.values(granted).every(
       (status) => status === PermissionsAndroid.RESULTS.GRANTED
     )
-
-    if (!allGranted) {
-      console.warn('Permisos de Bluetooth no concedidos')
-    }
-
-    return allGranted
   } catch (error) {
     console.error('Error solicitando permisos Bluetooth:', error)
     return false
   }
 }
 
-export const scanDevices = async () => {
-  const hasPermission = await requestBluetoothPermissions()
-  if (!hasPermission) return
+/* =========================
+   HELPERS
+   ========================= */
 
-  const devices = await BluetoothManager.scanDevices()
-  const paired =
-    typeof devices.paired === 'string'
-      ? JSON.parse(devices.paired)
-      : devices.paired
-
-  console.log('Dispositivos emparejados:', paired)
-}
-
-export const connectToPrinter = async (address: string): Promise<void> => {
-  const hasPermission = await requestBluetoothPermissions()
-  if (!hasPermission) return
-
-  try {
-    await BluetoothManager.connect(address)
-    console.log('Conectado a la impresora')
-  } catch (error) {
-    console.error('Error al conectar a la impresora:', error)
-  }
-}
-
-const normalizeTextForPrinter = (text: string): string => {
-  return text
+const normalizeTextForPrinter = (text: string): string =>
+  text
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^\x20-\x7E]/g, '')
     .replace(/\s+/g, ' ')
-}
+
+/* =========================
+   FUNCIÓN PRINCIPAL
+   ========================= */
 
 export const printOrder = async (
-  order: Order,
-  printerAddress: string
+  order: PrintOrder,
+  printerAddress?: string
 ): Promise<{ success: boolean; error?: string }> => {
+  if (!printerAddress) {
+    return { success: false, error: 'No hay impresora configurada' }
+  }
+
   const hasPermission = await requestBluetoothPermissions()
-  if (!hasPermission)
-    return { success: false, error: 'Permisos de Bluetooth no concedidos' }
+  if (!hasPermission) {
+    return {
+      success: false,
+      error: 'Permisos de Bluetooth no concedidos'
+    }
+  }
 
   try {
     await BluetoothManager.connect(printerAddress)
 
-    const normalizedName = normalizeTextForPrinter(order.customer_name)
-
-    await BluetoothEscposPrinter.printPic(logoBase64, { width: 576, left: 80 })
+    /* ---------- LOGO ---------- */
+    await BluetoothEscposPrinter.printPic(logoBase64, {
+      width: 576,
+      left: 80
+    })
 
     await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT)
 
+    /* ---------- ENCABEZADO ---------- */
+    const headerLines: string[] = []
+
+    headerLines.push(`Comanda: ${order.order_number}`)
+
+    if (order.type === 'DINE_IN') {
+      headerLines.push(`Mesa: ${order.table_name ?? '-'}`)
+    } else {
+      headerLines.push(
+        `Cliente: ${normalizeTextForPrinter(order.customer_name ?? '-')}`
+      )
+    }
+
+    headerLines.push(
+      `Tipo: ${order.type === 'DINE_IN' ? 'Para aqui' : 'Para llevar'}`
+    )
+
     await BluetoothEscposPrinter.printText(
-      `Nombre: ${normalizedName}\nComanda: ${order.order_number}\nTipo: ${
-        order.type === 'F' ? 'Para aqui' : 'Para llevar'
-      }\nEstado: ${order.status === 'C' ? 'Pagado' : 'Pendiente'}\n\n`,
+      headerLines.join('\n') + '\n\n',
       fontConfig
     )
 
     await BluetoothEscposPrinter.printText(
-      '------------------------------------------------\n',
+      '-----------------------------------------------\n',
       {}
     )
 
+    /* ---------- TABLA ---------- */
     const columnWidths = [18, 6, 8]
 
     await BluetoothEscposPrinter.printColumn(
@@ -113,14 +139,15 @@ export const printOrder = async (
     )
 
     await BluetoothEscposPrinter.printText(
-      '------------------------------------------------\n',
+      '-----------------------------------------------\n',
       {}
     )
 
+    /* ---------- ITEMS ---------- */
     for (const item of order.items) {
       const name = normalizeTextForPrinter(item.name)
       const quantity = item.quantity.toString()
-      const price = parseFloat(item.price.toString()).toFixed(2)
+      const price = (item.price * item.quantity).toFixed(2)
 
       await BluetoothEscposPrinter.printColumn(
         columnWidths,
@@ -133,41 +160,43 @@ export const printOrder = async (
         fontConfig
       )
 
-      if (item.description && item.description.trim() !== '') {
+      if (item.notes?.trim()) {
         await BluetoothEscposPrinter.printText(
-          `  - ${item.description.trim()}\n`,
+          `  - ${normalizeTextForPrinter(item.notes)}\n`,
           fontConfig
         )
       }
     }
 
     await BluetoothEscposPrinter.printText(
-      '------------------------------------------------\n',
+      '-----------------------------------------------\n',
       {}
     )
 
-    const total = order.items.reduce((acc, item) => {
-      return acc + parseFloat(item.price.toString())
-    }, 0)
+    /* ---------- TOTAL ---------- */
+    const total = order.items.reduce(
+      (acc, item) => acc + item.price * item.quantity,
+      0
+    )
 
     await BluetoothEscposPrinter.printerAlign(
       BluetoothEscposPrinter.ALIGN.RIGHT
     )
 
-    await BluetoothEscposPrinter.printText(`Total: ${total.toFixed(2)}\n\n`, {
-      ...fontConfig
-    })
-    await BluetoothEscposPrinter.printText('\n\n\n\n', {})
+    await BluetoothEscposPrinter.printText(
+      `Total: $${total.toFixed(2)}\n\n`,
+      fontConfig
+    )
 
+    await BluetoothEscposPrinter.printText('\n\n\n', {})
     await BluetoothEscposPrinter.cutOnePoint()
 
-    console.log('✅ Successfully printed order')
     return { success: true }
   } catch (error: any) {
-    console.error(error)
+    console.error('Error al imprimir:', error)
     return {
       success: false,
-      error: error.message || 'Error desconocido al imprimir'
+      error: error?.message || 'Error desconocido al imprimir'
     }
   }
 }

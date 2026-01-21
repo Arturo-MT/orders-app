@@ -9,16 +9,11 @@ import {
   Dimensions
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { OrderItemDraft } from '@/types/types'
 
 interface Props {
-  item: {
-    name: string
-    quantity: number
-    price: number
-    basePrice: number
-    description?: string
-  }
-  onUpdate: (updates: Partial<Props['item']>) => void
+  item: OrderItemDraft
+  onUpdate: (updates: Partial<OrderItemDraft>) => void
   onRemove: () => void
 }
 
@@ -27,24 +22,26 @@ export default function OrderItemComponent({
   onUpdate,
   onRemove
 }: Props) {
-  const [showComment, setShowComment] = useState(false)
+  const [showNotes, setShowNotes] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
-  const [tempComment, setTempComment] = useState(item.description)
+  const [tempNotes, setTempNotes] = useState(item.notes ?? '')
 
   const isSmallDevice = Dimensions.get('window').width < 768
 
   return (
     <View style={styles.column}>
+      {/* ---------- header ---------- */}
       <View style={styles.row}>
         <Text style={styles.name}>{item.name}</Text>
+
         <View style={styles.iconsWrapper}>
           <TouchableOpacity
             onPress={() => {
               if (isSmallDevice) {
-                setTempComment(item.description || '')
+                setTempNotes(item.notes ?? '')
                 setModalVisible(true)
               } else {
-                setShowComment(!showComment)
+                setShowNotes(!showNotes)
               }
             }}
           >
@@ -57,45 +54,34 @@ export default function OrderItemComponent({
         </View>
       </View>
 
-      <View style={styles.descriptionWrapper}>
-        <Text style={styles.especification}>
-          {item.description || 'Con todo'}
-        </Text>
-      </View>
+      {/* ---------- notes preview ---------- */}
+      {(item.notes || showNotes) && (
+        <View style={styles.notesWrapper}>
+          <Text style={styles.notesText}>
+            {item.notes || 'Sin especificaciones'}
+          </Text>
+        </View>
+      )}
 
+      {/* ---------- quantity + price ---------- */}
       <View style={styles.row}>
         <View style={styles.quantityWrapper}>
           <TouchableOpacity
-            onPress={() =>
-              onUpdate({
-                quantity: item.quantity - 1,
-                price: item.basePrice * (item.quantity - 1)
-              })
-            }
-            style={{ marginLeft: 8 }}
             disabled={item.quantity <= 1}
+            onPress={() => onUpdate({ quantity: item.quantity - 1 })}
           >
             <Ionicons name='remove-circle-outline' size={22} color='#130918' />
           </TouchableOpacity>
+
           <TextInput
             style={[styles.input, { width: 40 }]}
             keyboardType='numeric'
             value={String(item.quantity)}
-            onChangeText={(value) =>
-              onUpdate({
-                quantity: parseInt(value) || 0
-              })
-            }
-            placeholder='Cantidad'
+            onChangeText={(value) => onUpdate({ quantity: Number(value) || 1 })}
           />
+
           <TouchableOpacity
-            onPress={() =>
-              onUpdate({
-                quantity: item.quantity + 1,
-                price: item.basePrice * (item.quantity + 1)
-              })
-            }
-            style={{ marginLeft: 8 }}
+            onPress={() => onUpdate({ quantity: item.quantity + 1 })}
           >
             <Ionicons name='add-circle-outline' size={22} color='#130918' />
           </TouchableOpacity>
@@ -107,42 +93,42 @@ export default function OrderItemComponent({
             style={[styles.input, styles.priceInput]}
             keyboardType='numeric'
             value={String(item.price)}
-            onChangeText={(value) => {
-              const newPrice = parseInt(value) || 0
-              onUpdate({ price: newPrice })
-            }}
-            placeholder='Precio'
+            onChangeText={(value) => onUpdate({ price: Number(value) || 0 })}
           />
         </View>
       </View>
 
-      {showComment && !isSmallDevice && (
+      {/* ---------- notes input (desktop) ---------- */}
+      {showNotes && !isSmallDevice && (
         <TextInput
-          style={[styles.input, styles.commentInput]}
-          value={item.description}
-          onChangeText={(value) => onUpdate({ description: value })}
+          style={[styles.input, styles.notesInput]}
+          value={item.notes ?? ''}
+          onChangeText={(value) => onUpdate({ notes: value })}
           placeholder='Especificaciones'
         />
       )}
 
+      {/* ---------- notes modal (mobile) ---------- */}
       {isSmallDevice && (
         <Modal
           visible={modalVisible}
           animationType='slide'
-          transparent={true}
+          transparent
           onRequestClose={() => setModalVisible(false)}
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Especificaciones</Text>
+
               <TextInput
                 style={styles.modalInput}
-                value={tempComment}
-                onChangeText={setTempComment}
+                value={tempNotes}
+                onChangeText={setTempNotes}
                 placeholder='Escribe aquí...'
                 multiline
                 autoFocus
               />
+
               <View style={styles.modalButtons}>
                 <TouchableOpacity
                   onPress={() => setModalVisible(false)}
@@ -150,9 +136,10 @@ export default function OrderItemComponent({
                 >
                   <Text>Cancelar</Text>
                 </TouchableOpacity>
+
                 <TouchableOpacity
                   onPress={() => {
-                    onUpdate({ description: tempComment })
+                    onUpdate({ notes: tempNotes })
                     setModalVisible(false)
                   }}
                   style={[styles.modalButton, { backgroundColor: '#f1aa1c' }]}
@@ -217,10 +204,20 @@ const styles = StyleSheet.create({
   priceInput: {
     minWidth: 60
   },
-  commentInput: {
+  notesInput: {
     flexBasis: '100%',
     marginTop: 8
   },
+  notesWrapper: {
+    paddingLeft: 8,
+    paddingBottom: 6
+  },
+
+  notesText: {
+    fontSize: 14,
+    color: '#130918'
+  },
+
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',

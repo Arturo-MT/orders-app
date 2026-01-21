@@ -1,26 +1,39 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { View, StyleSheet, ToastAndroid } from 'react-native'
+import {
+  View,
+  StyleSheet,
+  ToastAndroid,
+  useWindowDimensions,
+  ViewStyle
+} from 'react-native'
+import { useFocusEffect } from '@react-navigation/native'
+
 import { useCategoriesQuery } from '@/hooks/api/categories'
 import { useProductsQuery } from '@/hooks/api/products'
 import { useUserQuery } from '@/hooks/api/users'
-import { useOrdersMutation } from '@/hooks/api/orders'
-import { useFocusEffect } from '@react-navigation/native'
-import { Category, Order, OrderResponse, Product } from '@/types/types'
+import { useCreateOrder } from '@/hooks/api/orders'
+import { useStoreQuery } from '@/hooks/api/store'
+
+import {
+  OrderDraft,
+  OrderItemDraft,
+  OrderResponse,
+  Product
+} from '@/types/types'
 import { printOrder } from '../printing/print'
+
 import ProductsPanel from './ProductsPanel'
 import OrderPanel from './OrderPanel'
-import { useWindowDimensions } from 'react-native'
-import { useStoreQuery } from '@/hooks/api/store'
 
 export default function PosScreen() {
   const [selectedCategory, setSelectedCategory] = useState('Todos')
   const [total, setTotal] = useState(0)
-  const [order, setOrder] = useState<Order>({
+
+  const [order, setOrder] = useState<OrderDraft>({
+    type: 'TAKEAWAY',
+    table_id: null,
     customer_name: '',
-    type: 'F',
-    items: [],
-    order_number: '',
-    status: 'P'
+    items: []
   })
 
   const {
@@ -37,30 +50,30 @@ export default function PosScreen() {
     isRefetching: isProductsRefetching
   } = useProductsQuery()
 
-  const { data: userData, refetch: userRefetch } = useUserQuery()
+  const { refetch: userRefetch } = useUserQuery()
   const { data: storeData } = useStoreQuery()
-  const { mutate: createOrder } = useOrdersMutation({
+
+  const { mutateAsync: createOrder } = useCreateOrder({
     retry: 1,
     retryDelay: 1000
   })
 
+  /* ---------- productos ---------- */
+
   const categoriesList: string[] = [
     'Todos',
-    ...(categoriesData?.map((category: { name: string }) => category.name) ||
-      [])
+    ...(categoriesData?.map((c) => c.name) ?? [])
   ]
 
   const productsList: Product[] =
     productsData
-      ?.filter((product) =>
-        categoriesData?.some((c) => c.id === product.category_id)
-      )
-      .map((product) => ({
-        id: product.id,
-        name: product.name,
+      ?.filter((p) => categoriesData?.some((c) => c.id === p.category_id))
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
         category:
-          categoriesData?.find((c) => c.id === product.category_id)?.name ?? '',
-        price: product.price
+          categoriesData?.find((c) => c.id === p.category_id)?.name ?? '',
+        price: p.price
       })) ?? []
 
   const filteredProducts =
@@ -68,21 +81,29 @@ export default function PosScreen() {
       ? productsList
       : productsList.filter((p) => p.category === selectedCategory)
 
-  const { width, height } = useWindowDimensions()
+  /* ---------- layout ---------- */
 
+  const { width, height } = useWindowDimensions()
   const isPortrait = height >= width
-  const containerStyle = [
+
+  const containerStyle: ViewStyle[] = [
     styles.container,
-    { flexDirection: isPortrait ? ('column' as const) : ('row' as const) }
+    {
+      flexDirection: isPortrait ? 'column' : 'row'
+    }
   ]
 
+  /* ---------- total ---------- */
+
   useEffect(() => {
-    const total = order.items.reduce(
-      (acc, item) => acc + parseFloat(item.price.toString()) || 0,
+    const sum = order.items.reduce(
+      (acc, item) => acc + item.price * item.quantity,
       0
     )
-    setTotal(total)
-  }, [order])
+    setTotal(sum)
+  }, [order.items])
+
+  /* ---------- acciones ---------- */
 
   const handleAddProduct = (product: Product) => {
     setOrder((prev) => ({
@@ -90,37 +111,28 @@ export default function PosScreen() {
       items: [
         ...prev.items,
         {
-          id: `${Date.now()}-${product.id}`,
+          uid: `${Date.now()}-${product.id}`,
+          product_id: product.id,
           name: product.name,
-          product: product.id,
-          quantity: 1,
           price: product.price,
-          basePrice: product.price,
-          comment: ''
-        }
+          quantity: 1
+        } satisfies OrderItemDraft
       ]
     }))
   }
 
-  const buildOrderPayload = (order: Order) => {
-    const storeId = userData?.store
-    if (!storeId || order.items.length === 0 || !order.customer_name)
+  const buildOrderPayload = (draft: OrderDraft): OrderDraft | null => {
+    if (draft.items.length === 0) return null
+
+    if (draft.type === 'TAKEAWAY' && !draft.customer_name?.trim()) {
       return null
-    return {
-      customer_name: order.customer_name,
-      type: order.type,
-      store: storeId,
-      status: order.status || 'P',
-      items: order.items.map((item) => ({
-        id: item.id,
-        name: item.name,
-        basePrice: item.basePrice,
-        product: item.product,
-        quantity: item.quantity,
-        price: item.price,
-        description: item.description || ''
-      }))
     }
+
+    if (draft.type === 'DINE_IN' && !draft.table_id) {
+      return null
+    }
+
+    return draft
   }
 
   const handlePrintOrder = async () => {
@@ -135,48 +147,41 @@ export default function PosScreen() {
     }
 
     try {
-      const responseData: OrderResponse = await new Promise((resolve, reject) =>
-        createOrder(payload, {
-          onSuccess: resolve,
-          onError: reject
-        })
+      const response: OrderResponse = await createOrder(payload)
+
+      ToastAndroid.show('Orden creada correctamente', ToastAndroid.SHORT)
+
+      await printOrder(
+        {
+          order_number: response.order_number,
+          type: order.type,
+          customer_name: order.customer_name,
+          items: order.items.map((i) => ({
+            name: i.name,
+            quantity: i.quantity,
+            price: i.price,
+            notes: i.notes
+          }))
+        },
+        storeData?.printer_address
       )
 
-      ToastAndroid.show('Orden enviada correctamente', ToastAndroid.SHORT)
+      ToastAndroid.show('Orden impresa correctamente', ToastAndroid.SHORT)
 
-      try {
-        const { success, error } = await printOrder(
-          responseData as Order,
-          storeData.printer_address
-        )
-        if (success) {
-          ToastAndroid.show('Orden impresa correctamente', ToastAndroid.SHORT)
-        } else {
-          console.error('Error al imprimir la orden:', error)
-          ToastAndroid.show(
-            `Error al imprimir la orden: ${error}`,
-            ToastAndroid.SHORT
-          )
-        }
-      } catch (printError) {
-        console.error('Error al imprimir la orden:', printError)
-      }
-
+      // reset limpio
       setOrder({
+        type: 'TAKEAWAY',
+        table_id: null,
         customer_name: '',
-        type: 'F',
-        items: [],
-        order_number: '',
-        status: 'P'
+        items: []
       })
-    } catch (err) {
-      console.error('🚫 Fallo al enviar orden:', err)
-      ToastAndroid.show(
-        '❌ Fallo al enviar orden, reintente si es posible',
-        ToastAndroid.SHORT
-      )
+    } catch (error) {
+      console.error('🚫 Error al crear orden:', error)
+      ToastAndroid.show('❌ Fallo al crear la orden', ToastAndroid.SHORT)
     }
   }
+
+  /* ---------- refetch ---------- */
 
   useFocusEffect(
     useCallback(() => {
@@ -185,6 +190,8 @@ export default function PosScreen() {
       userRefetch()
     }, [categoriesRefetch, productsRefetch, userRefetch])
   )
+
+  /* ---------- render ---------- */
 
   return (
     <View style={containerStyle}>

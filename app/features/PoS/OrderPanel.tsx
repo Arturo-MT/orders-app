@@ -10,75 +10,92 @@ import {
   Alert
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { Order, OrderItem } from '@/types/types'
+import { OrderDraft, OrderItemDraft } from '@/types/types'
 import CustomCheckbox from '@/app/components/CustomCheckbox'
 import OrderItemComponent from '@/app/components/OrderItemComponent'
+import TablePicker from './TablePicker'
 
 interface Props {
-  order: Order
+  order: OrderDraft
   total: number
-  onChange: (newOrder: Order) => void
+  onChange: (newOrder: OrderDraft) => void
   onPrint: () => void
 }
 
 export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
   const scrollRef = useRef<ScrollView | null>(null)
-  const prevCountRef = useRef<number>(order.items.length)
-  const shouldScrollRef = useRef<boolean>(false)
+  const prevCountRef = useRef(order.items.length)
+  const shouldScrollRef = useRef(false)
 
   useEffect(() => {
-    const prev = prevCountRef.current
-    const curr = order.items.length
-    if (curr > prev) {
+    if (order.items.length > prevCountRef.current) {
       shouldScrollRef.current = true
     }
-    prevCountRef.current = curr
+    prevCountRef.current = order.items.length
   }, [order.items.length])
 
-  const handleUpdateItem = (index: number, updates: Partial<OrderItem>) => {
+  const handleUpdateItem = (
+    index: number,
+    updates: Partial<OrderItemDraft>
+  ) => {
     const updatedItems = [...order.items]
-    const safeUpdates = {
-      ...updates,
-      price:
-        updates.price !== undefined
-          ? Number(updates.price)
-          : updatedItems[index].price
+    updatedItems[index] = {
+      ...updatedItems[index],
+      ...updates
     }
-    updatedItems[index] = { ...updatedItems[index], ...safeUpdates }
     onChange({ ...order, items: updatedItems })
   }
 
   const handleRemoveItem = (index: number) => {
-    const updatedItems = order.items.filter((_, i) => i !== index)
-    onChange({ ...order, items: updatedItems })
+    onChange({
+      ...order,
+      items: order.items.filter((_, i) => i !== index)
+    })
   }
+
+  const canSendToKitchen =
+    order.items.length > 0 &&
+    ((order.type === 'TAKEAWAY' && order.customer_name?.trim() !== '') ||
+      (order.type === 'DINE_IN' && !!order.table_id))
 
   return (
     <View style={styles.wrapper}>
-      <TextInput
-        placeholder='Nombre del cliente'
-        style={styles.customerNameInput}
-        onChangeText={(text) => onChange({ ...order, customer_name: text })}
-        value={order.customer_name}
-      />
+      {order.type === 'TAKEAWAY' && (
+        <TextInput
+          style={styles.customerNameInput}
+          value={order.customer_name ?? ''}
+          onChangeText={(text) => onChange({ ...order, customer_name: text })}
+          placeholder='Nombre del cliente'
+        />
+      )}
+
+      {order.type === 'DINE_IN' && (
+        <TablePicker
+          value={order.table_id ?? null}
+          onChange={(tableId) => onChange({ ...order, table_id: tableId })}
+        />
+      )}
+
       <View style={styles.typeOrderWrapper}>
-        <Text>Para llevar:</Text>
+        <Text>Para llevar</Text>
         <CustomCheckbox
-          value={order.type === 'T'}
-          onChange={() => onChange({ ...order, type: 'T' })}
-        />
-        <Text>Para comer aquí:</Text>
-        <CustomCheckbox
-          value={order.type === 'F'}
-          onChange={() => onChange({ ...order, type: 'F' })}
-        />
-        <Text>Pagado:</Text>
-        <CustomCheckbox
-          value={order.status === 'C'}
+          value={order.type === 'TAKEAWAY'}
           onChange={() =>
             onChange({
               ...order,
-              status: order.status === 'C' ? 'P' : 'C'
+              type: 'TAKEAWAY'
+            })
+          }
+        />
+
+        <Text>Para comer aquí</Text>
+        <CustomCheckbox
+          value={order.type === 'DINE_IN'}
+          onChange={() =>
+            onChange({
+              ...order,
+              type: 'DINE_IN',
+              customer_name: ''
             })
           }
         />
@@ -86,14 +103,11 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
 
       <View style={styles.buttonsWrapper}>
         <Text style={styles.orderTitle}>Total: ${total}</Text>
+
         <TouchableOpacity
           onPress={onPrint}
-          style={[
-            styles.printButton,
-            (order.items.length === 0 || order.customer_name === '') &&
-              styles.disabled
-          ]}
-          disabled={order.items.length === 0 || order.customer_name === ''}
+          disabled={!canSendToKitchen}
+          style={[styles.printButton, !canSendToKitchen && styles.disabled]}
         >
           <Ionicons
             name='print'
@@ -101,11 +115,16 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
             color='#130918'
             style={{ marginRight: 6 }}
           />
-          <Text style={styles.printButtonText}>Imprimir</Text>
+          <Text style={styles.printButtonText}>Enviar a cocina</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => {
+          disabled={order.items.length === 0}
+          style={[
+            styles.clearButton,
+            order.items.length === 0 && styles.disabled
+          ]}
+          onPress={() =>
             Alert.alert(
               '¿Limpiar orden?',
               'Esta acción eliminará todos los productos de la orden actual.',
@@ -113,26 +132,19 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
                 { text: 'Cancelar', style: 'cancel' },
                 {
                   text: 'Limpiar',
+                  style: 'destructive',
                   onPress: () => {
                     onChange({
-                      customer_name: '',
-                      type: 'F',
+                      ...order,
                       items: [],
-                      order_number: '',
-                      status: 'P'
+                      customer_name: ''
                     })
                     ToastAndroid.show('Orden limpiada', ToastAndroid.SHORT)
-                  },
-                  style: 'destructive'
+                  }
                 }
               ]
             )
-          }}
-          style={[
-            styles.clearButton,
-            order.items.length === 0 && styles.disabled
-          ]}
-          disabled={order.items.length === 0}
+          }
         >
           <Ionicons name='trash' size={22} style={styles.buttonTrashIcon} />
         </TouchableOpacity>
@@ -140,10 +152,7 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
 
       <View style={styles.scrollWrapper}>
         <ScrollView
-          ref={(r) => {
-            // @ts-ignore
-            scrollRef.current = r
-          }}
+          ref={scrollRef}
           contentContainerStyle={styles.orderItemContainer}
           onContentSizeChange={() => {
             if (shouldScrollRef.current) {
@@ -154,7 +163,7 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
         >
           {order.items.map((item, index) => (
             <OrderItemComponent
-              key={item.id}
+              key={item.uid}
               item={item}
               onUpdate={(updates) => handleUpdateItem(index, updates)}
               onRemove={() => handleRemoveItem(index)}
