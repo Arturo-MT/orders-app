@@ -38,9 +38,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name='dashboard'
         options={{
-          title: 'Dashboard',
+          title: 'Ordenes',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name='bar-chart-outline' size={size} color={color} />
+            <Ionicons name='list-outline' size={size} color={color} />
           )
         }}
       />
@@ -48,9 +48,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name='summary'
         options={{
-          title: 'Resumen',
+          title: 'Dashboard',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name='list-outline' size={size} color={color} />
+            <Ionicons name='bar-chart-outline' size={size} color={color} />
           )
         }}
       />

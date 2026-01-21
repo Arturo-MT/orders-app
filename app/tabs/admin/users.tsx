@@ -33,7 +33,7 @@ export default function UsersScreen() {
 
   const { mutate: createMember, isPending: isCreating } = useCreateStoreMember()
 
-  const { mutate: updateMember, isPending: isUpdating } = useUpdateStoreMember()
+  const { mutate: updateMember } = useUpdateStoreMember()
 
   const [open, setOpen] = useState(false)
   const [email, setEmail] = useState('')
