@@ -1,6 +1,6 @@
 import React from 'react'
-import { Text } from 'react-native'
+import TablesScreen from '@/app/features/tables/TablesScreen'
 
 export default function TablesContainer() {
-  return <Text>Tables Screen</Text>
+  return <TablesScreen />
 }
