@@ -1,43 +1,21 @@
 import { useFetch } from '@/app/context/FetchContext'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { orderQuery, ordersQuery } from './queries'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ORDERS_KEY } from './constants'
-import { ordersMutation, orderUpdateMutation } from './mutations'
-import { Order, OrderUpdate } from '@/types/types'
+import { OrderDraft } from '@/types/types'
+import { useStore } from '@/app/context/StoreContext'
+import { orderCreate } from './mutations'
 
-export function useOrdersQuery(config = {}) {
+export function useCreateOrder(config = {}) {
   const { client } = useFetch()
-  return useQuery({
-    queryKey: [ORDERS_KEY],
-    queryFn: () => ordersQuery({ client }),
-    ...config
-  })
-}
-
-export function useOrderQuery(id: number, config = {}) {
-  const { client } = useFetch()
-  return useQuery({
-    queryKey: [ORDERS_KEY, id],
-    queryFn: () => orderQuery({ client, id }),
-    ...config
-  })
-}
-
-export function useOrdersMutation(config = {}) {
-  const { client } = useFetch()
+  const { store } = useStore()
 
   return useMutation({
-    mutationFn: (payload: Order) => ordersMutation({ client, payload }),
-    ...config
-  })
-}
-
-export function useOrderUpdateMutation(id: number, config = {}) {
-  const { client } = useFetch()
-
-  return useMutation({
-    mutationFn: ({ payload }: { payload: OrderUpdate }) =>
-      orderUpdateMutation({ client, payload, id }),
+    mutationFn: (payload: OrderDraft) =>
+      orderCreate({
+        client,
+        payload,
+        storeId: store!.id
+      }),
     ...config
   })
 }

@@ -1,26 +1,20 @@
-import { Order, OrderUpdate } from '@/types/types'
-import { AxiosInstance } from 'axios'
+import { SupabaseClient } from '@supabase/supabase-js'
+import { OrderDraft } from '@/types/types'
 
-export async function ordersMutation({
-  client,
-  payload
-}: {
-  client: AxiosInstance
-  payload: Order
-}) {
-  const { data } = await client.post('/create-order/', payload)
-  return data
-}
-
-export async function orderUpdateMutation({
+export async function orderCreate({
   client,
   payload,
-  id
+  storeId
 }: {
-  client: AxiosInstance
-  payload: OrderUpdate
-  id: number
+  client: SupabaseClient
+  payload: OrderDraft
+  storeId: string
 }) {
-  const { data } = await client.patch<OrderUpdate>(`/orders/${id}/`, payload)
+  const { data, error } = await client.rpc('create_order_from_draft', {
+    p_store_id: storeId,
+    p_order: payload
+  })
+
+  if (error) throw error
   return data
 }
