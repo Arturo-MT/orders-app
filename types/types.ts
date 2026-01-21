@@ -28,6 +28,36 @@ export interface Order {
   items: OrderItem[]
   order_number?: string
   status: string
+  table_id?: string | null
+}
+
+export type OrderItemDraft = {
+  uid: string
+  product_id: string
+  name: string
+  price: number
+  quantity: number
+  notes?: string
+}
+
+export type PrintOrder = {
+  order_number: string
+  type: 'DINE_IN' | 'TAKEAWAY'
+  customer_name: string | null
+  table_name?: string | null
+  items: {
+    name: string
+    quantity: number
+    price: number
+    notes?: string
+  }[]
+}
+
+export type OrderDraft = {
+  type: 'DINE_IN' | 'TAKEAWAY'
+  table_id: string | null
+  customer_name: string | null
+  items: OrderItemDraft[]
 }
 
 export interface OrderResponse {
