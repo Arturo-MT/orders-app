@@ -29,7 +29,6 @@ export default function TablePicker({ value, onChange }: Props) {
               key={table.id}
               label={table.is_occupied ? `${table.name} (ocupada)` : table.name}
               value={table.id}
-              enabled={!table.is_occupied}
             />
           ))}
         </Picker>
