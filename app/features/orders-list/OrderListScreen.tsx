@@ -1,4 +1,3 @@
-import { useDashboardQuery } from '@/hooks/api/dashboard'
 import { useFocusEffect } from '@react-navigation/native'
 import React, { useState, useCallback } from 'react'
 import {
@@ -13,20 +12,23 @@ import {
 import OrderCard from './OrderCard'
 import { useDebouncedValue } from '@/hooks/utils/useDebouncedValue'
 import { Ionicons } from '@expo/vector-icons'
+import { useOrdersQuery } from '@/hooks/api/orders'
+import OpenOrdersList from './OpenOrdersList'
 
-export default function DashboardScreen() {
+export default function OrdersListScreen() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const debouncedSearch = useDebouncedValue(search, 500)
 
   const {
-    data: dashboardData,
+    data: ordersListData,
     isLoading,
     isFetching,
     refetch
-  } = useDashboardQuery({
+  } = useOrdersQuery({
+    page,
     search: debouncedSearch,
-    page
+    status: 'CLOSED'
   })
 
   useFocusEffect(
@@ -35,7 +37,10 @@ export default function DashboardScreen() {
     }, [refetch])
   )
 
-  const orders = dashboardData?.results?.orders || []
+  const orders = ordersListData?.orders || []
+  const pageSize = 5
+  const total = ordersListData?.total ?? 0
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
   if (isLoading) {
     return (
@@ -47,11 +52,15 @@ export default function DashboardScreen() {
 
   return (
     <View style={styles.container}>
+      <OpenOrdersList />
+
+      <Text style={styles.sectionTitle}>Historial</Text>
+
       <TextInput
         placeholder='Buscar por cliente'
         style={styles.input}
         value={search}
-        onChangeText={(text) => setSearch(text)}
+        onChangeText={setSearch}
         onSubmitEditing={() => {
           setPage(1)
           refetch()
@@ -60,16 +69,11 @@ export default function DashboardScreen() {
 
       {isFetching ? (
         <>
-          {[...Array(10)].map((_, i) => (
+          {[...Array(6)].map((_, i) => (
             <View key={i} style={styles.orderSkeleton}>
               <View style={styles.skeletonRow}>
-                <View style={[styles.skeleton, { width: '50%', height: 16 }]} />
-                <View
-                  style={[
-                    styles.skeleton,
-                    { width: 24, height: 24, borderRadius: 12 }
-                  ]}
-                />
+                <View style={[styles.skeleton, { width: '50%' }]} />
+                <View style={[styles.skeleton, { width: 24, height: 24 }]} />
               </View>
               <View style={styles.skeleton} />
               <View style={[styles.skeleton, { width: '30%' }]} />
@@ -97,10 +101,10 @@ export default function DashboardScreen() {
 
         <TouchableOpacity
           onPress={() => setPage((p) => p + 1)}
-          disabled={!dashboardData?.next}
+          disabled={page >= totalPages}
           style={[
             styles.pageButton,
-            !dashboardData?.next && styles.disabledButton
+            page >= totalPages && styles.disabledButton
           ]}
         >
           <Ionicons name='chevron-forward' size={20} color='#130918' />
@@ -220,5 +224,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8
+  },
+  sectionTitle: {
+    textAlign: 'center',
+    marginBottom: 8,
+    fontSize: 18
   }
 })
