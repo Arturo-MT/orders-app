@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   View,
   Text,
@@ -11,20 +11,17 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { Ionicons } from '@expo/vector-icons'
 import { useSummaryQuery } from '@/hooks/api/summary'
+import TopProductsCard from './TopProducts'
+import { useFocusEffect } from 'expo-router'
 
 type Period = 'day' | 'week' | 'month' | 'year'
 
 export default function SummaryScreen() {
+  const today = new Date()
+
   const [period, setPeriod] = useState<Period>('year')
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [showPicker, setShowPicker] = useState(false)
-
-  const [queryParams, setQueryParams] = useState<{
-    period: Period
-    date: string
-  } | null>(null)
-
-  const { data, isLoading, isError, error } = useSummaryQuery(queryParams)
 
   const formatDateForApi = (date: Date, period: Period) => {
     const yyyy = date.getFullYear()
@@ -42,6 +39,29 @@ export default function SummaryScreen() {
         return `${yyyy}`
     }
   }
+
+  const [queryParams, setQueryParams] = useState({
+    period: 'day' as Period,
+    date: formatDateForApi(today, 'day')
+  })
+
+  const { data, isLoading, isError, error, refetch } =
+    useSummaryQuery(queryParams)
+
+  useEffect(() => {
+    setPeriod('day')
+    setSelectedDate(today)
+  }, [])
+
+  useFocusEffect(() => {
+    refetch()
+  })
+
+  const totalOrders = data?.summary?.total_orders ?? 0
+  const totalRevenue = data?.summary?.total_revenue ?? 0
+
+  const avgTicket =
+    totalOrders > 0 ? (totalRevenue / totalOrders).toFixed(0) : '0'
 
   const handleConsult = () => {
     setQueryParams({
@@ -72,10 +92,10 @@ export default function SummaryScreen() {
                 {p === 'day'
                   ? 'Día'
                   : p === 'week'
-                  ? 'Semana'
-                  : p === 'month'
-                  ? 'Mes'
-                  : 'Año'}
+                    ? 'Semana'
+                    : p === 'month'
+                      ? 'Mes'
+                      : 'Año'}
               </Text>
             </TouchableOpacity>
           ))}
@@ -125,21 +145,31 @@ export default function SummaryScreen() {
         )}
 
         {!isLoading && data?.summary && (
-          <>
-            <Text style={styles.resultText}>
-              Total de órdenes: {data.summary.total_orders}
-            </Text>
-            <Text style={styles.resultText}>
-              Total vendido: ${data.summary.total_revenue}
-            </Text>
-          </>
+          <View style={styles.kpiRow}>
+            <View style={[styles.kpiCard, styles.kpiPrimary]}>
+              <Text style={styles.kpiValue}>${data.summary.total_revenue}</Text>
+              <Text style={styles.kpiLabel}>Total vendido</Text>
+            </View>
+
+            <View style={styles.kpiCard}>
+              <Text style={styles.kpiValue}>{data.summary.total_orders}</Text>
+              <Text style={styles.kpiLabel}>Órdenes</Text>
+            </View>
+
+            <View style={styles.kpiCard}>
+              <Text style={styles.kpiValue}>${avgTicket}</Text>
+              <Text style={styles.kpiLabel}>Ticket promedio</Text>
+            </View>
+          </View>
         )}
 
-        {!isLoading && !data && (
+        {!isLoading && data?.summary?.total_orders === 0 && (
           <Text style={styles.placeholderText}>
-            Selecciona filtros y presiona Consultar
+            No hay ventas en este periodo
           </Text>
         )}
+
+        <TopProductsCard products={data?.summary?.top_products ?? []} />
       </View>
     </View>
   )
@@ -223,5 +253,29 @@ const styles = StyleSheet.create({
   resultText: {
     fontSize: 24,
     marginBottom: 4
+  },
+  kpiRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 12
+  },
+  kpiCard: {
+    flex: 1,
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center'
+  },
+  kpiPrimary: {
+    backgroundColor: '#f1aa1c'
+  },
+  kpiValue: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#130918'
+  },
+  kpiLabel: {
+    fontSize: 12,
+    color: '#333'
   }
 })
