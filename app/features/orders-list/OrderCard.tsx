@@ -48,8 +48,6 @@ export default function OrderCard({
     order_id: order.id
   })
 
-  console.log(orderData)
-
   const { data: storeData } = useStoreQuery()
 
   const orderTotal =

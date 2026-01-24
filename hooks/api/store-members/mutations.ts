@@ -27,7 +27,6 @@ export async function createStoreMember({
 
   if (error) throw error
 
-  console.log('Created store member:', data)
   return data
 }
 
