@@ -14,12 +14,7 @@ import { useUserQuery } from '@/hooks/api/users'
 import { useCreateOrder } from '@/hooks/api/orders'
 import { useStoreQuery } from '@/hooks/api/store'
 
-import {
-  OrderDraft,
-  OrderItemDraft,
-  OrderResponse,
-  Product
-} from '@/types/types'
+import { OrderDraft, OrderItemDraft, Product } from '@/types/types'
 import { printOrder } from '../printing/print'
 
 import ProductsPanel from './ProductsPanel'
@@ -33,6 +28,7 @@ export default function PosScreen() {
     type: 'TAKEAWAY',
     table_id: null,
     customer_name: '',
+    table_name: '',
     items: []
   })
 
@@ -147,7 +143,7 @@ export default function PosScreen() {
     }
 
     try {
-      const response: OrderResponse = await createOrder(payload)
+      const response = await createOrder(payload)
 
       ToastAndroid.show('Orden creada correctamente', ToastAndroid.SHORT)
 
@@ -156,6 +152,7 @@ export default function PosScreen() {
           order_number: response.order_number,
           type: order.type,
           customer_name: order.customer_name,
+          table_name: order.table_name,
           items: order.items.map((i) => ({
             name: i.name,
             quantity: i.quantity,
@@ -173,6 +170,7 @@ export default function PosScreen() {
         type: 'TAKEAWAY',
         table_id: null,
         customer_name: '',
+        table_name: '',
         items: []
       })
     } catch (error) {

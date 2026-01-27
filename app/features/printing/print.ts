@@ -184,7 +184,7 @@ export const printOrder = async (
     )
 
     await BluetoothEscposPrinter.printText(
-      `Total: $${total.toFixed(2)}\n\n`,
+      `Total: ${total.toFixed(2)}\n\n`,
       fontConfig
     )
 

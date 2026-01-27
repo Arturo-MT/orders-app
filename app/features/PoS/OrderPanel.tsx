@@ -71,8 +71,14 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
 
       {order.type === 'DINE_IN' && (
         <TablePicker
-          value={order.table_id ?? null}
-          onChange={(tableId) => onChange({ ...order, table_id: tableId })}
+          value={order.table_id}
+          onChange={(table) =>
+            onChange({
+              ...order,
+              table_id: table.id,
+              table_name: table.name
+            })
+          }
         />
       )}
 

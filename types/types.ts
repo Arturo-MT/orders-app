@@ -57,6 +57,7 @@ export type OrderDraft = {
   type: 'DINE_IN' | 'TAKEAWAY'
   table_id: string | null
   customer_name: string | null
+  table_name: string | null
   items: OrderItemDraft[]
 }
 

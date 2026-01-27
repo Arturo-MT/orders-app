@@ -1,17 +1,31 @@
 import React from 'react'
 import { View, StyleSheet } from 'react-native'
-import { Picker } from '@react-native-picker/picker'
 import { useTablesQuery } from '@/hooks/api/tables'
+import { Picker } from '@react-native-picker/picker'
+
+type Table = {
+  id: string
+  name: string
+}
 
 interface Props {
   value: string | null
-  onChange: (tableId: string | null) => void
+  onChange: (table: Table) => void
 }
 
 export default function TablePicker({ value, onChange }: Props) {
-  const { data: tables, isLoading } = useTablesQuery({
-    showOnlyActive: true
-  })
+  const { data: tables, isLoading } = useTablesQuery()
+  const handleChange = (tableId: string | null) => {
+    if (!tableId) return
+
+    const table = tables?.find((t) => t.id === tableId)
+    if (!table) return
+
+    onChange({
+      id: table.id,
+      name: table.name
+    })
+  }
 
   return (
     <View style={styles.wrapper}>
@@ -20,7 +34,7 @@ export default function TablePicker({ value, onChange }: Props) {
           mode='dropdown'
           selectedValue={value}
           enabled={!isLoading}
-          onValueChange={(val) => onChange(val)}
+          onValueChange={handleChange}
           style={styles.picker}
         >
           <Picker.Item label='Selecciona una mesa' value={null} />
