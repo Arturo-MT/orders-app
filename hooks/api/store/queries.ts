@@ -8,7 +8,7 @@ export async function storeQuery({
   client: SupabaseClient
 }) {
   const { data, error } = await client
-    .from('stores')
+    .from('store')
     .select('*')
     .eq('id', id)
     .single()

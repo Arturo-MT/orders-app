@@ -11,11 +11,11 @@ export async function storeUpdateMutation({
   id: string
 }) {
   const { data, error } = await client
-    .from('stores')
+    .from('store')
     .update(payload)
     .eq('id', id)
     .select()
-    .single()
+  console.log(data, error, payload)
   if (error) throw error
   return data
 }

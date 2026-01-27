@@ -4,25 +4,31 @@ import { STORE_KEY } from './constants'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { StoreConfig } from '@/types/types'
 import { storeUpdateMutation } from './mutations'
-import { useUserQuery } from '../users'
+import { useStore } from '@/app/context/StoreContext'
 
 export function useStoreQuery(config = {}) {
   const { client } = useFetch()
-  const { data: userData } = useUserQuery()
+  const { store } = useStore()
   return useQuery({
-    queryKey: [STORE_KEY, userData?.store],
-    enabled: !!userData?.store,
-    queryFn: () => storeQuery({ client, id: userData?.store_id }),
+    queryKey: [STORE_KEY, store],
+    enabled: !!store,
+    queryFn: () => storeQuery({ client, id: store!.id }),
     ...config
   })
 }
 
 export function useStoreUpdateMutation(config = {}) {
   const { client } = useFetch()
-  const { data: userData } = useUserQuery()
+  const { store } = useStore()
+
   return useMutation({
-    mutationFn: (payload: StoreConfig) =>
-      storeUpdateMutation({ client, payload, id: userData?.store }),
+    mutationFn: (payload: StoreConfig) => {
+      return storeUpdateMutation({
+        client,
+        payload,
+        id: store!.id
+      })
+    },
     ...config
   })
 }
