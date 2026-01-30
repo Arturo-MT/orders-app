@@ -8,25 +8,25 @@ import { useStore } from '@/app/context/StoreContext'
 
 export function useStoreQuery(config = {}) {
   const { client } = useFetch()
-  const { store } = useStore()
+  const { activeStore } = useStore()
   return useQuery({
-    queryKey: [STORE_KEY, store],
-    enabled: !!store,
-    queryFn: () => storeQuery({ client, id: store!.id }),
+    queryKey: [STORE_KEY, activeStore],
+    enabled: !!activeStore,
+    queryFn: () => storeQuery({ client, id: activeStore!.id }),
     ...config
   })
 }
 
 export function useStoreUpdateMutation(config = {}) {
   const { client } = useFetch()
-  const { store } = useStore()
+  const { activeStore } = useStore()
 
   return useMutation({
     mutationFn: (payload: StoreConfig) => {
       return storeUpdateMutation({
         client,
         payload,
-        id: store!.id
+        id: activeStore!.id
       })
     },
     ...config
