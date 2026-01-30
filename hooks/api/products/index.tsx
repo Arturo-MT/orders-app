@@ -8,15 +8,15 @@ import { ProductInput, ProductUpdateInput } from '@/types/types'
 
 export function useProductsQuery(config = {}) {
   const { client } = useFetch()
-  const { store, loading } = useStore()
+  const { activeStore, loading } = useStore()
 
   return useQuery({
-    queryKey: [PRODUCTS_KEY, store?.id],
-    enabled: !!store?.id && !loading,
+    queryKey: [PRODUCTS_KEY, activeStore?.id],
+    enabled: !!activeStore?.id && !loading,
     queryFn: () =>
       productsQuery({
         client,
-        storeId: store!.id,
+        storeId: activeStore!.id,
         showAll: (config as any).showAll || false
       }),
     ...config
@@ -25,14 +25,14 @@ export function useProductsQuery(config = {}) {
 
 export function useCreateProduct(config = {}) {
   const { client } = useFetch()
-  const { store } = useStore()
+  const { activeStore } = useStore()
 
   return useMutation({
     mutationFn: async (payload: ProductInput) => {
-      if (!store?.id) throw new Error('Store not found')
+      if (!activeStore?.id) throw new Error('Store not found')
       return createProduct({
         client,
-        storeId: store.id,
+        storeId: activeStore.id,
         payload
       })
     },
@@ -58,10 +58,12 @@ export function useUpdateProduct(config = {}) {
 export function useInvalidateProducts() {
   const { useQueryClient } = require('@tanstack/react-query')
   const queryClient = useQueryClient()
-  const { store, loading } = useStore()
+  const { activeStore, loading } = useStore()
   return () => {
-    if (!loading && store?.id) {
-      queryClient.invalidateQueries({ queryKey: [PRODUCTS_KEY, store.id] })
+    if (!loading && activeStore?.id) {
+      queryClient.invalidateQueries({
+        queryKey: [PRODUCTS_KEY, activeStore.id]
+      })
     }
   }
 }

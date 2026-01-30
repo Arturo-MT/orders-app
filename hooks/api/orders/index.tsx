@@ -7,7 +7,7 @@ import { findOpenOrderByTable, orderCreate } from './mutations'
 
 export function useCreateOrder(config = {}) {
   const { client } = useFetch()
-  const { store } = useStore()
+  const { activeStore } = useStore()
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -15,7 +15,7 @@ export function useCreateOrder(config = {}) {
       orderCreate({
         client,
         payload,
-        storeId: store!.id
+        storeId: activeStore!.id
       }),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: [ORDERS_KEY] })
@@ -102,15 +102,19 @@ export function useOrdersQuery({
   status?: 'OPEN' | 'CLOSED' | 'UNPAID'
 }) {
   const { client } = useFetch()
+  const { activeStore } = useStore()
 
   return useQuery({
-    queryKey: [ORDERS_KEY, page, pageSize, search, status],
+    queryKey: [ORDERS_KEY, page, pageSize, search, status, activeStore?.id],
 
     queryFn: async () => {
       const from = (page - 1) * pageSize
       const to = from + pageSize - 1
 
-      let query = client.from('order').select('*', { count: 'exact' })
+      let query = client
+        .from('order')
+        .select('*', { count: 'exact' })
+        .eq('store_id', activeStore!.id)
 
       if (search) {
         query = query.ilike('customer_name', `%${search}%`)

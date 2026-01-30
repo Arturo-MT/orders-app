@@ -7,15 +7,15 @@ import { createCategoryMutation, updateCategoryMutation } from './mutations'
 
 export function useCategoriesQuery(config = {}) {
   const { client } = useFetch()
-  const { store, loading: storeLoading } = useStore()
+  const { activeStore, loading: storeLoading } = useStore()
 
   return useQuery({
-    queryKey: [CATEGORIES_KEY, store?.id],
-    enabled: !!store?.id && !storeLoading,
+    queryKey: [CATEGORIES_KEY, activeStore?.id],
+    enabled: !!activeStore?.id && !storeLoading,
     queryFn: () =>
       categoriesQuery({
         client,
-        storeId: store!.id,
+        storeId: activeStore!.id,
         showAll: (config as any).showAll || false
       }),
     ...config
@@ -24,19 +24,19 @@ export function useCategoriesQuery(config = {}) {
 
 export function useCreateCategory(config = {}) {
   const { client } = useFetch()
-  const { store } = useStore()
+  const { activeStore } = useStore()
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (name: string) =>
       createCategoryMutation({
         client,
-        storeId: store!.id,
+        storeId: activeStore!.id,
         name
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [CATEGORIES_KEY, store?.id]
+        queryKey: [CATEGORIES_KEY, activeStore?.id]
       })
     },
     ...config
@@ -45,19 +45,19 @@ export function useCreateCategory(config = {}) {
 
 export function useUpdateCategory(config = {}) {
   const { client } = useFetch()
-  const { store } = useStore()
+  const { activeStore } = useStore()
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (input: { id: string; name?: string; is_active?: boolean }) =>
       updateCategoryMutation({
         client,
-        storeId: store!.id,
+        storeId: activeStore!.id,
         ...input
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [CATEGORIES_KEY, store?.id]
+        queryKey: [CATEGORIES_KEY, activeStore?.id]
       })
     },
     ...config
