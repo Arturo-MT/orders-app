@@ -7,18 +7,18 @@ import { storeMembersQuery } from './queries'
 
 export function useStoreMembersQuery() {
   const { client } = useFetch()
-  const { store } = useStore()
+  const { activeStore } = useStore()
 
   return useQuery({
-    queryKey: [STORE_MEMBERS_KEY, store?.id],
-    enabled: !!store?.id,
-    queryFn: () => storeMembersQuery(client, store!.id)
+    queryKey: [STORE_MEMBERS_KEY, activeStore?.id],
+    enabled: !!activeStore?.id,
+    queryFn: () => storeMembersQuery(client, activeStore!.id)
   })
 }
 
 export function useCreateStoreMember() {
   const { client } = useFetch()
-  const { store } = useStore()
+  const { activeStore } = useStore()
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -33,14 +33,14 @@ export function useCreateStoreMember() {
     }) =>
       createStoreMember({
         client,
-        storeId: store!.id,
+        storeId: activeStore!.id,
         email: email,
         role: role,
         is_active: is_active
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [STORE_MEMBERS_KEY, store?.id]
+        queryKey: [STORE_MEMBERS_KEY, activeStore?.id]
       })
     }
   })
@@ -48,7 +48,7 @@ export function useCreateStoreMember() {
 
 export function useUpdateStoreMember() {
   const { client } = useFetch()
-  const { store } = useStore()
+  const { activeStore } = useStore()
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -59,14 +59,14 @@ export function useUpdateStoreMember() {
     }) =>
       updateStoreMember({
         client,
-        storeId: store!.id,
+        storeId: activeStore!.id,
         id: input.id,
         role: input.role,
         is_active: input.is_active
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [STORE_MEMBERS_KEY, store?.id]
+        queryKey: [STORE_MEMBERS_KEY, activeStore?.id]
       })
     }
   })
