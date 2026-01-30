@@ -1,9 +1,10 @@
 import React from 'react'
-import { View, Text, StyleSheet } from 'react-native'
+import { View, Text, StyleSheet, ScrollView } from 'react-native'
 import BluetoothSettings from './BluetoothSettings'
 import { useUserQuery } from '@/hooks/api/users'
 import { useAuth } from '@/app/context/AuthContext'
 import { Pressable } from 'react-native'
+import StoreSelector from './StoreSelector'
 
 export default function SettingsScreen() {
   const { data, isLoading, error } = useUserQuery()
@@ -42,25 +43,13 @@ export default function SettingsScreen() {
   const role = isSuperAdmin ? 'super admin' : store_member_data?.role
 
   return (
-    <View style={styles.container}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Tienda</Text>
-        <Text style={styles.value}>{store_member_data?.store.name ?? '—'}</Text>
-      </View>
-
+    <ScrollView style={styles.container} contentContainerStyle={{ gap: 12 }}>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Cuenta</Text>
         <Text style={styles.label}>Email</Text>
         <Text style={styles.value}>{user?.email ?? '—'}</Text>
         <Text style={styles.label}>Rol</Text>
         <Text style={styles.value}>{role ?? '—'}</Text>
-      </View>
-
-      <View style={[styles.section, styles.bluetoothSection]}>
-        <BluetoothSettings />
-      </View>
-
-      <View style={styles.section}>
         <Pressable
           style={
             loadingLogout
@@ -75,7 +64,21 @@ export default function SettingsScreen() {
           </Text>
         </Pressable>
       </View>
-    </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Tienda</Text>
+        <Text style={styles.value}>{store_member_data?.store.name ?? '—'}</Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Seleccionar tienda</Text>
+        <StoreSelector />
+      </View>
+
+      <View style={[styles.section, styles.bluetoothSection]}>
+        <BluetoothSettings />
+      </View>
+    </ScrollView>
   )
 }
 
@@ -118,7 +121,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600'
   },
-  bluetoothSection: {
-    maxHeight: 300
-  }
+  bluetoothSection: {}
 })
