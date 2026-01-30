@@ -45,6 +45,7 @@ export type PrintOrder = {
   type: 'DINE_IN' | 'TAKEAWAY'
   customer_name: string | null
   table_name?: string | null
+  is_paid: boolean
   items: {
     name: string
     quantity: number
@@ -58,6 +59,7 @@ export type OrderDraft = {
   table_id: string | null
   customer_name: string | null
   table_name: string | null
+  is_paid: boolean
   items: OrderItemDraft[]
 }
 
