@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ORDERS_KEY } from './constants'
 import { OrderDraft } from '@/types/types'
 import { useStore } from '@/app/context/StoreContext'
-import { orderCreate } from './mutations'
+import { findOpenOrderByTable, orderCreate } from './mutations'
 
 export function useCreateOrder(config = {}) {
   const { client } = useFetch()
@@ -99,7 +99,7 @@ export function useOrdersQuery({
   page: number
   pageSize?: number
   search?: string
-  status?: 'OPEN' | 'CLOSED'
+  status?: 'OPEN' | 'CLOSED' | 'UNPAID'
 }) {
   const { client } = useFetch()
 
@@ -180,5 +180,16 @@ export function useCloseOrderMutation() {
         queryKey: ['order', variables.order_id]
       })
     }
+  })
+}
+
+export function useGetTableOrder(table_id: string) {
+  const { client } = useFetch()
+
+  return useQuery({
+    queryKey: ['table_order', table_id],
+    enabled: !!table_id,
+
+    queryFn: async () => findOpenOrderByTable(client, table_id)
   })
 }

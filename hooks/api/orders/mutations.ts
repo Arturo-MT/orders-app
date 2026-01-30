@@ -1,22 +1,24 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import { OrderDraft } from '@/types/types'
 
-async function findOpenOrderByTable(client: SupabaseClient, tableId: string) {
+export type OrderCreateResponse = {
+  order_id: string
+  order_number: string
+}
+
+export async function findOpenOrderByTable(
+  client: SupabaseClient,
+  tableId: string
+): Promise<{ id: string; order_number: string } | null> {
   const { data, error } = await client
     .from('order')
-    .select('id')
+    .select('id, order_number')
     .eq('table_id', tableId)
     .eq('status', 'OPEN')
-    .limit(1)
     .maybeSingle()
 
   if (error) throw error
   return data
-}
-
-export type OrderCreateResponse = {
-  order_id: string
-  order_number: string
 }
 
 export async function orderCreate({
@@ -31,49 +33,68 @@ export async function orderCreate({
   let orderId: string
   let orderNumber: string
 
-  // =========================
-  // DINE_IN
-  // =========================
   if (payload.type === 'DINE_IN') {
-    if (!payload.table_id) {
-      throw new Error('DINE_IN requiere table_id')
+    const hasTable = !!payload.table_id
+    const hasCustomerName = !!payload.customer_name?.trim()
+
+    if (!hasTable && !hasCustomerName) {
+      throw new Error('DINE_IN requiere mesa o nombre del cliente')
     }
 
-    const openOrder = await findOpenOrderByTable(client, payload.table_id)
+    if (hasTable) {
+      const openOrder = await findOpenOrderByTable(client, payload.table_id!)
 
-    if (openOrder) {
-      orderId = openOrder.id
+      if (openOrder) {
+        orderId = openOrder.id
+        orderNumber = openOrder.order_number
 
-      // obtener order_number de la orden abierta
-      const { data, error } = await client
-        .from('order')
-        .select('order_number')
-        .eq('id', orderId)
-        .single()
+        const { error: itemsError } = await client.rpc('add_items_to_order', {
+          p_order_id: orderId,
+          p_items: payload.items
+        })
 
-      if (error) throw error
-      orderNumber = data.order_number
-    } else {
-      const { data, error } = await client.rpc('create_dine_in_order', {
+        if (itemsError) throw itemsError
+
+        return {
+          order_id: orderId,
+          order_number: orderNumber
+        }
+      }
+    }
+
+    const status = payload.is_paid ? 'CLOSED' : 'OPEN'
+
+    const { data, error }: any = await client
+      .rpc('create_order', {
         p_store_id: storeId,
-        p_table_id: payload.table_id
+        p_type: 'DINE_IN',
+        p_table_id: hasTable ? payload.table_id : null,
+        p_customer_name: hasCustomerName ? payload.customer_name : null,
+        p_status: status
       })
+      .single()
 
-      if (error) throw error
+    if (error) throw error
 
-      orderId = data.order_id
-      orderNumber = data.order_number
+    orderId = data.order_id
+    orderNumber = data.order_number
+  } else {
+    const hasCustomerName = !!payload.customer_name?.trim()
+    if (!hasCustomerName) {
+      throw new Error('TAKEAWAY requiere nombre del cliente')
     }
-  }
 
-  // =========================
-  // TAKEAWAY
-  // =========================
-  else {
-    const { data, error } = await client.rpc('create_takeaway_order', {
-      p_store_id: storeId,
-      p_customer_name: payload.customer_name
-    })
+    const status = payload.is_paid ? 'CLOSED' : 'UNPAID'
+
+    const { data, error }: any = await client
+      .rpc('create_order', {
+        p_store_id: storeId,
+        p_type: 'TAKEAWAY',
+        p_table_id: null,
+        p_customer_name: payload.customer_name,
+        p_status: status
+      })
+      .single()
 
     if (error) throw error
 
@@ -81,9 +102,6 @@ export async function orderCreate({
     orderNumber = data.order_number
   }
 
-  // =========================
-  // AGREGAR ITEMS
-  // =========================
   const { error: itemsError } = await client.rpc('add_items_to_order', {
     p_order_id: orderId,
     p_items: payload.items
@@ -91,9 +109,6 @@ export async function orderCreate({
 
   if (itemsError) throw itemsError
 
-  // =========================
-  // RESPUESTA FINAL
-  // =========================
   return {
     order_id: orderId,
     order_number: orderNumber
