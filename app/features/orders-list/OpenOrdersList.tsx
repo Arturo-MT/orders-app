@@ -5,10 +5,22 @@ import OrderCard from './OrderCard'
 import { View } from 'react-native'
 
 export default function OpenOrdersList() {
-  const { data } = useOrdersQuery({
+  const { data: openOrdersData } = useOrdersQuery({
     page: 1,
     status: 'OPEN'
   })
+
+  const { data: unpaidOrdersData } = useOrdersQuery({
+    page: 1,
+    status: 'UNPAID'
+  })
+
+  const data = {
+    orders: [
+      ...(openOrdersData?.orders || []),
+      ...(unpaidOrdersData?.orders || [])
+    ]
+  }
 
   return (
     <View>

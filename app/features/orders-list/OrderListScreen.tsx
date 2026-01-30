@@ -51,66 +51,74 @@ export default function OrdersListScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <OpenOrdersList />
-
-      <Text style={styles.sectionTitle}>Historial</Text>
-
-      <TextInput
-        placeholder='Buscar por cliente'
-        style={styles.input}
-        value={search}
-        onChangeText={setSearch}
-        onSubmitEditing={() => {
-          setPage(1)
-          refetch()
-        }}
-      />
-
-      {isFetching ? (
+    <FlatList
+      style={styles.container}
+      data={orders}
+      keyExtractor={(item) => item.id.toString()}
+      renderItem={({ item }) => <OrderCard order={item} />}
+      ListHeaderComponent={
         <>
-          {[...Array(6)].map((_, i) => (
-            <View key={i} style={styles.orderSkeleton}>
-              <View style={styles.skeletonRow}>
-                <View style={[styles.skeleton, { width: '50%' }]} />
-                <View style={[styles.skeleton, { width: 24, height: 24 }]} />
-              </View>
-              <View style={styles.skeleton} />
-              <View style={[styles.skeleton, { width: '30%' }]} />
-            </View>
-          ))}
+          <OpenOrdersList />
+
+          <Text style={styles.sectionTitle}>Historial</Text>
+
+          <TextInput
+            placeholder='Buscar por cliente'
+            style={styles.input}
+            value={search}
+            onChangeText={setSearch}
+            onSubmitEditing={() => {
+              setPage(1)
+              refetch()
+            }}
+          />
+
+          {isFetching && (
+            <>
+              {[...Array(6)].map((_, i) => (
+                <View key={i} style={styles.orderSkeleton}>
+                  <View style={styles.skeletonRow}>
+                    <View style={[styles.skeleton, { width: '50%' }]} />
+                    <View
+                      style={[styles.skeleton, { width: 24, height: 24 }]}
+                    />
+                  </View>
+                  <View style={styles.skeleton} />
+                  <View style={[styles.skeleton, { width: '30%' }]} />
+                </View>
+              ))}
+            </>
+          )}
         </>
-      ) : (
-        <FlatList
-          data={orders}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => <OrderCard order={item} />}
-        />
-      )}
+      }
+      ListFooterComponent={
+        <View style={styles.pagination}>
+          <TouchableOpacity
+            onPress={() => setPage((p) => Math.max(p - 1, 1))}
+            disabled={page <= 1}
+            style={[styles.pageButton, page <= 1 && styles.disabledButton]}
+          >
+            <Ionicons name='chevron-back' size={20} color='#130918' />
+          </TouchableOpacity>
 
-      <View style={styles.pagination}>
-        <TouchableOpacity
-          onPress={() => setPage((p) => Math.max(p - 1, 1))}
-          disabled={page <= 1}
-          style={[styles.pageButton, page <= 1 && styles.disabledButton]}
-        >
-          <Ionicons name='chevron-back' size={20} color='#130918' />
-        </TouchableOpacity>
+          <Text style={styles.pageText}>Página {page}</Text>
 
-        <Text style={styles.pageText}>Página {page}</Text>
-
-        <TouchableOpacity
-          onPress={() => setPage((p) => p + 1)}
-          disabled={page >= totalPages}
-          style={[
-            styles.pageButton,
-            page >= totalPages && styles.disabledButton
-          ]}
-        >
-          <Ionicons name='chevron-forward' size={20} color='#130918' />
-        </TouchableOpacity>
-      </View>
-    </View>
+          <TouchableOpacity
+            onPress={() => setPage((p) => p + 1)}
+            disabled={page >= totalPages}
+            style={[
+              styles.pageButton,
+              page >= totalPages && styles.disabledButton
+            ]}
+          >
+            <Ionicons name='chevron-forward' size={20} color='#130918' />
+          </TouchableOpacity>
+        </View>
+      }
+      contentContainerStyle={{
+        paddingBottom: 20
+      }}
+    />
   )
 }
 

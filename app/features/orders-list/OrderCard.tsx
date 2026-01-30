@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useCloseOrderMutation, useOrderQuery } from '@/hooks/api/orders'
 import { useStoreQuery } from '@/hooks/api/store'
 import { printOrder, PrintOrder } from '../printing/print'
+import CustomCheckbox from '@/app/components/CustomCheckbox'
 
 if (
   Platform.OS === 'android' &&
@@ -43,10 +44,24 @@ export default function OrderCard({
   onOpenOrder
 }: Props) {
   const [expanded, setExpanded] = useState(false)
+  const [paidItems, setPaidItems] = useState<Record<string, boolean>>({})
+
+  const toggleItemPaid = (key: string) => {
+    setPaidItems((prev) => ({
+      ...prev,
+      [key]: !prev[key]
+    }))
+  }
 
   const { data: orderData, isLoading } = useOrderQuery({
     order_id: order.id
   })
+
+  const paidTotal =
+    orderData?.items.reduce((acc: number, item: any, i: number) => {
+      const key = `${item.product_name}-${i}`
+      return paidItems[key] ? acc + Number(item.total_price) : acc
+    }, 0) ?? 0
 
   const { data: storeData } = useStoreQuery()
 
@@ -83,6 +98,7 @@ export default function OrderCard({
       type: orderData.type,
       customer_name: orderData.customer_name,
       table_name: orderData.table_name,
+      is_paid: orderData.status === 'CLOSED',
       items: orderData.items.map((item: any) => ({
         name: item.product_name,
         quantity: item.quantity,
@@ -108,9 +124,7 @@ export default function OrderCard({
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>
-            {order.type === 'DINE_IN'
-              ? orderData?.table_name
-              : (order.customer_name ?? 'Para llevar')}
+            {orderData?.table_name || order.customer_name}
           </Text>
 
           <Text style={styles.subtitle}>
@@ -136,32 +150,56 @@ export default function OrderCard({
           ) : (
             <>
               <Text style={styles.status}>
-                Estado: {orderData?.status === 'OPEN' ? 'Abierta' : 'Cerrada'}
+                Estado:{' '}
+                {orderData?.status === 'OPEN' || orderData?.status === 'UNPAID'
+                  ? 'Abierta'
+                  : 'Cerrada'}
               </Text>
 
-              {orderData?.items.map((item: any, i: number) => (
-                <View key={i} style={styles.itemRow}>
-                  <View>
-                    <Text style={styles.itemName}>
-                      {item.quantity} × {item.product_name}
-                    </Text>
-                    {item.notes ? (
-                      <Text style={styles.itemNotes}>{item.notes}</Text>
-                    ) : null}
-                  </View>
-                  <Text style={styles.itemPrice}>
-                    ${item.total_price.toFixed(2)}
-                  </Text>
-                </View>
-              ))}
+              {orderData?.items.map((item: any, i: number) => {
+                const itemKey = `${item.product_name}-${i}`
+                const isPaid = !!paidItems[itemKey]
 
-              <Text
-                style={{
-                  textAlign: 'right',
-                  width: '100%'
-                }}
-              >
-                Total: ${orderTotal.toFixed(2)}
+                return (
+                  <View key={itemKey} style={styles.itemRow}>
+                    <CustomCheckbox
+                      value={isPaid}
+                      onChange={() => toggleItemPaid(itemKey)}
+                    />
+
+                    <View style={styles.itemInfo}>
+                      <Text
+                        style={[styles.itemName, isPaid && styles.itemPaidText]}
+                      >
+                        {item.quantity} × {item.product_name}
+                      </Text>
+
+                      {item.notes ? (
+                        <Text
+                          style={[
+                            styles.itemNotes,
+                            isPaid && styles.itemPaidText
+                          ]}
+                        >
+                          {item.notes}
+                        </Text>
+                      ) : null}
+                    </View>
+
+                    <Text
+                      style={[styles.itemPrice, isPaid && styles.itemPaidText]}
+                    >
+                      ${item.total_price.toFixed(2)}
+                    </Text>
+                  </View>
+                )
+              })}
+
+              <Text style={{ textAlign: 'right' }}>
+                Pagado: ${paidTotal.toFixed(2)}
+              </Text>
+              <Text style={{ textAlign: 'right' }}>
+                Pendiente: ${(orderTotal - paidTotal).toFixed(2)}
               </Text>
 
               <View style={styles.actions}>
@@ -171,7 +209,8 @@ export default function OrderCard({
                 >
                   <Ionicons name='print-outline' size={26} color='#130918' />
                 </TouchableOpacity>
-                {orderData?.status === 'OPEN' && (
+                {(orderData?.status === 'OPEN' ||
+                  orderData?.status === 'UNPAID') && (
                   <TouchableOpacity
                     onPress={handleCloseOrder}
                     style={styles.closeButton}
@@ -232,7 +271,8 @@ const styles = StyleSheet.create({
   itemRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 6
+    marginBottom: 6,
+    alignItems: 'center'
   },
   itemName: {
     fontSize: 14,
@@ -263,5 +303,13 @@ const styles = StyleSheet.create({
     marginTop: 8,
     padding: 6,
     borderRadius: 6
+  },
+  itemInfo: {
+    flex: 1,
+    marginLeft: 6
+  },
+  itemPaidText: {
+    textDecorationLine: 'line-through',
+    color: '#999'
   }
 })
