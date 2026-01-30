@@ -7,15 +7,15 @@ import { createTableMutation, updateTableMutation } from './mutations'
 
 export function useTablesQuery(config = {}) {
   const { client } = useFetch()
-  const { store, loading: storeLoading } = useStore()
+  const { activeStore, loading: storeLoading } = useStore()
 
   return useQuery({
-    queryKey: [TABLES_KEY, store?.id],
-    enabled: !!store?.id && !storeLoading,
+    queryKey: [TABLES_KEY, activeStore?.id],
+    enabled: !!activeStore?.id && !storeLoading,
     queryFn: () =>
       tablesQuery({
         client,
-        storeId: store!.id,
+        storeId: activeStore!.id,
         showAll: (config as any).showAll || false
       }),
     ...config
@@ -24,19 +24,19 @@ export function useTablesQuery(config = {}) {
 
 export function useCreateTable(config = {}) {
   const { client } = useFetch()
-  const { store } = useStore()
+  const { activeStore } = useStore()
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (name: string) =>
       createTableMutation({
         client,
-        storeId: store!.id,
+        storeId: activeStore!.id,
         name
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [TABLES_KEY, store?.id]
+        queryKey: [TABLES_KEY, activeStore?.id]
       })
     },
     ...config
@@ -45,19 +45,19 @@ export function useCreateTable(config = {}) {
 
 export function useUpdateTable(config = {}) {
   const { client } = useFetch()
-  const { store } = useStore()
+  const { activeStore } = useStore()
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (input: { id: string; name?: string; is_active?: boolean }) =>
       updateTableMutation({
         client,
-        storeId: store!.id,
+        storeId: activeStore!.id,
         ...input
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [TABLES_KEY, store?.id]
+        queryKey: [TABLES_KEY, activeStore?.id]
       })
     },
     ...config
