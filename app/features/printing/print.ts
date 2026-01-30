@@ -14,6 +14,7 @@ export type PrintOrder = {
   type: 'DINE_IN' | 'TAKEAWAY'
   customer_name: string | null
   table_name?: string | null
+  is_paid: boolean
   items: {
     name: string
     quantity: number
@@ -109,6 +110,8 @@ export const printOrder = async (
         `Cliente: ${normalizeTextForPrinter(order.customer_name ?? '-')}`
       )
     }
+
+    headerLines.push(`Estado: ${order.is_paid ? 'Pagada' : 'Pendiente'}`)
 
     headerLines.push(
       `Tipo: ${order.type === 'DINE_IN' ? 'Para aqui' : 'Para llevar'}`
