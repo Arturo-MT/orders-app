@@ -25,7 +25,14 @@ export default function BluetoothSettings() {
     }
   })
 
-  const handleSelectPrinter = (device: { name: string; address: string }) => {
+  const handleSelectPrinter = (device: { name?: string; address: string }) => {
+    if (!device.name) {
+      ToastAndroid.show(
+        'El nombre de la impresora no es válido',
+        ToastAndroid.SHORT
+      )
+      return
+    }
     saveStoreConfig({
       printer_name: device.name,
       printer_address: device.address
@@ -42,9 +49,7 @@ export default function BluetoothSettings() {
           : `Impresora actual: ${storeData?.printer_name || 'No configurada'}`}
       </Text>
 
-      <View style={styles.selectorWrapper}>
-        <PrinterSelector onSelect={handleSelectPrinter} />
-      </View>
+      <PrinterSelector onSelect={handleSelectPrinter} />
     </View>
   )
 }
@@ -63,8 +68,6 @@ const styles = StyleSheet.create({
     color: '#130918'
   },
   selectorWrapper: {
-    borderRadius: 12,
-    overflow: 'hidden',
-    maxHeight: 150
+    borderRadius: 12
   }
 })
