@@ -55,30 +55,27 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
 
   const canSendToKitchen =
     order.items.length > 0 &&
-    ((order.type === 'TAKEAWAY' && order.customer_name?.trim() !== '') ||
-      (order.type === 'DINE_IN' && !!order.table_id))
+    (order.customer_name?.trim() !== '' || order.table_id !== null)
 
   return (
     <View style={styles.wrapper}>
-      {order.type === 'TAKEAWAY' && (
-        <TextInput
-          style={styles.customerNameInput}
-          value={order.customer_name ?? ''}
-          onChangeText={(text) => onChange({ ...order, customer_name: text })}
-          placeholder='Nombre del cliente'
-        />
-      )}
+      <TextInput
+        style={styles.customerNameInput}
+        value={order.customer_name ?? ''}
+        onChangeText={(text) => onChange({ ...order, customer_name: text })}
+        placeholder='Nombre del cliente'
+      />
 
       {order.type === 'DINE_IN' && (
         <TablePicker
           value={order.table_id}
-          onChange={(table) =>
+          onChange={(table) => {
             onChange({
               ...order,
               table_id: table.id,
               table_name: table.name
             })
-          }
+          }}
         />
       )}
 
@@ -102,6 +99,17 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
               ...order,
               type: 'DINE_IN',
               customer_name: ''
+            })
+          }
+        />
+
+        <Text>Pagado</Text>
+        <CustomCheckbox
+          value={!!order.is_paid}
+          onChange={(checked) =>
+            onChange({
+              ...order,
+              is_paid: checked
             })
           }
         />
@@ -198,7 +206,8 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 5,
     padding: 8,
-    backgroundColor: '#fff'
+    backgroundColor: '#fff',
+    marginBottom: 10
   },
   orderTitle: {
     fontSize: 18,

@@ -29,6 +29,7 @@ export default function PosScreen() {
     table_id: null,
     customer_name: '',
     table_name: '',
+    is_paid: false,
     items: []
   })
 
@@ -120,11 +121,10 @@ export default function PosScreen() {
   const buildOrderPayload = (draft: OrderDraft): OrderDraft | null => {
     if (draft.items.length === 0) return null
 
-    if (draft.type === 'TAKEAWAY' && !draft.customer_name?.trim()) {
-      return null
-    }
+    const hasTable = draft.table_id !== null
+    const hasCustomerName = !!draft.customer_name?.trim()
 
-    if (draft.type === 'DINE_IN' && !draft.table_id) {
+    if (!hasTable && !hasCustomerName) {
       return null
     }
 
@@ -153,6 +153,7 @@ export default function PosScreen() {
           type: order.type,
           customer_name: order.customer_name,
           table_name: order.table_name,
+          is_paid: order.is_paid ?? false,
           items: order.items.map((i) => ({
             name: i.name,
             quantity: i.quantity,
@@ -171,6 +172,7 @@ export default function PosScreen() {
         table_id: null,
         customer_name: '',
         table_name: '',
+        is_paid: false,
         items: []
       })
     } catch (error) {

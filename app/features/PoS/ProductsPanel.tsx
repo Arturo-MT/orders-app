@@ -4,9 +4,7 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
-  StyleSheet,
-  TextInput
+  StyleSheet
 } from 'react-native'
 import Card from '@/app/components/Card'
 import { Product } from '@/types/types'
@@ -103,14 +101,14 @@ export default function ProductsPanel({
 
   return (
     <View style={styles.wrapper}>
-      <View style={styles.searchWrapper}>
+      {/* <View style={styles.searchWrapper}>
         <TextInput
           value={searchText}
           onChangeText={setSearchText}
           placeholder='Buscar categoría o producto'
           style={styles.searchInput}
         />
-      </View>
+      </View> */}
 
       <View style={mainContentStyle}>
         <View style={containerStyle}>
