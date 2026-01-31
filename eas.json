@@ -11,15 +11,14 @@
         "gradleCommand": ":app:assembleDebug"
       }
     },
-    "production": {
-      "distribution": "store",
-      "autoIncrement": true,
+    "beta": {
+      "distribution": "internal",
       "android": {
-        "buildType": "app-bundle",
+        "buildType": "apk",
         "gradleCommand": ":app:assembleRelease"
       }
     },
-    "apk": {
+    "production": {
       "android": {
         "buildType": "apk"
       },
