@@ -111,12 +111,29 @@ android {
 
     namespace 'com.signemammoth.tacoloco'
     defaultConfig {
-        applicationId 'com.signemammoth.tacoloco'
-        minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0.0"
+    applicationId "com.signemammoth.tacoloco"
+    minSdkVersion 23
+    targetSdkVersion 34
+    versionCode 1
+    versionName "1.0.0"
+}
+
+flavorDimensions "app"
+
+productFlavors {
+    production {
+        dimension "app"
+        applicationId "com.signemammoth.tacoloco"
+        resValue "string", "app_name", "Taco Loco"
     }
+
+    beta {
+        dimension "app"
+        applicationId "com.signemammoth.tacoloco.beta"
+        resValue "string", "app_name", "Taco Loco (BETA)"
+    }
+}
+
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
