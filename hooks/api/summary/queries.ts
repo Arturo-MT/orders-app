@@ -11,13 +11,13 @@ export async function summaryQuery({
   date: string
   storeId: string
 }) {
-  const { data, error } = await client
-    .rpc('get_summary', {
-      p_period: period,
-      p_date: date
-    })
-    .eq('store_id', storeId)
+  const { data, error } = await client.rpc('get_summary', {
+    p_period: period,
+    p_date: date,
+    p_store_id: storeId
+  })
 
   if (error) throw error
+  console.log('Summary data:', data, error)
   return data
 }

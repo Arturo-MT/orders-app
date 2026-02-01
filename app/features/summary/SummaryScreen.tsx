@@ -45,17 +45,12 @@ export default function SummaryScreen() {
     date: formatDateForApi(today, 'day')
   })
 
-  const { data, isLoading, isError, error, refetch } =
-    useSummaryQuery(queryParams)
+  const { data, isLoading, isError, error } = useSummaryQuery(queryParams)
 
   useEffect(() => {
     setPeriod('day')
     setSelectedDate(today)
   }, [])
-
-  useFocusEffect(() => {
-    refetch()
-  })
 
   const totalOrders = data?.summary?.total_orders ?? 0
   const totalRevenue = data?.summary?.total_revenue ?? 0
