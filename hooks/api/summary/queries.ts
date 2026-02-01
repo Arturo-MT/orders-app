@@ -18,6 +18,5 @@ export async function summaryQuery({
   })
 
   if (error) throw error
-  console.log('Summary data:', data, error)
   return data
 }
