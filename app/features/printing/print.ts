@@ -103,12 +103,12 @@ export const printOrder = async (
 
     headerLines.push(`Comanda: ${order.order_number}`)
 
-    if (order.type === 'DINE_IN') {
+    if (order.table_name) {
       headerLines.push(`Mesa: ${order.table_name ?? '-'}`)
-    } else {
-      headerLines.push(
-        `Cliente: ${normalizeTextForPrinter(order.customer_name ?? '-')}`
-      )
+    }
+
+    if (order.customer_name) {
+      headerLines.push(`Cliente: ${order.customer_name}`)
     }
 
     headerLines.push(`Estado: ${order.is_paid ? 'Pagada' : 'Pendiente'}`)
