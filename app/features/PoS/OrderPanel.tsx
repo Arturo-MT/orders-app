@@ -97,8 +97,7 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
           onChange={() =>
             onChange({
               ...order,
-              type: 'DINE_IN',
-              customer_name: ''
+              type: 'DINE_IN'
             })
           }
         />
