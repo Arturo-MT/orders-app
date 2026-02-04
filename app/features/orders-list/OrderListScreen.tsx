@@ -51,31 +51,31 @@ export default function OrdersListScreen() {
   }
 
   return (
-    <FlatList
-      style={styles.container}
-      data={orders}
-      keyExtractor={(item) => item.id.toString()}
-      renderItem={({ item }) => <OrderCard order={item} />}
-      ListHeaderComponent={
-        <>
-          <OpenOrdersList />
+    <View style={styles.container}>
+      {/* ===== ZONA SCROLLEABLE ===== */}
+      <FlatList
+        data={orders}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => <OrderCard order={item} />}
+        ListHeaderComponent={
+          <>
+            <OpenOrdersList />
 
-          <Text style={styles.sectionTitle}>Historial</Text>
+            <Text style={styles.sectionTitle}>Historial</Text>
 
-          <TextInput
-            placeholder='Buscar por cliente'
-            style={styles.input}
-            value={search}
-            onChangeText={setSearch}
-            onSubmitEditing={() => {
-              setPage(1)
-              refetch()
-            }}
-          />
+            <TextInput
+              placeholder='Buscar por cliente'
+              style={styles.input}
+              value={search}
+              onChangeText={setSearch}
+              onSubmitEditing={() => {
+                setPage(1)
+                refetch()
+              }}
+            />
 
-          {isFetching && (
-            <>
-              {[...Array(6)].map((_, i) => (
+            {isFetching &&
+              [...Array(6)].map((_, i) => (
                 <View key={i} style={styles.orderSkeleton}>
                   <View style={styles.skeletonRow}>
                     <View style={[styles.skeleton, { width: '50%' }]} />
@@ -87,52 +87,46 @@ export default function OrdersListScreen() {
                   <View style={[styles.skeleton, { width: '30%' }]} />
                 </View>
               ))}
-            </>
-          )}
-        </>
-      }
-      ListFooterComponent={
-        <View style={styles.pagination}>
-          <TouchableOpacity
-            onPress={() => setPage((p) => Math.max(p - 1, 1))}
-            disabled={page <= 1}
-            style={[styles.pageButton, page <= 1 && styles.disabledButton]}
-          >
-            <Ionicons name='chevron-back' size={20} color='#130918' />
-          </TouchableOpacity>
+          </>
+        }
+        contentContainerStyle={{
+          paddingBottom: 16,
+          paddingHorizontal: 16
+        }}
+        showsVerticalScrollIndicator={false}
+      />
 
-          <Text style={styles.pageText}>Página {page}</Text>
+      {/* ===== FOOTER FIJO ===== */}
+      <View style={styles.pagination}>
+        <TouchableOpacity
+          onPress={() => setPage((p) => Math.max(p - 1, 1))}
+          disabled={page <= 1}
+          style={[styles.pageButton, page <= 1 && styles.disabledButton]}
+        >
+          <Ionicons name='chevron-back' size={20} color='#130918' />
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => setPage((p) => p + 1)}
-            disabled={page >= totalPages}
-            style={[
-              styles.pageButton,
-              page >= totalPages && styles.disabledButton
-            ]}
-          >
-            <Ionicons name='chevron-forward' size={20} color='#130918' />
-          </TouchableOpacity>
-        </View>
-      }
-      contentContainerStyle={{
-        paddingBottom: 20
-      }}
-    />
+        <Text style={styles.pageText}>Página {page}</Text>
+
+        <TouchableOpacity
+          onPress={() => setPage((p) => p + 1)}
+          disabled={page >= totalPages}
+          style={[
+            styles.pageButton,
+            page >= totalPages && styles.disabledButton
+          ]}
+        >
+          <Ionicons name='chevron-forward' size={20} color='#130918' />
+        </TouchableOpacity>
+      </View>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: '#ece2d0'
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#130918'
   },
   input: {
     borderWidth: 1,
@@ -141,65 +135,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
     marginBottom: 16,
-    backgroundColor: '#fff'
+    backgroundColor: '#fff',
+    marginHorizontal: 16
   },
-  summary: {
-    marginBottom: 20
+  sectionTitle: {
+    textAlign: 'center',
+    marginBottom: 8,
+    fontSize: 18
   },
-  summaryTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10
-  },
-  summaryGrid: {
+  pagination: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10
-  },
-  card: {
-    backgroundColor: '#fff',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 16,
-    borderRadius: 10,
-    marginBottom: 10,
-    shadowColor: '#130918',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    flexGrow: 1
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 4,
-    color: '#130918'
-  },
-  orderItem: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 10
-  },
-  customer: {
-    fontSize: 16,
-    fontWeight: '500'
-  },
-  total: {
-    color: '#130918'
-  },
-  date: {
-    fontSize: 12,
-    color: '#130918',
-    opacity: 0.7
+    borderTopWidth: 1,
+    borderColor: '#ddd',
+    backgroundColor: '#ece2d0'
   },
   pageButton: {
     backgroundColor: '#f1aa1c',
     padding: 10,
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
     width: 40,
-    height: 40
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   disabledButton: {
     backgroundColor: '#ccc'
@@ -207,13 +167,6 @@ const styles = StyleSheet.create({
   pageText: {
     fontSize: 16,
     fontWeight: '500'
-  },
-  pagination: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 20,
-    gap: 20
   },
   skeleton: {
     height: 16,
@@ -225,17 +178,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 12,
     borderRadius: 8,
-    marginBottom: 10
+    marginBottom: 10,
+    marginHorizontal: 16
   },
   skeletonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8
-  },
-  sectionTitle: {
-    textAlign: 'center',
-    marginBottom: 8,
-    fontSize: 18
   }
 })
