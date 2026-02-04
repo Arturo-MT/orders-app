@@ -26,6 +26,10 @@ export default ({ config }) => {
         : isDev
           ? 'com.signemammoth.tacoloco.dev'
           : 'com.signemammoth.tacoloco'
+    },
+
+    updates: {
+      enabled: !isBeta
     }
   }
 }
