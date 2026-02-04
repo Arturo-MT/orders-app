@@ -102,14 +102,14 @@ export default function ProductsPanel({
 
   return (
     <View style={styles.wrapper}>
-      {/* <View style={styles.searchWrapper}>
+      <View style={styles.searchWrapper}>
         <TextInput
           value={searchText}
           onChangeText={setSearchText}
           placeholder='Buscar categoría o producto'
           style={styles.searchInput}
         />
-      </View> */}
+      </View>
 
       <View style={mainContentStyle}>
         <View style={containerStyle}>
