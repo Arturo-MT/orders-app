@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -28,8 +28,11 @@ export default function ProductsScreen() {
   const { data: categoriesData } = useCategoriesQuery()
   const { mutate: createProduct, isPending: isCreating } = useCreateProduct()
   const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct()
-
   const invalidate = useInvalidateProducts()
+
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>(
+    {}
+  )
 
   const [open, setOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
@@ -38,10 +41,7 @@ export default function ProductsScreen() {
   const [price, setPrice] = useState(0)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
-  const [editingProduct, setEditingProduct] = useState<{
-    id: string
-    name: string
-  } | null>(null)
+  const [editingProduct, setEditingProduct] = useState<any>(null)
   const [editName, setEditName] = useState('')
   const [editCategory, setEditCategory] = useState<string | null>(null)
   const [editPrice, setEditPrice] = useState(0)
@@ -49,7 +49,55 @@ export default function ProductsScreen() {
   const saveDisabled =
     !name.trim() || !selectedCategory || price <= 0 || isCreating
 
-  const editDisabled = !editName.trim() || isUpdating
+  const editDisabled = !editName.trim() || !editCategory || isUpdating
+
+  const groupedData = useMemo(() => {
+    if (!data || !categoriesData) return []
+
+    const map = new Map<
+      string,
+      { id: string; name: string; products: typeof data }
+    >()
+
+    categoriesData.forEach((cat) => {
+      map.set(cat.id, { id: cat.id, name: cat.name, products: [] })
+    })
+
+    data.forEach((product) => {
+      if (product.category_id) {
+        const group = map.get(product.category_id)
+        if (group) group.products.push(product)
+      }
+    })
+
+    map.forEach((group) => {
+      group.products.sort((a, b) =>
+        a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })
+      )
+    })
+
+    return Array.from(map.values()).sort((a, b) =>
+      a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })
+    )
+  }, [data, categoriesData])
+
+  useEffect(() => {
+    if (groupedData.length) {
+      setOpenCategories(
+        Object.fromEntries(groupedData.map((g) => [g.id, false]))
+      )
+    }
+  }, [groupedData])
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch()
+    }, [refetch])
+  )
+
+  const toggleCategory = (id: string) => {
+    setOpenCategories((prev) => ({ ...prev, [id]: !prev[id] }))
+  }
 
   const handleCreate = () => {
     if (saveDisabled || !selectedCategory) return
@@ -72,12 +120,6 @@ export default function ProductsScreen() {
     )
   }
 
-  useFocusEffect(
-    useCallback(() => {
-      refetch()
-    }, [refetch])
-  )
-
   return (
     <View style={styles.container}>
       {(isLoading || isRefetching) && (
@@ -90,55 +132,88 @@ export default function ProductsScreen() {
 
       {!isLoading && !isRefetching && (
         <FlatList
-          data={data}
+          data={groupedData}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ gap: 12, paddingBottom: 96 }}
-          renderItem={({ item }) => (
-            <View style={styles.row}>
-              <View style={styles.rowLeft}>
-                <Text
-                  style={[
-                    styles.rowText,
-                    !item.is_active && styles.rowTextDisabled
-                  ]}
-                >
-                  {item.name}
-                </Text>
-              </View>
+          renderItem={({ item }) => {
+            const isOpen = openCategories[item.id]
 
-              <View style={styles.rowActions}>
-                <Switch
-                  value={item.is_active}
-                  onValueChange={(value) =>
-                    updateProduct(
-                      {
-                        id: item.id,
-                        data: { is_active: value }
-                      },
-                      {
-                        onSuccess: () => invalidate()
-                      }
-                    )
-                  }
-                  trackColor={{ false: '#ccc', true: '#f1aa1c' }}
-                  thumbColor={item.is_active ? '#130918' : '#f4f3f4'}
-                />
-
+            return (
+              <View>
                 <Pressable
-                  style={styles.iconButton}
-                  onPress={() => {
-                    setEditingProduct(item)
-                    setEditName(item.name)
-                    setEditCategory(item.category_id)
-                    setEditPrice(item.price)
-                    setEditOpen(true)
-                  }}
+                  onPress={() => toggleCategory(item.id)}
+                  style={styles.categoryHeader}
                 >
-                  <Ionicons name='pencil-outline' size={20} color='#130918' />
+                  <Text style={styles.categoryTitle}>
+                    {item.name} ({item.products.length})
+                  </Text>
+                  <Ionicons
+                    name={isOpen ? 'chevron-up' : 'chevron-down'}
+                    size={20}
+                    color='#130918'
+                  />
                 </Pressable>
+
+                {isOpen &&
+                  item.products.map((product) => (
+                    <View key={product.id} style={styles.row}>
+                      <View style={styles.rowLeft}>
+                        <Text
+                          style={[
+                            styles.rowText,
+                            !product.is_active && styles.rowTextDisabled
+                          ]}
+                        >
+                          {product.name}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.rowText,
+                            !product.is_active && styles.rowTextDisabled
+                          ]}
+                        >
+                          $ {product.price.toFixed(2)}
+                        </Text>
+                      </View>
+
+                      <View style={styles.rowActions}>
+                        <Switch
+                          value={product.is_active}
+                          onValueChange={(value) =>
+                            updateProduct(
+                              {
+                                id: product.id,
+                                data: { is_active: value }
+                              },
+                              { onSuccess: () => invalidate() }
+                            )
+                          }
+                          trackColor={{ false: '#ccc', true: '#f1aa1c' }}
+                          thumbColor={product.is_active ? '#130918' : '#f4f3f4'}
+                        />
+
+                        <Pressable
+                          style={styles.iconButton}
+                          onPress={() => {
+                            setEditingProduct(product)
+                            setEditName(product.name)
+                            setEditCategory(product.category_id)
+                            setEditPrice(product.price)
+                            setEditOpen(true)
+                          }}
+                        >
+                          <Ionicons
+                            name='pencil-outline'
+                            size={20}
+                            color='#130918'
+                          />
+                        </Pressable>
+                      </View>
+                    </View>
+                  ))}
               </View>
-            </View>
-          )}
+            )
+          }}
           ListEmptyComponent={
             <Text style={styles.empty}>No hay productos</Text>
           }
@@ -149,7 +224,6 @@ export default function ProductsScreen() {
         <Ionicons name='add' size={32} color='#fff' />
       </Pressable>
 
-      {/* MODAL CREAR */}
       <Modal visible={open} transparent animationType='fade'>
         <View style={styles.modalOverlay}>
           <View style={styles.modal}>
@@ -172,20 +246,16 @@ export default function ProductsScreen() {
               style={styles.input}
             />
 
-            <View style={styles.categorySelector}>
-              <Text style={styles.selectorTitle}>Categoría</Text>
-
-              <View style={styles.pickerWrapper}>
-                <Picker
-                  selectedValue={selectedCategory}
-                  onValueChange={(value) => setSelectedCategory(value)}
-                >
-                  <Picker.Item label='Selecciona una categoría' value={null} />
-                  {categoriesData?.map((cat) => (
-                    <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
-                  ))}
-                </Picker>
-              </View>
+            <View style={styles.pickerWrapper}>
+              <Picker
+                selectedValue={selectedCategory}
+                onValueChange={(value) => setSelectedCategory(value)}
+              >
+                <Picker.Item label='Selecciona una categoría' value={null} />
+                {categoriesData?.map((cat) => (
+                  <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
+                ))}
+              </Picker>
             </View>
 
             <View style={styles.actionsRight}>
@@ -205,7 +275,6 @@ export default function ProductsScreen() {
         </View>
       </Modal>
 
-      {/* MODAL EDITAR */}
       <Modal visible={editOpen} transparent animationType='fade'>
         <View style={styles.modalOverlay}>
           <View style={styles.modal}>
@@ -218,33 +287,26 @@ export default function ProductsScreen() {
               style={styles.input}
             />
 
-            <View>
-              <Text>Precio</Text>
-              <TextInput
-                value={String(editPrice)}
-                onChangeText={(text) =>
-                  setEditPrice(Number(text.replace(',', '.')) || 0)
-                }
-                placeholder='Precio'
-                keyboardType='numeric'
-                style={styles.input}
-              />
-            </View>
+            <TextInput
+              value={String(editPrice)}
+              onChangeText={(text) =>
+                setEditPrice(Number(text.replace(',', '.')) || 0)
+              }
+              placeholder='Precio'
+              keyboardType='numeric'
+              style={styles.input}
+            />
 
-            <View style={styles.categorySelector}>
-              <Text style={styles.selectorTitle}>Categoría</Text>
-
-              <View style={styles.pickerWrapper}>
-                <Picker
-                  selectedValue={editCategory}
-                  onValueChange={(value) => setEditCategory(value)}
-                >
-                  <Picker.Item label='Selecciona una categoría' value={null} />
-                  {categoriesData?.map((cat) => (
-                    <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
-                  ))}
-                </Picker>
-              </View>
+            <View style={styles.pickerWrapper}>
+              <Picker
+                selectedValue={editCategory}
+                onValueChange={(value) => setEditCategory(value)}
+              >
+                <Picker.Item label='Selecciona una categoría' value={null} />
+                {categoriesData?.map((cat) => (
+                  <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
+                ))}
+              </Picker>
             </View>
 
             <View style={styles.actionsRight}>
@@ -253,16 +315,14 @@ export default function ProductsScreen() {
               </Pressable>
 
               <Pressable
-                disabled={editDisabled || !editName.trim() || !editCategory}
+                disabled={editDisabled}
                 onPress={() => {
-                  if (!editingProduct || !editCategory) return
-
                   updateProduct(
                     {
                       id: editingProduct.id,
                       data: {
                         name: editName.trim(),
-                        category_id: editCategory,
+                        category_id: editCategory ?? undefined,
                         price: editPrice
                       }
                     },
@@ -277,11 +337,7 @@ export default function ProductsScreen() {
                 }}
               >
                 <Text
-                  style={[
-                    styles.save,
-                    (editDisabled || !editName.trim() || !editCategory) &&
-                      styles.saveDisabled
-                  ]}
+                  style={[styles.save, editDisabled && styles.saveDisabled]}
                 >
                   {isUpdating ? 'Guardando...' : 'Guardar'}
                 </Text>
@@ -317,6 +373,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     elevation: 4
   },
+  categoryHeader: {
+    backgroundColor: '#f1aa1c',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  categoryTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#130918'
+  },
   row: {
     backgroundColor: '#fff',
     paddingHorizontal: 16,
@@ -324,7 +394,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'center',
+    marginTop: 8
   },
   rowLeft: {
     flex: 1
@@ -372,31 +443,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     backgroundColor: '#fff'
-  },
-  categorySelector: {
-    gap: 8
-  },
-  selectorTitle: {
-    fontWeight: '600',
-    color: '#130918'
-  },
-  categoryOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8
-  },
-  categoryOption: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    backgroundColor: '#ece2d0'
-  },
-  categoryOptionSelected: {
-    backgroundColor: '#f1aa1c'
-  },
-  categoryText: {
-    fontWeight: '600',
-    color: '#130918'
   },
   actionsRight: {
     flexDirection: 'row',
