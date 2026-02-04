@@ -7,11 +7,13 @@ import { View } from 'react-native'
 export default function OpenOrdersList() {
   const { data: openOrdersData } = useOrdersQuery({
     page: 1,
+    pageSize: 100,
     status: 'OPEN'
   })
 
   const { data: unpaidOrdersData } = useOrdersQuery({
     page: 1,
+    pageSize: 100,
     status: 'UNPAID'
   })
 
