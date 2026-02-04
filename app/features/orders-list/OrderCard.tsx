@@ -124,11 +124,11 @@ export default function OrderCard({
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>
-            {orderData?.table_name || order.customer_name}
+            {orderData?.table_name || order.customer_name} (#
+            {order.order_number})
           </Text>
 
           <Text style={styles.subtitle}>
-            #{order.order_number} ·{' '}
             {new Date(order.created_at).toLocaleString()}
           </Text>
         </View>
@@ -154,6 +154,11 @@ export default function OrderCard({
                 {orderData?.status === 'OPEN' || orderData?.status === 'UNPAID'
                   ? 'Abierta'
                   : 'Cerrada'}
+              </Text>
+
+              <Text style={styles.status}>
+                Tipo:{' '}
+                {orderData?.type === 'TAKEAWAY' ? 'Para llevar' : 'Para aqui'}
               </Text>
 
               {orderData?.items.map((item: any, i: number) => {
