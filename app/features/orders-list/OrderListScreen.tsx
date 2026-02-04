@@ -126,7 +126,8 @@ export default function OrdersListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ece2d0'
+    backgroundColor: '#ece2d0',
+    paddingTop: 16
   },
   input: {
     borderWidth: 1,
