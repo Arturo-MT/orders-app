@@ -4,20 +4,30 @@ import { FlatList, Pressable, StyleSheet, Text } from 'react-native'
 import OrderCard from './OrderCard'
 import { View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import Skeleton from '@/app/components/Skeleton'
 
 export default function OpenOrdersList() {
-  const { data: openOrdersData, refetch: refetchOpenOrders } = useOrdersQuery({
+  const {
+    data: openOrdersData,
+    refetch: refetchOpenOrders,
+    isRefetching: isRefetchingOpenOrders,
+    isLoading: isLoadingOpenOrders
+  } = useOrdersQuery({
     page: 1,
     pageSize: 100,
     status: 'OPEN'
   })
 
-  const { data: unpaidOrdersData, refetch: refetchUnpaidOrders } =
-    useOrdersQuery({
-      page: 1,
-      pageSize: 100,
-      status: 'UNPAID'
-    })
+  const {
+    data: unpaidOrdersData,
+    refetch: refetchUnpaidOrders,
+    isRefetching: isRefetchingUnpaidOrders,
+    isLoading: isLoadingUnpaidOrders
+  } = useOrdersQuery({
+    page: 1,
+    pageSize: 100,
+    status: 'UNPAID'
+  })
 
   const data = {
     orders: [
@@ -25,6 +35,12 @@ export default function OpenOrdersList() {
       ...(unpaidOrdersData?.orders || [])
     ]
   }
+
+  const isLoading =
+    isLoadingOpenOrders ||
+    isLoadingUnpaidOrders ||
+    isRefetchingOpenOrders ||
+    isRefetchingUnpaidOrders
 
   return (
     <View>
@@ -40,7 +56,15 @@ export default function OpenOrdersList() {
         </Pressable>
       </View>
 
-      {data && data?.orders?.length > 0 ? (
+      {isLoading && (
+        <View style={{ gap: 12 }}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} width='100%' height={56} radius={12} />
+          ))}
+        </View>
+      )}
+
+      {!isLoading && data && data?.orders?.length > 0 ? (
         <FlatList
           data={data?.orders}
           keyExtractor={(item) => item.id.toString()}
