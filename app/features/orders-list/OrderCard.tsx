@@ -124,8 +124,8 @@ export default function OrderCard({
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>
-            {orderData?.table_name || order.customer_name} (#
-            {order.order_number})
+            (#
+            {order.order_number}) {order.customer_name}
           </Text>
 
           <Text style={styles.subtitle}>
@@ -149,6 +149,10 @@ export default function OrderCard({
             <ActivityIndicator size='small' color='#130918' />
           ) : (
             <>
+              <Text style={styles.status}>
+                {orderData?.table_name || orderData?.customer_name}
+              </Text>
+
               <Text style={styles.status}>
                 Estado:{' '}
                 {orderData?.status === 'OPEN' || orderData?.status === 'UNPAID'
