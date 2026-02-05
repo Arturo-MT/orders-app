@@ -41,27 +41,6 @@ export async function orderCreate({
       throw new Error('DINE_IN requiere mesa o nombre del cliente')
     }
 
-    if (hasTable) {
-      const openOrder = await findOpenOrderByTable(client, payload.table_id!)
-
-      if (openOrder) {
-        orderId = openOrder.id
-        orderNumber = openOrder.order_number
-
-        const { error: itemsError } = await client.rpc('add_items_to_order', {
-          p_order_id: orderId,
-          p_items: payload.items
-        })
-
-        if (itemsError) throw itemsError
-
-        return {
-          order_id: orderId,
-          order_number: orderNumber
-        }
-      }
-    }
-
     const status = payload.is_paid ? 'CLOSED' : 'OPEN'
 
     const { data, error }: any = await client
@@ -78,8 +57,14 @@ export async function orderCreate({
 
     orderId = data.order_id
     orderNumber = data.order_number
-  } else {
+  }
+
+  // =========================
+  // TAKEAWAY
+  // =========================
+  else {
     const hasCustomerName = !!payload.customer_name?.trim()
+
     if (!hasCustomerName) {
       throw new Error('TAKEAWAY requiere nombre del cliente')
     }
