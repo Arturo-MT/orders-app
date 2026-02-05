@@ -42,6 +42,27 @@ export default function OpenOrdersList() {
     isRefetchingOpenOrders ||
     isRefetchingUnpaidOrders
 
+  const groupedOrders = React.useMemo(() => {
+    if (!data?.orders) return []
+
+    const map: Record<string, any[]> = {}
+
+    data.orders.forEach((order) => {
+      const key = order.dining_table?.name ?? order.customer_name ?? 'Barra'
+
+      if (!map[key]) {
+        map[key] = []
+      }
+
+      map[key].push(order)
+    })
+
+    return Object.entries(map).map(([tableName, orders]) => ({
+      tableName,
+      orders
+    }))
+  }, [data?.orders])
+
   return (
     <View>
       <View style={styles.titleContainer}>
@@ -66,12 +87,30 @@ export default function OpenOrdersList() {
 
       {!isLoading && data && data?.orders?.length > 0 ? (
         <FlatList
-          data={data?.orders}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => <OrderCard order={item} variant='open' />}
+          data={groupedOrders}
+          keyExtractor={(item) => item.tableName}
+          renderItem={({ item }) => (
+            <View style={{ marginBottom: 16 }}>
+              <View style={styles.tableHeader}>
+                <Text style={styles.tableTitle}>
+                  {item.tableName === 'BAR' ? 'Barra' : item.tableName}
+                </Text>
+
+                <Text style={styles.count}>{item.orders.length} orden(es)</Text>
+              </View>
+
+              {item.orders.map((order) => (
+                <OrderCard key={order.id} order={order} variant='open' />
+              ))}
+            </View>
+          )}
         />
-      ) : (
-        <Text>No hay ordenes abiertas</Text>
+      ) : null}
+
+      {!isLoading && data && data?.orders?.length === 0 && (
+        <Text style={{ textAlign: 'center', marginTop: 16 }}>
+          No hay órdenes abiertas
+        </Text>
       )}
     </View>
   )
@@ -87,5 +126,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center'
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#f2f2f2',
+    padding: 8,
+    borderRadius: 8,
+    marginBottom: 6
+  },
+  tableTitle: {
+    fontWeight: '600',
+    fontSize: 15
+  },
+  count: {
+    fontSize: 12,
+    color: '#666'
   }
 })
