@@ -154,12 +154,14 @@ export default function PosScreen() {
           customer_name: order.customer_name,
           table_name: order.table_name,
           is_paid: order.is_paid ?? false,
-          items: order.items.map((i) => ({
-            name: i.name,
-            quantity: i.quantity,
-            price: i.price,
-            notes: i.notes
-          }))
+          items: order.items
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map((i) => ({
+              name: i.name,
+              quantity: i.quantity,
+              price: i.price,
+              notes: i.notes
+            }))
         },
         storeData?.printer_address
       )
