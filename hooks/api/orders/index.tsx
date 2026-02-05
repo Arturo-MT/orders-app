@@ -113,7 +113,16 @@ export function useOrdersQuery({
 
       let query = client
         .from('order')
-        .select('*', { count: 'exact' })
+        .select(
+          `
+    *,
+    dining_table (
+      id,
+      name
+    )
+    `,
+          { count: 'exact' }
+        )
         .eq('store_id', activeStore!.id)
 
       if (search) {
