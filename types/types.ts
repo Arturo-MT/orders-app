@@ -35,9 +35,10 @@ export type OrderItemDraft = {
   uid: string
   product_id: string
   name: string
-  price: number
+  base_price: number
   quantity: number
   notes?: string
+  price: number
 }
 
 export type PrintOrder = {

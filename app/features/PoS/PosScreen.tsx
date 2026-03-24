@@ -93,10 +93,7 @@ export default function PosScreen() {
   /* ---------- total ---------- */
 
   useEffect(() => {
-    const sum = order.items.reduce(
-      (acc, item) => acc + item.price * item.quantity,
-      0
-    )
+    const sum = order.items.reduce((acc, item) => acc + item.price, 0)
     setTotal(sum)
   }, [order.items])
 
@@ -111,6 +108,7 @@ export default function PosScreen() {
           uid: `${Date.now()}-${product.id}`,
           product_id: product.id,
           name: product.name,
+          base_price: product.price,
           price: product.price,
           quantity: 1
         } satisfies OrderItemDraft
@@ -159,7 +157,7 @@ export default function PosScreen() {
             .map((i) => ({
               name: i.name,
               quantity: i.quantity,
-              price: i.price,
+              price: i.base_price,
               notes: i.notes
             }))
         },

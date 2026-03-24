@@ -5,8 +5,7 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
-  Modal,
-  Dimensions
+  Modal
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { OrderItemDraft } from '@/types/types'
@@ -22,202 +21,167 @@ export default function OrderItemComponent({
   onUpdate,
   onRemove
 }: Props) {
-  const [showNotes, setShowNotes] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
   const [tempNotes, setTempNotes] = useState(item.notes ?? '')
-
-  const isSmallDevice = Dimensions.get('window').width < 768
+  const [priceValue, setPriceValue] = useState(String(item.price))
 
   return (
-    <View style={styles.column}>
-      {/* ---------- header ---------- */}
-      <View style={styles.row}>
-        <Text style={styles.name}>{item.name}</Text>
-
-        <View style={styles.iconsWrapper}>
-          <TouchableOpacity
-            onPress={() => {
-              if (isSmallDevice) {
-                setTempNotes(item.notes ?? '')
-                setModalVisible(true)
-              } else {
-                setShowNotes(!showNotes)
-              }
-            }}
-          >
-            <Ionicons name='chatbubble-outline' size={22} color='#130918' />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={onRemove}>
-            <Ionicons name='trash-outline' size={22} color='#130918' />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* ---------- notes preview ---------- */}
-      {(item.notes || showNotes) && (
-        <View style={styles.notesWrapper}>
-          <Text style={styles.notesText}>
-            {item.notes || 'Sin especificaciones'}
-          </Text>
-        </View>
-      )}
-
-      {/* ---------- quantity + price ---------- */}
-      <View style={styles.row}>
-        <View style={styles.quantityWrapper}>
-          <TouchableOpacity
-            disabled={item.quantity <= 1}
-            onPress={() => onUpdate({ quantity: item.quantity - 1 })}
-          >
-            <Ionicons name='remove-circle-outline' size={22} color='#130918' />
-          </TouchableOpacity>
-
-          <TextInput
-            style={[styles.input, { width: 40 }]}
-            keyboardType='numeric'
-            value={String(item.quantity)}
-            onChangeText={(value) => onUpdate({ quantity: Number(value) || 1 })}
-          />
-
-          <TouchableOpacity
-            onPress={() => onUpdate({ quantity: item.quantity + 1 })}
-          >
-            <Ionicons name='add-circle-outline' size={22} color='#130918' />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.priceWrapper}>
-          <Text style={styles.currency}>$</Text>
-          <TextInput
-            style={[styles.input, styles.priceInput]}
-            keyboardType='numeric'
-            value={String(item.price)}
-            onChangeText={(value) => onUpdate({ price: Number(value) || 0 })}
-          />
-        </View>
-      </View>
-
-      {/* ---------- notes input (desktop) ---------- */}
-      {showNotes && !isSmallDevice && (
-        <TextInput
-          style={[styles.input, styles.notesInput]}
-          value={item.notes ?? ''}
-          onChangeText={(value) => onUpdate({ notes: value })}
-          placeholder='Especificaciones'
+    <View style={styles.container}>
+      <TouchableOpacity
+        style={styles.notesButton}
+        onPress={() => {
+          setTempNotes(item.notes ?? '')
+          setModalVisible(true)
+        }}
+      >
+        <Ionicons
+          name={item.notes ? 'chatbubble' : 'chatbubble-outline'}
+          size={18}
+          color={item.notes ? '#f1aa1c' : '#130918'}
         />
-      )}
+      </TouchableOpacity>
 
-      {/* ---------- notes modal (mobile) ---------- */}
-      {isSmallDevice && (
-        <Modal
-          visible={modalVisible}
-          animationType='slide'
-          transparent
-          onRequestClose={() => setModalVisible(false)}
+      <Text style={styles.name} numberOfLines={1}>
+        {item.name}
+      </Text>
+
+      <View style={styles.quantityControls}>
+        <TouchableOpacity
+          onPress={() => {
+            const newQty = Math.max(1, item.quantity - 1)
+            onUpdate({ quantity: newQty, price: item.base_price * newQty })
+          }}
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Especificaciones</Text>
+          <Ionicons name='remove-circle' size={20} color='#130918' />
+        </TouchableOpacity>
 
-              <TextInput
-                style={styles.modalInput}
-                value={tempNotes}
-                onChangeText={setTempNotes}
-                placeholder='Escribe aquí...'
-                multiline
-                autoFocus
-              />
+        <Text style={styles.quantityText}>{item.quantity}</Text>
 
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  onPress={() => setModalVisible(false)}
-                  style={[styles.modalButton, { backgroundColor: '#ccc' }]}
-                >
-                  <Text>Cancelar</Text>
-                </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            const newQty = item.quantity + 1
+            onUpdate({ quantity: newQty, price: item.base_price * newQty })
+          }}
+        >
+          <Ionicons name='add-circle' size={20} color='#130918' />
+        </TouchableOpacity>
+      </View>
 
-                <TouchableOpacity
-                  onPress={() => {
-                    onUpdate({ notes: tempNotes })
-                    setModalVisible(false)
-                  }}
-                  style={[styles.modalButton, { backgroundColor: '#f1aa1c' }]}
-                >
-                  <Text style={{ color: '#130918' }}>Guardar</Text>
-                </TouchableOpacity>
-              </View>
+      <View style={styles.priceWrapper}>
+        <Text style={styles.currency}>$</Text>
+        <TextInput
+          style={styles.priceInput}
+          keyboardType='numeric'
+          value={priceValue}
+          onChangeText={setPriceValue}
+          onEndEditing={() => {
+            const value = Number(priceValue) || 0
+            onUpdate({ price: value })
+          }}
+        />
+      </View>
+
+      <TouchableOpacity onPress={onRemove} style={styles.removeButton}>
+        <Ionicons name='trash-outline' size={18} color='#F56A57' />
+      </TouchableOpacity>
+
+      <Modal
+        visible={modalVisible}
+        animationType='slide'
+        transparent
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Notas</Text>
+
+            <TextInput
+              style={styles.modalInput}
+              value={tempNotes}
+              onChangeText={setTempNotes}
+              placeholder='Sin especificaciones'
+              multiline
+              autoFocus
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                style={[styles.modalButton, { backgroundColor: '#ccc' }]}
+              >
+                <Text>Cancelar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  onUpdate({ notes: tempNotes })
+                  setModalVisible(false)
+                }}
+                style={[styles.modalButton, { backgroundColor: '#f1aa1c' }]}
+              >
+                <Text style={{ color: '#130918' }}>Guardar</Text>
+              </TouchableOpacity>
             </View>
           </View>
-        </Modal>
-      )}
+        </View>
+      </Modal>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  row: {
+  container: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
-    gap: 24,
-    flexWrap: 'wrap'
-  },
-  iconsWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12
-  },
-  column: {
+    paddingVertical: 6,
+    paddingHorizontal: 4,
     borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    paddingBottom: 10
+    borderBottomColor: '#e0e0e0',
+    gap: 6
+  },
+  notesButton: {
+    padding: 4
   },
   name: {
-    fontSize: 16,
     flex: 1,
-    fontWeight: '500'
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#130918'
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 2,
-    borderRadius: 5,
-    minWidth: 50,
-    textAlign: 'center',
-    backgroundColor: '#fff'
-  },
-  quantityWrapper: {
+  quantityControls: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    flex: 1
+    gap: 4
+  },
+  quantityText: {
+    fontSize: 14,
+    fontWeight: '600',
+    minWidth: 20,
+    textAlign: 'center'
   },
   priceWrapper: {
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
+    gap: 2
   },
   currency: {
-    fontSize: 16,
-    marginRight: 2
+    fontSize: 14,
+    color: '#666'
   },
   priceInput: {
-    minWidth: 60
-  },
-  notesInput: {
-    flexBasis: '100%',
-    marginTop: 8
-  },
-  notesWrapper: {
-    paddingLeft: 8,
-    paddingBottom: 6
-  },
-
-  notesText: {
+    width: 34,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
     fontSize: 14,
-    color: '#130918'
+    backgroundColor: '#fff',
+    textAlign: 'right'
   },
-
+  removeButton: {
+    padding: 4
+  },
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -230,18 +194,20 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 12
   },
   modalTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 8
+    marginBottom: 12
   },
   modalInput: {
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
-    padding: 10,
+    padding: 12,
     minHeight: 80,
     textAlignVertical: 'top',
-    marginBottom: 12
+    marginBottom: 12,
+    fontSize: 16,
+    backgroundColor: '#fff'
   },
   modalButtons: {
     flexDirection: 'row',
@@ -249,14 +215,8 @@ const styles = StyleSheet.create({
     gap: 8
   },
   modalButton: {
-    padding: 10,
-    borderRadius: 6
-  },
-  especification: {
-    fontSize: 14,
-    color: '#130918'
-  },
-  descriptionWrapper: {
-    paddingLeft: 8
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8
   }
 })
