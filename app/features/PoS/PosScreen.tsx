@@ -147,7 +147,7 @@ export default function PosScreen() {
 
       ToastAndroid.show('Orden creada correctamente', ToastAndroid.SHORT)
 
-      await printOrder(
+      const { success: printSuccess, error: printError } = await printOrder(
         {
           order_number: response.order_number,
           type: order.type,
@@ -166,7 +166,11 @@ export default function PosScreen() {
         storeData?.printer_address
       )
 
-      ToastAndroid.show('Orden impresa correctamente', ToastAndroid.SHORT)
+      if (printSuccess) {
+        ToastAndroid.show('Orden impresa correctamente', ToastAndroid.SHORT)
+      } else {
+        ToastAndroid.show(`Error al imprimir: ${printError}`, ToastAndroid.SHORT)
+      }
 
       // reset limpio
       setOrder({
