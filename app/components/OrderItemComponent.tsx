@@ -5,7 +5,8 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
-  Modal
+  Modal,
+  Dimensions
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { OrderItemDraft } from '@/types/types'
@@ -21,17 +22,21 @@ export default function OrderItemComponent({
   onUpdate,
   onRemove
 }: Props) {
-  const [modalVisible, setModalVisible] = useState(false)
+  const isSmallDevice = Dimensions.get('window').width < 768
+  const [notesModalVisible, setNotesModalVisible] = useState(false)
+  const [qtyModalVisible, setQtyModalVisible] = useState(false)
+  const [priceModalVisible, setPriceModalVisible] = useState(false)
   const [tempNotes, setTempNotes] = useState(item.notes ?? '')
-  const [priceValue, setPriceValue] = useState(String(item.price))
+  const [tempQty, setTempQty] = useState(String(item.quantity))
+  const [tempPrice, setTempPrice] = useState(String(item.price))
 
   return (
     <View style={styles.container}>
       <TouchableOpacity
-        style={styles.notesButton}
+        style={styles.iconButton}
         onPress={() => {
           setTempNotes(item.notes ?? '')
-          setModalVisible(true)
+          setNotesModalVisible(true)
         }}
       >
         <Ionicons
@@ -47,15 +52,27 @@ export default function OrderItemComponent({
 
       <View style={styles.quantityControls}>
         <TouchableOpacity
+          disabled={item.quantity <= 1}
           onPress={() => {
-            const newQty = Math.max(1, item.quantity - 1)
+            const newQty = item.quantity - 1
             onUpdate({ quantity: newQty, price: item.base_price * newQty })
           }}
         >
-          <Ionicons name='remove-circle' size={20} color='#130918' />
+          <Ionicons
+            name='remove-circle'
+            size={20}
+            color={item.quantity <= 1 ? '#ccc' : '#130918'}
+          />
         </TouchableOpacity>
 
-        <Text style={styles.quantityText}>{item.quantity}</Text>
+        <TouchableOpacity
+          onPress={() => {
+            setTempQty(String(item.quantity))
+            setQtyModalVisible(true)
+          }}
+        >
+          <Text style={styles.quantityText}>{item.quantity}</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => {
@@ -67,29 +84,40 @@ export default function OrderItemComponent({
         </TouchableOpacity>
       </View>
 
-      <View style={styles.priceWrapper}>
-        <Text style={styles.currency}>$</Text>
-        <TextInput
-          style={styles.priceInput}
-          keyboardType='numeric'
-          value={priceValue}
-          onChangeText={setPriceValue}
-          onEndEditing={() => {
-            const value = Number(priceValue) || 0
-            onUpdate({ price: value })
+      {isSmallDevice ? (
+        <TouchableOpacity
+          style={styles.priceBadge}
+          onPress={() => {
+            setTempPrice(String(item.price))
+            setPriceModalVisible(true)
           }}
-        />
-      </View>
+        >
+          <Text style={styles.priceBadgeText}>${item.price.toFixed(0)}</Text>
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.priceWrapper}>
+          <Text style={styles.currency}>$</Text>
+          <TextInput
+            style={styles.priceInput}
+            keyboardType='numeric'
+            value={String(item.price)}
+            onEndEditing={(e) => {
+              const value = Number(e.nativeEvent.text) || 0
+              onUpdate({ price: value })
+            }}
+          />
+        </View>
+      )}
 
-      <TouchableOpacity onPress={onRemove} style={styles.removeButton}>
+      <TouchableOpacity onPress={onRemove} style={styles.iconButton}>
         <Ionicons name='trash-outline' size={18} color='#F56A57' />
       </TouchableOpacity>
 
       <Modal
-        visible={modalVisible}
+        visible={notesModalVisible}
         animationType='slide'
         transparent
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={() => setNotesModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -106,7 +134,7 @@ export default function OrderItemComponent({
 
             <View style={styles.modalButtons}>
               <TouchableOpacity
-                onPress={() => setModalVisible(false)}
+                onPress={() => setNotesModalVisible(false)}
                 style={[styles.modalButton, { backgroundColor: '#ccc' }]}
               >
                 <Text>Cancelar</Text>
@@ -115,7 +143,114 @@ export default function OrderItemComponent({
               <TouchableOpacity
                 onPress={() => {
                   onUpdate({ notes: tempNotes })
-                  setModalVisible(false)
+                  setNotesModalVisible(false)
+                }}
+                style={[styles.modalButton, { backgroundColor: '#f1aa1c' }]}
+              >
+                <Text style={{ color: '#130918' }}>Guardar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={qtyModalVisible}
+        animationType='slide'
+        transparent
+        onRequestClose={() => setQtyModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Cantidad</Text>
+            <Text style={styles.modalSubtitle}>{item.name}</Text>
+
+            <View style={styles.qtyModalControls}>
+              <TouchableOpacity
+                style={styles.modalButtonAlt}
+                onPress={() =>
+                  setTempQty(String(Math.max(1, Number(tempQty) - 1)))
+                }
+              >
+                <Ionicons name='remove-circle' size={40} color='#130918' />
+              </TouchableOpacity>
+
+              <TextInput
+                style={styles.qtyModalInput}
+                keyboardType='numeric'
+                value={tempQty}
+                onChangeText={setTempQty}
+                autoFocus
+              />
+
+              <TouchableOpacity
+                style={styles.modalButtonAlt}
+                onPress={() => setTempQty(String(Number(tempQty) + 1))}
+              >
+                <Ionicons name='add-circle' size={40} color='#130918' />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                onPress={() => setQtyModalVisible(false)}
+                style={[styles.modalButton, { backgroundColor: '#ccc' }]}
+              >
+                <Text>Cancelar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  const newQty = Number(tempQty) || 1
+                  onUpdate({ quantity: newQty })
+                  setQtyModalVisible(false)
+                }}
+                style={[styles.modalButton, { backgroundColor: '#f1aa1c' }]}
+              >
+                <Text style={{ color: '#130918' }}>Guardar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={priceModalVisible}
+        animationType='slide'
+        transparent
+        onRequestClose={() => setPriceModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Precio</Text>
+            <Text style={styles.modalSubtitle}>{item.name}</Text>
+
+            <View style={styles.priceModalInputWrapper}>
+              <Text style={styles.priceModalCurrency}>$</Text>
+              <TextInput
+                style={styles.priceModalInput}
+                keyboardType='numeric'
+                value={tempPrice}
+                onChangeText={setTempPrice}
+                autoFocus
+              />
+            </View>
+
+            <View style={styles.priceModalButtons}>
+              <TouchableOpacity
+                onPress={() => setPriceModalVisible(false)}
+                style={[styles.modalButton, { backgroundColor: '#ccc' }]}
+              >
+                <Text>Cancelar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  const newPrice = Number(tempPrice) || 0
+                  const unitPrice =
+                    item.quantity > 0 ? newPrice / item.quantity : newPrice
+                  onUpdate({ price: newPrice, base_price: unitPrice })
+                  setPriceModalVisible(false)
                 }}
                 style={[styles.modalButton, { backgroundColor: '#f1aa1c' }]}
               >
@@ -139,7 +274,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e0e0e0',
     gap: 6
   },
-  notesButton: {
+  iconButton: {
     padding: 4
   },
   name: {
@@ -173,14 +308,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 4,
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
     paddingVertical: 2,
-    fontSize: 14,
+    fontSize: 13,
     backgroundColor: '#fff',
     textAlign: 'right'
-  },
-  removeButton: {
-    padding: 4
   },
   modalOverlay: {
     flex: 1,
@@ -196,7 +328,12 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 12
+    marginBottom: 4
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 16
   },
   modalInput: {
     borderWidth: 1,
@@ -218,5 +355,73 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8
+  },
+  modalButtonAlt: {
+    padding: 8
+  },
+  qtyModalControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 24,
+    marginBottom: 16
+  },
+  qtyModalInput: {
+    width: 80,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    backgroundColor: '#fff'
+  },
+  priceBadge: {
+    backgroundColor: '#e8e8e8',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4
+  },
+  priceBadgeText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#130918'
+  },
+  priceModalControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 24,
+    marginBottom: 16
+  },
+  priceModalInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8
+  },
+  priceModalCurrency: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#666',
+    marginRight: 4
+  },
+  priceModalInput: {
+    width: '100%',
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    padding: 0
+  },
+  priceModalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+    marginTop: 12
   }
 })
