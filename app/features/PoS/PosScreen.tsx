@@ -50,7 +50,7 @@ export default function PosScreen() {
   const { refetch: userRefetch } = useUserQuery()
   const { data: storeData } = useStoreQuery()
 
-  const { mutateAsync: createOrder } = useCreateOrder({
+  const { mutateAsync: createOrder, isPending: isCreatingOrder } = useCreateOrder({
     retry: 1,
     retryDelay: 1000
   })
@@ -215,6 +215,7 @@ export default function PosScreen() {
         total={total}
         onChange={setOrder}
         onPrint={handlePrintOrder}
+        isLoading={isCreatingOrder}
       />
     </View>
   )

@@ -20,9 +20,10 @@ interface Props {
   total: number
   onChange: (newOrder: OrderDraft) => void
   onPrint: () => void
+  isLoading?: boolean
 }
 
-export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
+export default function OrderPanel({ order, total, onChange, onPrint, isLoading }: Props) {
   const scrollRef = useRef<ScrollView | null>(null)
   const prevCountRef = useRef(order.items.length)
   const shouldScrollRef = useRef(false)
@@ -119,8 +120,8 @@ export default function OrderPanel({ order, total, onChange, onPrint }: Props) {
 
         <TouchableOpacity
           onPress={onPrint}
-          disabled={!canSendToKitchen}
-          style={[styles.printButton, !canSendToKitchen && styles.disabled]}
+          disabled={!canSendToKitchen || isLoading}
+          style={[styles.printButton, (!canSendToKitchen || isLoading) && styles.disabled]}
         >
           <Ionicons
             name='print'

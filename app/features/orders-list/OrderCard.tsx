@@ -215,14 +215,16 @@ export default function OrderCard({
                 <TouchableOpacity
                   onPress={handlePrint}
                   style={styles.printButton}
+                  disabled={closeOrderMutation.isPending}
                 >
                   <Ionicons name='print-outline' size={26} color='#130918' />
                 </TouchableOpacity>
-                {(orderData?.status === 'OPEN' ||
+                  {(orderData?.status === 'OPEN' ||
                   orderData?.status === 'UNPAID') && (
                   <TouchableOpacity
                     onPress={handleCloseOrder}
-                    style={styles.closeButton}
+                    style={[styles.closeButton, closeOrderMutation.isPending && styles.disabledButton]}
+                    disabled={closeOrderMutation.isPending}
                   >
                     <Ionicons
                       name='checkmark-done-outline'
@@ -320,5 +322,8 @@ const styles = StyleSheet.create({
   itemPaidText: {
     textDecorationLine: 'line-through',
     color: '#999'
+  },
+  disabledButton: {
+    opacity: 0.6
   }
 })
