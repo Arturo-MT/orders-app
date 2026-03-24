@@ -132,6 +132,12 @@ productFlavors {
         applicationId "com.signemammoth.tacoloco.beta"
         resValue "string", "app_name", "Taco Loco (BETA)"
     }
+
+    dev {
+        dimension "app"
+        applicationId "com.signemammoth.tacoloco.dev"
+        resValue "string", "app_name", "Taco Loco DEV"
+    }
 }
 
     signingConfigs {
