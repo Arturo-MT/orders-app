@@ -120,28 +120,21 @@ export default function OrderCard({
   }
 
   return (
-    <TouchableOpacity onPress={toggle} style={styles.card}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>
-            (#
-            {order.order_number}) {order.customer_name}
-          </Text>
+    <View style={styles.card}>
+      <TouchableOpacity onPress={toggle} style={styles.cardHeader}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.title}>
+              (#
+              {order.order_number}) {order.customer_name}
+            </Text>
 
-          <Text style={styles.subtitle}>
-            {new Date(order.created_at).toLocaleString()}
-          </Text>
+            <Text style={styles.subtitle}>
+              {new Date(order.created_at).toLocaleString()}
+            </Text>
+          </View>
         </View>
-
-        {variant === 'open' && onOpenOrder && (
-          <TouchableOpacity
-            onPress={() => onOpenOrder(order.id)}
-            style={styles.openButton}
-          >
-            <Text style={styles.openText}>Abrir</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      </TouchableOpacity>
 
       {expanded && (
         <View style={styles.details}>
@@ -219,11 +212,14 @@ export default function OrderCard({
                 >
                   <Ionicons name='print-outline' size={26} color='#130918' />
                 </TouchableOpacity>
-                  {(orderData?.status === 'OPEN' ||
+                {(orderData?.status === 'OPEN' ||
                   orderData?.status === 'UNPAID') && (
                   <TouchableOpacity
                     onPress={handleCloseOrder}
-                    style={[styles.closeButton, closeOrderMutation.isPending && styles.disabledButton]}
+                    style={[
+                      styles.closeButton,
+                      closeOrderMutation.isPending && styles.disabledButton
+                    ]}
                     disabled={closeOrderMutation.isPending}
                   >
                     <Ionicons
@@ -238,16 +234,20 @@ export default function OrderCard({
           )}
         </View>
       )}
-    </TouchableOpacity>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#fff',
-    padding: 12,
     borderRadius: 8,
     marginBottom: 10
+  },
+  cardHeader: {
+    backgroundColor: '#f5f5f5',
+    padding: 12,
+    borderRadius: 8
   },
   header: {
     flexDirection: 'row',
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     color: '#130918'
   },
   details: {
-    marginTop: 8
+    padding: 12
   },
   status: {
     fontWeight: '500',
