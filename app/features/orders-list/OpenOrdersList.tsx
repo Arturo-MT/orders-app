@@ -1,6 +1,6 @@
-import { useOpenOrderIds, useOpenOrder } from '@/hooks/api/orders'
+import { useOpenOrderIds } from '@/hooks/api/orders'
 import React, { memo, useCallback, useReducer } from 'react'
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 import OrderCard from './OrderCard'
 import { Ionicons } from '@expo/vector-icons'
 import Skeleton from '@/app/components/Skeleton'
@@ -9,9 +9,10 @@ import { theme } from '@/constants/Colors'
 type OrderSummary = {
   id: string
   order_number: string
-  type: string
-  status: string
+  type: 'DINE_IN' | 'TAKEAWAY'
+  status: 'OPEN' | 'UNPAID'
   customer_name: string | null
+  table_name: string | null
   table_id: string | null
   dining_table?: { id: string; name: string }
   created_at: string
@@ -29,16 +30,13 @@ const orderListReducer = (
 }
 
 const OrderCardWrapper = memo(function OrderCardWrapper({
-  orderId,
+  order,
   onRemove
 }: {
-  orderId: string
+  order: OrderSummary
   onRemove: (id: string) => void
 }) {
-  const { data: order, isLoading } = useOpenOrder(orderId)
-  if (isLoading) return <Skeleton width='100%' height={56} radius={12} />
-  if (!order) return null
-  return <OrderCard order={order} variant='open' onRemove={() => onRemove(orderId)} />
+  return <OrderCard order={order} variant='open' onRemove={() => onRemove(order.id)} />
 })
 
 export default function OpenOrdersList() {
@@ -46,7 +44,7 @@ export default function OpenOrdersList() {
   const [orders, dispatch] = useReducer(orderListReducer, [])
 
   React.useEffect(() => {
-    if (orderIds) dispatch({ type: 'SET', orders: orderIds })
+    if (orderIds) dispatch({ type: 'SET', orders: orderIds as OrderSummary[] })
   }, [orderIds])
 
   const handleRemove = useCallback((id: string) => {
@@ -83,25 +81,19 @@ export default function OpenOrdersList() {
         </View>
       )}
 
-      {!isLoadingTotal && orders.length > 0 ? (
-        <FlatList
-          data={groupedOrders}
-          keyExtractor={(item) => item.tableName}
-          renderItem={({ item }) => (
-            <View style={{ marginBottom: 16 }}>
-              <View style={styles.tableHeader}>
-                <Text style={styles.tableTitle}>
-                  {item.tableName === 'BAR' ? 'Barra' : item.tableName}
-                </Text>
-                <Text style={styles.count}>{item.orders.length} orden(es)</Text>
-              </View>
-              {item.orders.map((order) => (
-                <OrderCardWrapper key={order.id} orderId={order.id} onRemove={handleRemove} />
-              ))}
-            </View>
-          )}
-        />
-      ) : null}
+      {!isLoadingTotal && orders.length > 0 && groupedOrders.map((item) => (
+        <View key={item.tableName} style={{ marginBottom: 16 }}>
+          <View style={styles.tableHeader}>
+            <Text style={styles.tableTitle}>
+              {item.tableName === 'BAR' ? 'Barra' : item.tableName}
+            </Text>
+            <Text style={styles.count}>{item.orders.length} orden(es)</Text>
+          </View>
+          {item.orders.map((order) => (
+            <OrderCardWrapper key={order.id} order={order} onRemove={handleRemove} />
+          ))}
+        </View>
+      ))}
 
       {!isLoadingTotal && orders.length === 0 && (
         <Text style={{ textAlign: 'center', marginTop: 16 }}>No hay órdenes abiertas</Text>
@@ -111,7 +103,7 @@ export default function OpenOrdersList() {
 }
 
 const styles = StyleSheet.create({
-  title: { textAlign: 'center', marginBottom: 8, fontSize: 18 },
+  title: { textAlign: 'center', marginBottom: 8, fontSize: 18, color: theme.textPrimary },
   titleContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   tableHeader: {
     flexDirection: 'row',

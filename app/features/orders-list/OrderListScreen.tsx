@@ -29,6 +29,8 @@ export default function OrdersListScreen() {
 
   useFocusEffect(useCallback(() => { refetch() }, [refetch]))
 
+  React.useEffect(() => { setPage(1) }, [debouncedSearch])
+
   const orders = ordersListData?.orders || []
   const pageSize = 5
   const total = ordersListData?.total ?? 0
@@ -45,20 +47,24 @@ export default function OrdersListScreen() {
   return (
     <View style={styles.container}>
       <FlatList
-        data={orders}
+        data={isFetching ? [] : orders}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => <OrderCard order={item} />}
         ListHeaderComponent={
           <>
             <OpenOrdersList />
             <Text style={styles.sectionTitle}>Historial</Text>
-            <TextInput
-              placeholder='Buscar por cliente'
-              style={styles.input}
-              value={search}
-              onChangeText={setSearch}
-              onSubmitEditing={() => { setPage(1); refetch() }}
-            />
+            <View style={styles.searchContainer}>
+              <Ionicons name='search-outline' size={18} color={theme.textMuted} />
+              <TextInput
+                placeholder='Buscar por cliente'
+                placeholderTextColor={theme.textMuted}
+                style={styles.searchInput}
+                value={search}
+                onChangeText={setSearch}
+                onSubmitEditing={() => { setPage(1); refetch() }}
+              />
+            </View>
             {isFetching && [...Array(6)].map((_, i) => (
               <View key={i} style={styles.orderSkeleton}>
                 <View style={styles.skeletonRow}>
@@ -84,7 +90,7 @@ export default function OrdersListScreen() {
           <Ionicons name='chevron-back' size={20} color={theme.textPrimary} />
         </TouchableOpacity>
 
-        <Text style={styles.pageText}>Página {page}</Text>
+        <Text style={styles.pageText}>Página {page} de {totalPages}</Text>
 
         <TouchableOpacity
           onPress={() => setPage((p) => p + 1)}
@@ -100,7 +106,9 @@ export default function OrdersListScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background, paddingTop: 16 },
-  input: {
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: theme.border,
     borderRadius: 8,
@@ -108,9 +116,11 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     marginBottom: 16,
     backgroundColor: theme.surface,
-    marginHorizontal: 16
+    marginHorizontal: 16,
+    gap: 8
   },
-  sectionTitle: { textAlign: 'center', marginBottom: 8, fontSize: 18 },
+  searchInput: { flex: 1, color: theme.textPrimary },
+  sectionTitle: { textAlign: 'center', marginBottom: 8, fontSize: 18, color: theme.textPrimary },
   pagination: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -130,7 +140,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   disabledButton: { backgroundColor: theme.disabled },
-  pageText: { fontSize: 16, fontWeight: '500' },
+  pageText: { fontSize: 16, fontWeight: '500', color: theme.textPrimary },
   skeleton: { height: 16, backgroundColor: theme.background, borderRadius: 4, marginBottom: 8 },
   orderSkeleton: {
     backgroundColor: theme.surface,

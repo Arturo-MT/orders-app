@@ -27,7 +27,7 @@ interface Props {
     id: string
     order_number: string
     type: 'DINE_IN' | 'TAKEAWAY'
-    status: 'OPEN' | 'CLOSED'
+    status: 'OPEN' | 'CLOSED' | 'UNPAID'
     customer_name: string | null
     table_name: string | null
     table_id: string | null
@@ -55,7 +55,7 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
     setPaidItems((prev) => ({ ...prev, [key]: !prev[key] }))
   }
 
-  const { data: orderData, isLoading } = useOrderQuery({ order_id: order.id })
+  const { data: orderData, isLoading } = useOrderQuery({ order_id: order.id, enabled: expanded })
   const paidTotal = orderData?.items.reduce((acc: number, item: any, i: number) => {
     const key = `${item.product_name}-${i}`
     return paidItems[key] ? acc + Number(item.total_price) : acc
@@ -103,13 +103,31 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
     }
   }
 
+  const displayName = order.table_name || order.customer_name
+  const isTakeaway = order.type === 'TAKEAWAY'
+
   return (
     <View style={styles.card}>
       <TouchableOpacity onPress={toggle} style={styles.cardHeader}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.title}>(#{order.order_number}) {order.customer_name}</Text>
+        <View style={styles.headerRow}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.title}>(#{order.order_number}) {displayName}</Text>
             <Text style={styles.subtitle}>{new Date(order.created_at).toLocaleString()}</Text>
+          </View>
+          <View style={styles.headerRight}>
+            <View style={[styles.typeBadge, isTakeaway ? styles.takeawayBadge : styles.dineInBadge]}>
+              <Text style={[styles.typeBadgeText, isTakeaway ? styles.takeawayText : styles.dineInText]}>
+                {isTakeaway ? 'Llevar' : 'Aquí'}
+              </Text>
+            </View>
+            {orderTotal > 0 && (
+              <Text style={styles.totalHeader}>${orderTotal.toFixed(2)}</Text>
+            )}
+            <Ionicons
+              name={expanded ? 'chevron-up' : 'chevron-down'}
+              size={18}
+              color={theme.textSecondary}
+            />
           </View>
         </View>
       </TouchableOpacity>
@@ -173,9 +191,18 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
 const styles = StyleSheet.create({
   card: { backgroundColor: theme.surface, borderRadius: 8, marginBottom: 10 },
   cardHeader: { backgroundColor: theme.borderLight, padding: 12, borderRadius: 8 },
-  header: { flexDirection: 'row', justifyContent: 'space-between' },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  headerLeft: { flex: 1, marginRight: 8 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   title: { fontSize: 16, fontWeight: '600', color: theme.textPrimary },
-  subtitle: { fontSize: 12, color: theme.textSecondary },
+  subtitle: { fontSize: 12, color: theme.textSecondary, marginTop: 2 },
+  typeBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 },
+  takeawayBadge: { backgroundColor: '#f1aa1c33' },
+  dineInBadge: { backgroundColor: '#5A7A5233' },
+  typeBadgeText: { fontSize: 11, fontWeight: '700' },
+  takeawayText: { color: '#a07010' },
+  dineInText: { color: theme.success },
+  totalHeader: { fontSize: 14, fontWeight: '700', color: theme.textPrimary },
   openButton: { backgroundColor: theme.primary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
   openText: { fontWeight: '600', color: theme.textPrimary },
   details: { padding: 12 },

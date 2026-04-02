@@ -29,12 +29,12 @@ export function useCreateOrder(config = {}) {
   })
 }
 
-export function useOrderQuery({ order_id }: { order_id: string }) {
+export function useOrderQuery({ order_id, enabled = true }: { order_id: string; enabled?: boolean }) {
   const { client } = useFetch()
 
   return useQuery({
     queryKey: ['order', order_id],
-    enabled: !!order_id,
+    enabled: !!order_id && enabled,
 
     queryFn: async () => {
       const { data, error } = await client
@@ -106,59 +106,11 @@ export function useOpenOrderIds() {
         .in('status', ['OPEN', 'UNPAID'])
 
       if (error) throw error
-      return data ?? []
-    }
-  })
-}
 
-export function useOpenOrder(orderId: string) {
-  const { client } = useFetch()
-
-  return useQuery({
-    queryKey: ['openOrder', orderId],
-    enabled: !!orderId,
-
-    queryFn: async () => {
-      const { data, error } = await client
-        .from('order')
-        .select(
-          `
-          *,
-          dining_table (id, name),
-          order_item (
-            product_id,
-            quantity,
-            base_price,
-            total_price,
-            notes,
-            product (name)
-          )
-          `
-        )
-        .eq('id', orderId)
-        .single()
-
-      if (error) throw error
-
-      return {
-        id: data.id,
-        order_number: data.order_number,
-        type: data.type,
-        status: data.status,
-        customer_name: data.customer_name,
-        table_name: data.dining_table?.name ?? null,
-        table_id: data.table_id,
-        created_at: data.created_at,
-        closed_at: data.closed_at,
-        items: data.order_item.map((item: any) => ({
-          product_id: item.product_id,
-          product_name: item.product?.name ?? '',
-          quantity: item.quantity,
-          base_price: item.base_price,
-          total_price: item.total_price,
-          notes: item.notes
-        }))
-      }
+      return (data ?? []).map((order: any) => ({
+        ...order,
+        table_name: order.dining_table?.name ?? null
+      }))
     }
   })
 }
@@ -214,7 +166,10 @@ export function useOrdersQuery({
       if (error) throw error
 
       return {
-        orders: data ?? [],
+        orders: (data ?? []).map((order: any) => ({
+          ...order,
+          table_name: order.dining_table?.name ?? null
+        })),
         total: count ?? 0
       }
     },
@@ -261,7 +216,9 @@ export function useCloseOrderMutation() {
     },
 
     onSuccess: (_data, variables) => {
-      queryClient.removeQueries({ queryKey: ['openOrder', variables.order_id] })
+      queryClient.removeQueries({ queryKey: ['order', variables.order_id] })
+      queryClient.invalidateQueries({ queryKey: ['openOrderIds'] })
+      queryClient.invalidateQueries({ queryKey: [ORDERS_KEY] })
       clearOrderState(variables.order_id)
     }
   })
