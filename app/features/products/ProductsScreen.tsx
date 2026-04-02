@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, useEffect } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import {
   View,
   Text,
@@ -14,9 +14,9 @@ import Skeleton from '@/app/components/Skeleton'
 import { useFocusEffect } from 'expo-router'
 import {
   useCreateProduct,
-  useInvalidateProducts,
   useProductsQuery,
-  useUpdateProduct
+  useUpdateProduct,
+  useRefetchProducts
 } from '@/hooks/api/products'
 import { useCategoriesQuery } from '@/hooks/api/categories'
 import { Picker } from '@react-native-picker/picker'
@@ -28,11 +28,9 @@ export default function ProductsScreen() {
   const { data: categoriesData } = useCategoriesQuery()
   const { mutate: createProduct, isPending: isCreating } = useCreateProduct()
   const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct()
-  const invalidate = useInvalidateProducts()
+  const refetchProducts = useRefetchProducts()
 
-  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>(
-    {}
-  )
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({})
 
   const [open, setOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
@@ -81,16 +79,11 @@ export default function ProductsScreen() {
     )
   }, [data, categoriesData])
 
-  useEffect(() => {
-    if (groupedData.length) {
-      setOpenCategories(
-        Object.fromEntries(groupedData.map((g) => [g.id, false]))
-      )
-    }
-  }, [groupedData])
-
   useFocusEffect(
     useCallback(() => {
+      if (categoriesData) {
+        setOpenCategories({})
+      }
       refetch()
     }, [refetch])
   )
@@ -114,7 +107,6 @@ export default function ProductsScreen() {
           setPrice(0)
           setSelectedCategory(null)
           setOpen(false)
-          invalidate()
         }
       }
     )
@@ -184,8 +176,7 @@ export default function ProductsScreen() {
                               {
                                 id: product.id,
                                 data: { is_active: value }
-                              },
-                              { onSuccess: () => invalidate() }
+                              }
                             )
                           }
                           trackColor={{ false: '#ccc', true: '#f1aa1c' }}
@@ -317,17 +308,14 @@ export default function ProductsScreen() {
               <Pressable
                 disabled={editDisabled}
                 onPress={() => {
-                  updateProduct(
-                    {
-                      id: editingProduct.id,
-                      data: {
-                        name: editName.trim(),
-                        category_id: editCategory ?? undefined,
-                        price: editPrice
-                      }
-                    },
-                    { onSuccess: () => invalidate() }
-                  )
+                  updateProduct({
+                    id: editingProduct.id,
+                    data: {
+                      name: editName.trim(),
+                      category_id: editCategory ?? undefined,
+                      price: editPrice
+                    }
+                  })
 
                   setEditOpen(false)
                   setEditingProduct(null)
