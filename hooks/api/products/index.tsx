@@ -1,6 +1,6 @@
 import { useFetch } from '@/app/context/FetchContext'
 import { useStore } from '@/app/context/StoreContext'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { PRODUCTS_KEY } from './constants'
 import { productsQuery } from './queries'
 import { createProduct, updateProduct } from './mutations'
@@ -23,9 +23,10 @@ export function useProductsQuery(config = {}) {
   })
 }
 
-export function useCreateProduct(config = {}) {
+export function useCreateProduct() {
   const { client } = useFetch()
   const { activeStore } = useStore()
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (payload: ProductInput) => {
@@ -36,12 +37,19 @@ export function useCreateProduct(config = {}) {
         payload
       })
     },
-    ...config
+    onSuccess: (data) => {
+      queryClient.setQueryData(
+        [PRODUCTS_KEY, activeStore!.id],
+        (old: any) => (old ? [...old, data] : [data])
+      )
+    }
   })
 }
 
-export function useUpdateProduct(config = {}) {
+export function useUpdateProduct() {
   const { client } = useFetch()
+  const { activeStore } = useStore()
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async ({ id, data }: ProductUpdateInput) => {
@@ -51,17 +59,34 @@ export function useUpdateProduct(config = {}) {
         payload: data
       })
     },
-    ...config
+    onSuccess: (data) => {
+      queryClient.setQueryData(
+        [PRODUCTS_KEY, activeStore?.id],
+        (old: any) =>
+          old?.map((p: any) => (p.id === data.id ? data : p))
+      )
+    }
   })
 }
 
 export function useInvalidateProducts() {
-  const { useQueryClient } = require('@tanstack/react-query')
   const queryClient = useQueryClient()
   const { activeStore, loading } = useStore()
   return () => {
     if (!loading && activeStore?.id) {
       queryClient.invalidateQueries({
+        queryKey: [PRODUCTS_KEY, activeStore.id]
+      })
+    }
+  }
+}
+
+export function useRefetchProducts() {
+  const queryClient = useQueryClient()
+  const { activeStore, loading } = useStore()
+  return () => {
+    if (!loading && activeStore?.id) {
+      queryClient.refetchQueries({
         queryKey: [PRODUCTS_KEY, activeStore.id]
       })
     }
