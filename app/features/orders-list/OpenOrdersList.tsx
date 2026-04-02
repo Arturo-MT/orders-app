@@ -1,53 +1,73 @@
-import { useOrdersQuery } from '@/hooks/api/orders'
-import React from 'react'
-import { FlatList, Pressable, StyleSheet, Text } from 'react-native'
+import { useOpenOrderIds, useOpenOrder } from '@/hooks/api/orders'
+import React, { memo, useCallback, useReducer } from 'react'
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
 import OrderCard from './OrderCard'
-import { View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import Skeleton from '@/app/components/Skeleton'
 
-export default function OpenOrdersList() {
-  const {
-    data: openOrdersData,
-    refetch: refetchOpenOrders,
-    isRefetching: isRefetchingOpenOrders,
-    isLoading: isLoadingOpenOrders
-  } = useOrdersQuery({
-    page: 1,
-    pageSize: 100,
-    status: 'OPEN'
-  })
+type OrderSummary = {
+  id: string
+  order_number: string
+  type: string
+  status: string
+  customer_name: string | null
+  table_id: string | null
+  dining_table?: { id: string; name: string }
+  created_at: string
+}
 
-  const {
-    data: unpaidOrdersData,
-    refetch: refetchUnpaidOrders,
-    isRefetching: isRefetchingUnpaidOrders,
-    isLoading: isLoadingUnpaidOrders
-  } = useOrdersQuery({
-    page: 1,
-    pageSize: 100,
-    status: 'UNPAID'
-  })
+const orderListReducer = (
+  state: OrderSummary[],
+  action: { type: 'SET'; orders: OrderSummary[] } | { type: 'REMOVE'; id: string }
+) => {
+  switch (action.type) {
+    case 'SET':
+      return action.orders
+    case 'REMOVE':
+      return state.filter((o) => o.id !== action.id)
+    default:
+      return state
+  }
+}
 
-  const data = {
-    orders: [
-      ...(openOrdersData?.orders || []),
-      ...(unpaidOrdersData?.orders || [])
-    ]
+const OrderCardWrapper = memo(function OrderCardWrapper({
+  orderId,
+  onRemove
+}: {
+  orderId: string
+  onRemove: (id: string) => void
+}) {
+  const { data: order, isLoading } = useOpenOrder(orderId)
+
+  if (isLoading) {
+    return <Skeleton width='100%' height={56} radius={12} />
   }
 
-  const isLoading =
-    isLoadingOpenOrders ||
-    isLoadingUnpaidOrders ||
-    isRefetchingOpenOrders ||
-    isRefetchingUnpaidOrders
+  if (!order) return null
+
+  return <OrderCard order={order} variant='open' onRemove={() => onRemove(orderId)} />
+})
+
+export default function OpenOrdersList() {
+  const { data: orderIds, isLoading, refetch, isRefetching } = useOpenOrderIds()
+  const [orders, dispatch] = useReducer(orderListReducer, [])
+
+  React.useEffect(() => {
+    if (orderIds) {
+      dispatch({ type: 'SET', orders: orderIds })
+    }
+  }, [orderIds])
+
+  const handleRemove = useCallback((id: string) => {
+    dispatch({ type: 'REMOVE', id })
+  }, [])
 
   const groupedOrders = React.useMemo(() => {
-    if (!data?.orders) return []
+    if (!orders || orders.length === 0) return []
 
-    const map: Record<string, any[]> = {}
+    const map: Record<string, OrderSummary[]> = {}
 
-    data.orders.forEach((order) => {
+    orders.forEach((order) => {
       const key = order.dining_table?.name ?? order.customer_name ?? 'Barra'
 
       if (!map[key]) {
@@ -57,27 +77,24 @@ export default function OpenOrdersList() {
       map[key].push(order)
     })
 
-    return Object.entries(map).map(([tableName, orders]) => ({
+    return Object.entries(map).map(([tableName, ordersList]) => ({
       tableName,
-      orders
+      orders: ordersList
     }))
-  }, [data?.orders])
+  }, [orders])
+
+  const isLoadingTotal = isLoading || isRefetching
 
   return (
     <View>
       <View style={styles.titleContainer}>
         <Text style={styles.title}>Órdenes abiertas</Text>
-        <Pressable
-          onPress={() => {
-            refetchOpenOrders()
-            refetchUnpaidOrders()
-          }}
-        >
+        <Pressable onPress={() => refetch()}>
           <Ionicons name='refresh' size={24} color='#130918' />
         </Pressable>
       </View>
 
-      {isLoading && (
+      {isLoadingTotal && (
         <View style={{ gap: 12 }}>
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} width='100%' height={56} radius={12} />
@@ -85,7 +102,7 @@ export default function OpenOrdersList() {
         </View>
       )}
 
-      {!isLoading && data && data?.orders?.length > 0 ? (
+      {!isLoadingTotal && orders.length > 0 ? (
         <FlatList
           data={groupedOrders}
           keyExtractor={(item) => item.tableName}
@@ -100,14 +117,18 @@ export default function OpenOrdersList() {
               </View>
 
               {item.orders.map((order) => (
-                <OrderCard key={order.id} order={order} variant='open' />
+                <OrderCardWrapper
+                  key={order.id}
+                  orderId={order.id}
+                  onRemove={handleRemove}
+                />
               ))}
             </View>
           )}
         />
       ) : null}
 
-      {!isLoading && data && data?.orders?.length === 0 && (
+      {!isLoadingTotal && orders.length === 0 && (
         <Text style={{ textAlign: 'center', marginTop: 16 }}>
           No hay órdenes abiertas
         </Text>
