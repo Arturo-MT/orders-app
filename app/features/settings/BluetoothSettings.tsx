@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, StyleSheet, ToastAndroid } from 'react-native'
+import { View, Text, StyleSheet } from 'react-native'
 import PrinterSelector from '../printing/PrinterSelector'
 import {
   useInvalidateStore,
@@ -7,31 +7,26 @@ import {
   useStoreUpdateMutation
 } from '@/hooks/api/store'
 import { theme } from '@/constants/Colors'
+import { useToast } from '@/app/context/ToastContext'
 
 export default function BluetoothSettings() {
   const { data: storeData, isLoading: isLoadingStoreConfig } = useStoreQuery()
-
+  const { showToast } = useToast()
   const invalidate = useInvalidateStore()
 
   const { mutate: saveStoreConfig } = useStoreUpdateMutation({
     onSuccess: () => {
       invalidate()
-      ToastAndroid.show(
-        'Configuración guardada correctamente',
-        ToastAndroid.SHORT
-      )
+      showToast('Configuración guardada correctamente', 'success')
     },
     onError: () => {
-      ToastAndroid.show('Error al guardar la configuración', ToastAndroid.SHORT)
+      showToast('Error al guardar la configuración', 'error')
     }
   })
 
   const handleSelectPrinter = (device: { name?: string; address: string }) => {
     if (!device.name) {
-      ToastAndroid.show(
-        'El nombre de la impresora no es válido',
-        ToastAndroid.SHORT
-      )
+      showToast('El nombre de la impresora no es válido', 'error')
       return
     }
     saveStoreConfig({
@@ -42,8 +37,6 @@ export default function BluetoothSettings() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Bluetooth</Text>
-
       <Text style={styles.subtitle}>
         {isLoadingStoreConfig
           ? 'Cargando configuración...'
@@ -59,16 +52,8 @@ const styles = StyleSheet.create({
   container: {
     gap: 6
   },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.textPrimary
-  },
   subtitle: {
     fontSize: 14,
-    color: theme.textPrimary
-  },
-  selectorWrapper: {
-    borderRadius: 12
+    color: theme.textSecondary
   }
 })
