@@ -205,7 +205,7 @@ export default function OrderItemComponent({
               <TouchableOpacity
                 onPress={() => {
                   const newQty = Number(tempQty) || 1
-                  onUpdate({ quantity: newQty })
+                  onUpdate({ quantity: newQty, price: item.base_price * newQty })
                   setQtyModalVisible(false)
                 }}
                 style={[styles.modalButton, { backgroundColor: '#f1aa1c' }]}

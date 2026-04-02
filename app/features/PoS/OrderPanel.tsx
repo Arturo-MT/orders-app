@@ -80,7 +80,8 @@ export default function OrderPanel({ order, total, onChange, onPrint, isLoading 
             onChange({
               ...order,
               table_id: table.id,
-              table_name: table.name
+              table_name: table.name,
+              type: 'DINE_IN'
             })
           }}
         />
@@ -155,9 +156,12 @@ export default function OrderPanel({ order, total, onChange, onPrint, isLoading 
                   style: 'destructive',
                   onPress: () => {
                     onChange({
-                      ...order,
-                      items: [],
-                      customer_name: ''
+                      type: 'TAKEAWAY',
+                      table_id: null,
+                      customer_name: '',
+                      table_name: '',
+                      is_paid: false,
+                      items: []
                     })
                     ToastAndroid.show('Orden limpiada', ToastAndroid.SHORT)
                   }
@@ -181,14 +185,20 @@ export default function OrderPanel({ order, total, onChange, onPrint, isLoading 
             }
           }}
         >
-          {order.items.map((item, index) => (
-            <OrderItemComponent
-              key={item.uid}
-              item={item}
-              onUpdate={(updates) => handleUpdateItem(index, updates)}
-              onRemove={() => handleRemoveItem(index)}
-            />
-          ))}
+          {order.items.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>Agrega productos a la orden</Text>
+            </View>
+          ) : (
+            order.items.map((item, index) => (
+              <OrderItemComponent
+                key={item.uid}
+                item={item}
+                onUpdate={(updates) => handleUpdateItem(index, updates)}
+                onRemove={() => handleRemoveItem(index)}
+              />
+            ))
+          )}
         </ScrollView>
       </View>
     </View>
@@ -253,6 +263,15 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center'
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const
+  },
+  emptyStateText: {
+    fontSize: 15,
+    color: '#999'
   },
   disabled: {
     backgroundColor: '#ccc',
