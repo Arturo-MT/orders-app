@@ -3,7 +3,8 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import { BluetoothManager } from 'react-native-bluetooth-escpos-printer'
 import { requestBluetoothPermissions } from './print'
 import Skeleton from '@/app/components/Skeleton'
-import { theme } from '@/constants/Colors'
+import { useTheme } from '@/app/context/ThemeContext'
+import { Theme } from '@/constants/Colors'
 
 export type Device = {
   name?: string
@@ -47,6 +48,8 @@ const parseDevices = (raw: any): Device[] => {
 export default function PrinterSelector({ onSelect }: Props) {
   const [devices, setDevices] = useState<Device[]>([])
   const [loading, setLoading] = useState(false)
+  const { theme } = useTheme()
+  const styles = makeStyles(theme)
 
   const scanDevices = async () => {
     const hasPermission = await requestBluetoothPermissions()
@@ -97,27 +100,29 @@ export default function PrinterSelector({ onSelect }: Props) {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginTop: 10
-  },
-  deviceButton: {
-    backgroundColor: theme.borderLight,
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 10
-  },
-  deviceName: {
-    fontSize: 16,
-    fontWeight: '600'
-  },
-  deviceAddress: {
-    fontSize: 12,
-    color: theme.textSecondary
-  },
-  emptyText: {
-    textAlign: 'center',
-    color: theme.textSecondary,
-    marginTop: 20
-  }
-})
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: {
+      marginTop: 10
+    },
+    deviceButton: {
+      backgroundColor: theme.borderLight,
+      padding: 12,
+      borderRadius: 8,
+      marginBottom: 10
+    },
+    deviceName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.textPrimary
+    },
+    deviceAddress: {
+      fontSize: 12,
+      color: theme.textSecondary
+    },
+    emptyText: {
+      textAlign: 'center',
+      color: theme.textSecondary,
+      marginTop: 20
+    }
+  })

@@ -2,11 +2,12 @@ import { Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '@/app/context/AuthContext'
 import { useUserQuery } from '@/hooks/api/users'
-import { theme } from '@/constants/Colors'
+import { useTheme } from '@/app/context/ThemeContext'
 
 export default function TabLayout() {
   const { isSuperAdmin } = useAuth()
   const { data } = useUserQuery()
+  const { theme } = useTheme()
   const role = data?.[0]?.role
 
   const canSeeAdmin = isSuperAdmin || role === 'admin'
@@ -18,7 +19,9 @@ export default function TabLayout() {
         tabBarInactiveTintColor: theme.textMuted,
         tabBarStyle: {
           backgroundColor: theme.background,
-          borderTopColor: theme.borderLight
+          borderTopColor: theme.borderLight,
+          paddingBottom: 4,
+          paddingTop: 4
         },
         headerStyle: {
           backgroundColor: theme.primary

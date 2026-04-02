@@ -6,12 +6,15 @@ import {
   useStoreQuery,
   useStoreUpdateMutation
 } from '@/hooks/api/store'
-import { theme } from '@/constants/Colors'
 import { useToast } from '@/app/context/ToastContext'
+import { useTheme } from '@/app/context/ThemeContext'
+import { Theme } from '@/constants/Colors'
 
 export default function BluetoothSettings() {
   const { data: storeData, isLoading: isLoadingStoreConfig } = useStoreQuery()
   const { showToast } = useToast()
+  const { theme } = useTheme()
+  const styles = makeStyles(theme)
   const invalidate = useInvalidateStore()
 
   const { mutate: saveStoreConfig } = useStoreUpdateMutation({
@@ -42,18 +45,18 @@ export default function BluetoothSettings() {
           ? 'Cargando configuración...'
           : `Impresora actual: ${storeData?.printer_name || 'No configurada'}`}
       </Text>
-
       <PrinterSelector onSelect={handleSelectPrinter} />
     </View>
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: 6
-  },
-  subtitle: {
-    fontSize: 14,
-    color: theme.textSecondary
-  }
-})
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: {
+      gap: 6
+    },
+    subtitle: {
+      fontSize: 14,
+      color: theme.textSecondary
+    }
+  })
