@@ -18,6 +18,7 @@ import {
 import Skeleton from '@/app/components/Skeleton'
 import { useFocusEffect } from 'expo-router'
 import { useAuth } from '@/app/context/AuthContext'
+import { theme } from '@/constants/Colors'
 
 interface UsersScreenProps {
   id: string
@@ -91,8 +92,8 @@ export default function UsersScreen() {
                     transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }],
                     opacity: item.email === user?.email ? 0.6 : 1
                   }}
-                  trackColor={{ false: '#ccc', true: '#f1aa1c' }}
-                  thumbColor={item.is_active ? '#130918' : '#f4f3f4'}
+                  trackColor={{ false: theme.border, true: theme.primary }}
+                  thumbColor={item.is_active ? theme.textPrimary : theme.borderLight}
                 />
               </View>
             </View>
@@ -104,7 +105,7 @@ export default function UsersScreen() {
       )}
 
       <Pressable style={styles.fab} onPress={() => setOpen(true)}>
-        <Ionicons name='add' size={32} color='#fff' />
+        <Ionicons name='add' size={32} color={theme.surface} />
       </Pressable>
 
       <Modal visible={open} transparent animationType='fade'>
@@ -180,18 +181,18 @@ export default function UsersScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ece2d0',
+    backgroundColor: theme.background,
     padding: 16
   },
 
   empty: {
     textAlign: 'center',
     marginTop: 40,
-    color: '#666'
+    color: theme.textSecondary
   },
 
   row: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -207,13 +208,13 @@ const styles = StyleSheet.create({
 
   email: {
     fontSize: 14,
-    color: '#130918',
+    color: theme.textPrimary,
     fontWeight: '500'
   },
 
   role: {
     fontSize: 12,
-    color: '#666'
+    color: theme.textSecondary
   },
 
   actions: {
@@ -226,7 +227,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 16,
     bottom: 16,
-    backgroundColor: '#130918',
+    backgroundColor: theme.textPrimary,
     width: 56,
     height: 56,
     borderRadius: 28,
@@ -237,13 +238,13 @@ const styles = StyleSheet.create({
 
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: theme.overlay,
     justifyContent: 'center',
     padding: 24
   },
 
   modal: {
-    backgroundColor: '#ece2d0',
+    backgroundColor: theme.background,
     borderRadius: 16,
     padding: 20,
     gap: 16
@@ -252,15 +253,15 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#130918'
+    color: theme.textPrimary
   },
 
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: theme.border,
     borderRadius: 12,
     padding: 12,
-    backgroundColor: '#fff'
+    backgroundColor: theme.surface
   },
 
   roleSelector: {
@@ -272,17 +273,17 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     borderRadius: 10,
-    backgroundColor: '#f4f4f4',
+    backgroundColor: theme.borderLight,
     alignItems: 'center'
   },
 
   roleSelected: {
-    backgroundColor: '#f1aa1c'
+    backgroundColor: theme.primary
   },
 
   roleText: {
     fontWeight: '600',
-    color: '#130918'
+    color: theme.textPrimary
   },
 
   modalActions: {
@@ -293,21 +294,21 @@ const styles = StyleSheet.create({
   },
 
   cancel: {
-    color: '#130918',
+    color: theme.textPrimary,
     fontSize: 16
   },
 
   save: {
-    color: '#130918',
+    color: theme.textPrimary,
     fontSize: 16,
     fontWeight: '600',
-    backgroundColor: '#f1aa1c',
+    backgroundColor: theme.primary,
     padding: 8,
     borderRadius: 6
   },
 
   error: {
-    color: 'red',
+    color: theme.destructive,
     fontSize: 14
   },
   saveDisabled: {
@@ -315,10 +316,10 @@ const styles = StyleSheet.create({
   },
   rowText: {
     fontSize: 16,
-    color: '#130918'
+    color: theme.textPrimary
   },
   rowTextDisabled: {
-    color: '#999'
+    color: theme.textMuted
   },
   rowActions: {
     flexDirection: 'row',
@@ -334,7 +335,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f1aa1c'
+    backgroundColor: theme.primary
   },
   actionsRight: {
     flexDirection: 'row',

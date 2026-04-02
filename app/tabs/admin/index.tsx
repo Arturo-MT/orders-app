@@ -1,6 +1,7 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
+import { theme } from '@/constants/Colors'
 
 export default function AdminHomeScreen() {
   const router = useRouter()
@@ -12,7 +13,7 @@ export default function AdminHomeScreen() {
           style={styles.card}
           onPress={() => router.push('/tabs/admin/categories')}
         >
-          <Ionicons name='folder-outline' size={36} color='#130918' />
+          <Ionicons name='folder-outline' size={36} color={theme.textPrimary} />
           <Text style={styles.title}>Categorías</Text>
         </Pressable>
 
@@ -20,7 +21,7 @@ export default function AdminHomeScreen() {
           style={styles.card}
           onPress={() => router.push('/tabs/admin/products')}
         >
-          <Ionicons name='cube-outline' size={36} color='#130918' />
+          <Ionicons name='cube-outline' size={36} color={theme.textPrimary} />
           <Text style={styles.title}>Productos</Text>
         </Pressable>
 
@@ -28,14 +29,14 @@ export default function AdminHomeScreen() {
           style={styles.card}
           onPress={() => router.push('/tabs/admin/tables')}
         >
-          <Ionicons name='restaurant-outline' size={36} color='#130918' />
+          <Ionicons name='restaurant-outline' size={36} color={theme.textPrimary} />
           <Text style={styles.title}>Mesas</Text>
         </Pressable>
         <Pressable
           style={styles.card}
           onPress={() => router.push('/tabs/admin/users')}
         >
-          <Ionicons name='people-outline' size={36} color='#130918' />
+          <Ionicons name='people-outline' size={36} color={theme.textPrimary} />
           <Text style={styles.title}>Usuarios</Text>
         </Pressable>
       </View>
@@ -45,7 +46,7 @@ export default function AdminHomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ece2d0',
+    backgroundColor: theme.background,
     padding: 16
   },
   grid: {
@@ -55,7 +56,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '31%',
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     borderRadius: 16,
     paddingVertical: 28,
     alignItems: 'center',
@@ -66,7 +67,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#130918',
+    color: theme.textPrimary,
     textAlign: 'center'
   }
 })

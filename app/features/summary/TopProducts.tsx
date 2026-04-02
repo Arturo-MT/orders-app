@@ -1,5 +1,6 @@
 import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
+import { theme } from '@/constants/Colors'
 
 type TopProduct = {
   product_name: string
@@ -52,7 +53,7 @@ export default function TopProductsCard({ products }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     borderRadius: 8,
     padding: 12,
     marginBottom: 10
@@ -60,7 +61,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#130918',
+    color: theme.textPrimary,
     marginBottom: 8
   },
   row: {
@@ -68,7 +69,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee'
+    borderBottomColor: theme.borderLight
   },
   left: {
     flexDirection: 'row',
@@ -84,23 +85,23 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#130918',
+    color: theme.textPrimary,
     flexShrink: 1
   },
   quantity: {
     width: 50,
     textAlign: 'center',
-    color: '#555',
+    color: theme.textSecondary,
     fontWeight: '500'
   },
   total: {
     width: 80,
     textAlign: 'right',
     fontWeight: '600',
-    color: '#130918'
+    color: theme.textPrimary
   },
   empty: {
-    color: '#777',
+    color: theme.textMuted,
     fontStyle: 'italic'
   }
 })

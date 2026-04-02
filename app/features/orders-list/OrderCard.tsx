@@ -15,16 +15,10 @@ import { useCloseOrderMutation, useOrderQuery } from '@/hooks/api/orders'
 import { useStoreQuery } from '@/hooks/api/store'
 import { printOrder, PrintOrder } from '../printing/print'
 import CustomCheckbox from '@/app/components/CustomCheckbox'
-import {
-  getOrderState,
-  setOrderExpanded,
-  setOrderPaidItem
-} from './orderStates'
+import { getOrderState, setOrderExpanded, setOrderPaidItem } from './orderStates'
+import { theme } from '@/constants/Colors'
 
-if (
-  Platform.OS === 'android' &&
-  UIManager.setLayoutAnimationEnabledExperimental
-) {
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true)
 }
 
@@ -44,19 +38,12 @@ interface Props {
   onRemove?: (orderId: string) => void
 }
 
-export default function OrderCard({
-  order,
-  variant = 'default',
-  onOpenOrder,
-  onRemove
-}: Props) {
+export default function OrderCard({ order, variant = 'default', onOpenOrder, onRemove }: Props) {
   const state = getOrderState(order.id)
   const [expanded, setExpanded] = useState(state.expanded)
   const [paidItems, setPaidItems] = useState(state.paidItems)
 
-  useEffect(() => {
-    setOrderExpanded(order.id, expanded)
-  }, [expanded, order.id])
+  useEffect(() => { setOrderExpanded(order.id, expanded) }, [expanded, order.id])
 
   useEffect(() => {
     Object.entries(paidItems).forEach(([key, value]) => {
@@ -65,38 +52,22 @@ export default function OrderCard({
   }, [paidItems, order.id])
 
   const toggleItemPaid = (key: string) => {
-    setPaidItems((prev) => {
-      const newPaidItems = { ...prev, [key]: !prev[key] }
-      return newPaidItems
-    })
+    setPaidItems((prev) => ({ ...prev, [key]: !prev[key] }))
   }
 
-  const { data: orderData, isLoading } = useOrderQuery({
-    order_id: order.id
-  })
-
-  const paidTotal =
-    orderData?.items.reduce((acc: number, item: any, i: number) => {
-      const key = `${item.product_name}-${i}`
-      return paidItems[key] ? acc + Number(item.total_price) : acc
-    }, 0) ?? 0
+  const { data: orderData, isLoading } = useOrderQuery({ order_id: order.id })
+  const paidTotal = orderData?.items.reduce((acc: number, item: any, i: number) => {
+    const key = `${item.product_name}-${i}`
+    return paidItems[key] ? acc + Number(item.total_price) : acc
+  }, 0) ?? 0
 
   const { data: storeData } = useStoreQuery()
-
-  const orderTotal =
-    orderData?.items.reduce(
-      (acc: number, item: any) => acc + Number(item.total_price),
-      0
-    ) ?? 0
-
+  const orderTotal = orderData?.items.reduce((acc: number, item: any) => acc + Number(item.total_price), 0) ?? 0
   const closeOrderMutation = useCloseOrderMutation()
 
   const handleCloseOrder = async () => {
     try {
-      await closeOrderMutation.mutateAsync({
-        order_id: order.id,
-        table_id: order.table_id
-      })
+      await closeOrderMutation.mutateAsync({ order_id: order.id, table_id: order.table_id })
       ToastAndroid.show('Orden cerrada', ToastAndroid.SHORT)
       onRemove?.(order.id)
     } catch {
@@ -111,7 +82,6 @@ export default function OrderCard({
 
   const handlePrint = async () => {
     if (!orderData) return
-
     const printPayload: PrintOrder = {
       order_number: orderData.order_number,
       type: orderData.type,
@@ -125,12 +95,7 @@ export default function OrderCard({
         notes: item.notes ?? undefined
       }))
     }
-
-    const { success, error } = await printOrder(
-      printPayload,
-      storeData?.printer_address
-    )
-
+    const { success, error } = await printOrder(printPayload, storeData?.printer_address)
     if (success) {
       ToastAndroid.show('Orden impresa correctamente', ToastAndroid.SHORT)
     } else {
@@ -143,14 +108,8 @@ export default function OrderCard({
       <TouchableOpacity onPress={toggle} style={styles.cardHeader}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>
-              (#
-              {order.order_number}) {order.customer_name}
-            </Text>
-
-            <Text style={styles.subtitle}>
-              {new Date(order.created_at).toLocaleString()}
-            </Text>
+            <Text style={styles.title}>(#{order.order_number}) {order.customer_name}</Text>
+            <Text style={styles.subtitle}>{new Date(order.created_at).toLocaleString()}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -158,94 +117,48 @@ export default function OrderCard({
       {expanded && (
         <View style={styles.details}>
           {isLoading ? (
-            <ActivityIndicator size='small' color='#130918' />
+            <ActivityIndicator size='small' color={theme.textPrimary} />
           ) : (
             <>
-              <Text style={styles.status}>
-                {orderData?.table_name || orderData?.customer_name}
-              </Text>
-
-              <Text style={styles.status}>
-                Estado:{' '}
-                {orderData?.status === 'OPEN' || orderData?.status === 'UNPAID'
-                  ? 'Abierta'
-                  : 'Cerrada'}
-              </Text>
-
-              <Text style={styles.status}>
-                Tipo:{' '}
-                {orderData?.type === 'TAKEAWAY' ? 'Para llevar' : 'Para aqui'}
-              </Text>
+              <Text style={styles.status}>{orderData?.table_name || orderData?.customer_name}</Text>
+              <Text style={styles.status}>Estado: {orderData?.status === 'OPEN' || orderData?.status === 'UNPAID' ? 'Abierta' : 'Cerrada'}</Text>
+              <Text style={styles.status}>Tipo: {orderData?.type === 'TAKEAWAY' ? 'Para llevar' : 'Para aqui'}</Text>
 
               {orderData?.items.map((item: any, i: number) => {
                 const itemKey = `${item.product_name}-${i}`
                 const isPaid = !!paidItems[itemKey]
-
                 return (
                   <View key={itemKey} style={styles.itemRow}>
-                    <CustomCheckbox
-                      value={isPaid}
-                      onChange={() => toggleItemPaid(itemKey)}
-                    />
-
+                    <CustomCheckbox value={isPaid} onChange={() => toggleItemPaid(itemKey)} />
                     <View style={styles.itemInfo}>
-                      <Text
-                        style={[styles.itemName, isPaid && styles.itemPaidText]}
-                      >
+                      <Text style={[styles.itemName, isPaid && styles.itemPaidText]}>
                         {item.quantity} × {item.product_name}
                       </Text>
-
                       {item.notes ? (
-                        <Text
-                          style={[
-                            styles.itemNotes,
-                            isPaid && styles.itemPaidText
-                          ]}
-                        >
-                          {item.notes}
-                        </Text>
+                        <Text style={[styles.itemNotes, isPaid && styles.itemPaidText]}>{item.notes}</Text>
                       ) : null}
                     </View>
-
-                    <Text
-                      style={[styles.itemPrice, isPaid && styles.itemPaidText]}
-                    >
+                    <Text style={[styles.itemPrice, isPaid && styles.itemPaidText]}>
                       ${item.total_price.toFixed(2)}
                     </Text>
                   </View>
                 )
               })}
 
-              <Text style={{ textAlign: 'right' }}>
-                Pagado: ${paidTotal.toFixed(2)}
-              </Text>
-              <Text style={{ textAlign: 'right' }}>
-                Pendiente: ${(orderTotal - paidTotal).toFixed(2)}
-              </Text>
+              <Text style={{ textAlign: 'right' }}>Pagado: ${paidTotal.toFixed(2)}</Text>
+              <Text style={{ textAlign: 'right' }}>Pendiente: ${(orderTotal - paidTotal).toFixed(2)}</Text>
 
               <View style={styles.actions}>
-                <TouchableOpacity
-                  onPress={handlePrint}
-                  style={styles.printButton}
-                  disabled={closeOrderMutation.isPending}
-                >
-                  <Ionicons name='print-outline' size={26} color='#130918' />
+                <TouchableOpacity onPress={handlePrint} style={styles.printButton} disabled={closeOrderMutation.isPending}>
+                  <Ionicons name='print-outline' size={26} color={theme.textPrimary} />
                 </TouchableOpacity>
-                {(orderData?.status === 'OPEN' ||
-                  orderData?.status === 'UNPAID') && (
+                {(orderData?.status === 'OPEN' || orderData?.status === 'UNPAID') && (
                   <TouchableOpacity
                     onPress={handleCloseOrder}
-                    style={[
-                      styles.closeButton,
-                      closeOrderMutation.isPending && styles.disabledButton
-                    ]}
+                    style={[styles.closeButton, closeOrderMutation.isPending && styles.disabledButton]}
                     disabled={closeOrderMutation.isPending}
                   >
-                    <Ionicons
-                      name='checkmark-done-outline'
-                      size={26}
-                      color='#130918'
-                    />
+                    <Ionicons name='checkmark-done-outline' size={26} color={theme.textPrimary} />
                   </TouchableOpacity>
                 )}
               </View>
@@ -258,91 +171,23 @@ export default function OrderCard({
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    marginBottom: 10
-  },
-  cardHeader: {
-    backgroundColor: '#f5f5f5',
-    padding: 12,
-    borderRadius: 8
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between'
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#130918'
-  },
-  subtitle: {
-    fontSize: 12,
-    color: '#666'
-  },
-  openButton: {
-    backgroundColor: '#f1aa1c',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6
-  },
-  openText: {
-    fontWeight: '600',
-    color: '#130918'
-  },
-  details: {
-    padding: 12
-  },
-  status: {
-    fontWeight: '500',
-    marginBottom: 6
-  },
-  itemRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-    alignItems: 'center'
-  },
-  itemName: {
-    fontSize: 14,
-    fontWeight: '500'
-  },
-  itemNotes: {
-    fontSize: 12,
-    color: '#666'
-  },
-  itemPrice: {
-    fontSize: 14,
-    fontWeight: '600'
-  },
-  actions: {
-    marginTop: 8,
-    display: 'flex',
-    justifyContent: 'flex-end',
-    flexDirection: 'row',
-    gap: 6
-  },
-  closeButton: {
-    marginTop: 8,
-    padding: 6,
-    backgroundColor: '#f1aa1c',
-    borderRadius: 6
-  },
-  printButton: {
-    marginTop: 8,
-    padding: 6,
-    borderRadius: 6
-  },
-  itemInfo: {
-    flex: 1,
-    marginLeft: 6
-  },
-  itemPaidText: {
-    textDecorationLine: 'line-through',
-    color: '#999'
-  },
-  disabledButton: {
-    opacity: 0.6
-  }
+  card: { backgroundColor: theme.surface, borderRadius: 8, marginBottom: 10 },
+  cardHeader: { backgroundColor: theme.borderLight, padding: 12, borderRadius: 8 },
+  header: { flexDirection: 'row', justifyContent: 'space-between' },
+  title: { fontSize: 16, fontWeight: '600', color: theme.textPrimary },
+  subtitle: { fontSize: 12, color: theme.textSecondary },
+  openButton: { backgroundColor: theme.primary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
+  openText: { fontWeight: '600', color: theme.textPrimary },
+  details: { padding: 12 },
+  status: { fontWeight: '500', marginBottom: 6 },
+  itemRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6, alignItems: 'center' },
+  itemName: { fontSize: 14, fontWeight: '500' },
+  itemNotes: { fontSize: 12, color: theme.textSecondary },
+  itemPrice: { fontSize: 14, fontWeight: '600' },
+  actions: { marginTop: 8, display: 'flex', justifyContent: 'flex-end', flexDirection: 'row', gap: 6 },
+  closeButton: { marginTop: 8, padding: 6, backgroundColor: theme.primary, borderRadius: 6 },
+  printButton: { marginTop: 8, padding: 6, borderRadius: 6 },
+  itemInfo: { flex: 1, marginLeft: 6 },
+  itemPaidText: { textDecorationLine: 'line-through', color: theme.textMuted },
+  disabledButton: { opacity: 0.6 }
 })

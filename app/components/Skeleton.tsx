@@ -1,5 +1,6 @@
 import { StyleSheet, Animated } from 'react-native'
 import { useEffect, useRef } from 'react'
+import { theme } from '@/constants/Colors'
 
 export default function Skeleton({
   width,
@@ -51,6 +52,6 @@ export default function Skeleton({
 
 const styles = StyleSheet.create({
   skeleton: {
-    backgroundColor: '#f1aa1c'
+    backgroundColor: theme.primary
   }
 })

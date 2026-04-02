@@ -14,6 +14,7 @@ import {
 } from 'react-native'
 import { useAuth } from '../../context/AuthContext'
 import { Href, router } from 'expo-router'
+import { theme } from '@/constants/Colors'
 
 export default function LoginScreen() {
   const { loginWithPassword } = useAuth()
@@ -57,7 +58,7 @@ export default function LoginScreen() {
               autoCapitalize='none'
               style={styles.input}
               placeholder='ejemplo@correo.com'
-              placeholderTextColor='#aaa'
+              placeholderTextColor={theme.textMuted}
             />
 
             <Text style={styles.label}>Contraseña</Text>
@@ -67,7 +68,7 @@ export default function LoginScreen() {
               secureTextEntry
               style={styles.input}
               placeholder='********'
-              placeholderTextColor='#aaa'
+              placeholderTextColor={theme.textMuted}
             />
 
             <TouchableOpacity
@@ -76,7 +77,7 @@ export default function LoginScreen() {
               disabled={loading}
             >
               {loading ? (
-                <ActivityIndicator color='#ece2d0' />
+                <ActivityIndicator color={theme.background} />
               ) : (
                 <Text style={styles.buttonText}>Ingresar</Text>
               )}
@@ -92,7 +93,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#ECE2D0',
+    backgroundColor: theme.background,
     justifyContent: 'center'
   },
 
@@ -111,24 +112,24 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     marginBottom: 6,
-    color: '#130918',
+    color: theme.textPrimary,
     fontWeight: '600'
   },
 
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: theme.border,
     borderRadius: 6,
     paddingVertical: 12,
     paddingHorizontal: 14,
     marginBottom: 16,
     fontSize: 16,
-    color: '#130918',
-    backgroundColor: '#fff'
+    color: theme.textPrimary,
+    backgroundColor: theme.surface
   },
 
   button: {
-    backgroundColor: '#f1aa1c',
+    backgroundColor: theme.primary,
     paddingVertical: 14,
     borderRadius: 6,
     alignItems: 'center',
@@ -140,7 +141,7 @@ const styles = StyleSheet.create({
   },
 
   buttonText: {
-    color: '#130918',
+    color: theme.textPrimary,
     fontSize: 16,
     fontWeight: 'bold'
   }

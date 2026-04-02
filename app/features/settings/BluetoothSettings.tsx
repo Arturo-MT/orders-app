@@ -6,6 +6,7 @@ import {
   useStoreQuery,
   useStoreUpdateMutation
 } from '@/hooks/api/store'
+import { theme } from '@/constants/Colors'
 
 export default function BluetoothSettings() {
   const { data: storeData, isLoading: isLoadingStoreConfig } = useStoreQuery()
@@ -61,11 +62,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#130918'
+    color: theme.textPrimary
   },
   subtitle: {
     fontSize: 14,
-    color: '#130918'
+    color: theme.textPrimary
   },
   selectorWrapper: {
     borderRadius: 12

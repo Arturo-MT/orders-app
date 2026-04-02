@@ -4,6 +4,7 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
 import OrderCard from './OrderCard'
 import { Ionicons } from '@expo/vector-icons'
 import Skeleton from '@/app/components/Skeleton'
+import { theme } from '@/constants/Colors'
 
 type OrderSummary = {
   id: string
@@ -21,12 +22,9 @@ const orderListReducer = (
   action: { type: 'SET'; orders: OrderSummary[] } | { type: 'REMOVE'; id: string }
 ) => {
   switch (action.type) {
-    case 'SET':
-      return action.orders
-    case 'REMOVE':
-      return state.filter((o) => o.id !== action.id)
-    default:
-      return state
+    case 'SET': return action.orders
+    case 'REMOVE': return state.filter((o) => o.id !== action.id)
+    default: return state
   }
 }
 
@@ -38,13 +36,8 @@ const OrderCardWrapper = memo(function OrderCardWrapper({
   onRemove: (id: string) => void
 }) {
   const { data: order, isLoading } = useOpenOrder(orderId)
-
-  if (isLoading) {
-    return <Skeleton width='100%' height={56} radius={12} />
-  }
-
+  if (isLoading) return <Skeleton width='100%' height={56} radius={12} />
   if (!order) return null
-
   return <OrderCard order={order} variant='open' onRemove={() => onRemove(orderId)} />
 })
 
@@ -53,9 +46,7 @@ export default function OpenOrdersList() {
   const [orders, dispatch] = useReducer(orderListReducer, [])
 
   React.useEffect(() => {
-    if (orderIds) {
-      dispatch({ type: 'SET', orders: orderIds })
-    }
+    if (orderIds) dispatch({ type: 'SET', orders: orderIds })
   }, [orderIds])
 
   const handleRemove = useCallback((id: string) => {
@@ -64,23 +55,13 @@ export default function OpenOrdersList() {
 
   const groupedOrders = React.useMemo(() => {
     if (!orders || orders.length === 0) return []
-
     const map: Record<string, OrderSummary[]> = {}
-
     orders.forEach((order) => {
       const key = order.dining_table?.name ?? order.customer_name ?? 'Barra'
-
-      if (!map[key]) {
-        map[key] = []
-      }
-
+      if (!map[key]) map[key] = []
       map[key].push(order)
     })
-
-    return Object.entries(map).map(([tableName, ordersList]) => ({
-      tableName,
-      orders: ordersList
-    }))
+    return Object.entries(map).map(([tableName, ordersList]) => ({ tableName, orders: ordersList }))
   }, [orders])
 
   const isLoadingTotal = isLoading || isRefetching
@@ -90,7 +71,7 @@ export default function OpenOrdersList() {
       <View style={styles.titleContainer}>
         <Text style={styles.title}>Órdenes abiertas</Text>
         <Pressable onPress={() => refetch()}>
-          <Ionicons name='refresh' size={24} color='#130918' />
+          <Ionicons name='refresh' size={24} color={theme.textPrimary} />
         </Pressable>
       </View>
 
@@ -112,16 +93,10 @@ export default function OpenOrdersList() {
                 <Text style={styles.tableTitle}>
                   {item.tableName === 'BAR' ? 'Barra' : item.tableName}
                 </Text>
-
                 <Text style={styles.count}>{item.orders.length} orden(es)</Text>
               </View>
-
               {item.orders.map((order) => (
-                <OrderCardWrapper
-                  key={order.id}
-                  orderId={order.id}
-                  onRemove={handleRemove}
-                />
+                <OrderCardWrapper key={order.id} orderId={order.id} onRemove={handleRemove} />
               ))}
             </View>
           )}
@@ -129,40 +104,24 @@ export default function OpenOrdersList() {
       ) : null}
 
       {!isLoadingTotal && orders.length === 0 && (
-        <Text style={{ textAlign: 'center', marginTop: 16 }}>
-          No hay órdenes abiertas
-        </Text>
+        <Text style={{ textAlign: 'center', marginTop: 16 }}>No hay órdenes abiertas</Text>
       )}
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  title: {
-    textAlign: 'center',
-    marginBottom: 8,
-    fontSize: 18
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
+  title: { textAlign: 'center', marginBottom: 8, fontSize: 18 },
+  titleContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   tableHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#f2f2f2',
+    backgroundColor: theme.borderLight,
     padding: 8,
     borderRadius: 8,
     marginBottom: 6
   },
-  tableTitle: {
-    fontWeight: '600',
-    fontSize: 15
-  },
-  count: {
-    fontSize: 12,
-    color: '#666'
-  }
+  tableTitle: { fontWeight: '600', fontSize: 15 },
+  count: { fontSize: 12, color: theme.textSecondary }
 })

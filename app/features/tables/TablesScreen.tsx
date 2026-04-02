@@ -17,6 +17,7 @@ import {
   useCreateTable,
   useUpdateTable
 } from '@/hooks/api/tables'
+import { theme } from '@/constants/Colors'
 
 export default function TablesScreen() {
   const { data, isLoading, isRefetching, refetch } = useTablesQuery()
@@ -91,8 +92,8 @@ export default function TablesScreen() {
                       is_active: value
                     })
                   }
-                  trackColor={{ false: '#ccc', true: '#f1aa1c' }}
-                  thumbColor={item.is_active ? '#130918' : '#f4f3f4'}
+                  trackColor={{ false: theme.border, true: theme.primary }}
+                  thumbColor={item.is_active ? theme.textPrimary : theme.borderLight}
                 />
 
                 <Pressable
@@ -104,7 +105,7 @@ export default function TablesScreen() {
                     setEditOpen(true)
                   }}
                 >
-                  <Ionicons name='pencil-outline' size={20} color='#130918' />
+                  <Ionicons name='pencil-outline' size={20} color={theme.textPrimary} />
                 </Pressable>
               </View>
             </View>
@@ -114,7 +115,7 @@ export default function TablesScreen() {
       )}
 
       <Pressable style={styles.fab} onPress={() => setOpen(true)}>
-        <Ionicons name='add' size={32} color='#fff' />
+        <Ionicons name='add' size={32} color={theme.surface} />
       </Pressable>
 
       {/* MODAL CREAR */}
@@ -202,21 +203,21 @@ export default function TablesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ece2d0',
+    backgroundColor: theme.background,
     padding: 16
   },
 
   empty: {
     textAlign: 'center',
     marginTop: 40,
-    color: '#666'
+    color: theme.textSecondary
   },
 
   fab: {
     position: 'absolute',
     right: 16,
     bottom: 16,
-    backgroundColor: '#130918',
+    backgroundColor: theme.textPrimary,
     width: 56,
     height: 56,
     borderRadius: 28,
@@ -226,7 +227,7 @@ const styles = StyleSheet.create({
   },
 
   row: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
@@ -238,11 +239,11 @@ const styles = StyleSheet.create({
   rowText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#130918'
+    color: theme.textPrimary
   },
 
   rowTextDisabled: {
-    color: '#999'
+    color: theme.textMuted
   },
 
   rowActions: {
@@ -257,18 +258,18 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f1aa1c'
+    backgroundColor: theme.primary
   },
 
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: theme.overlay,
     justifyContent: 'center',
     padding: 24
   },
 
   modal: {
-    backgroundColor: '#ece2d0',
+    backgroundColor: theme.background,
     borderRadius: 16,
     padding: 20,
     gap: 16
@@ -277,15 +278,15 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#130918'
+    color: theme.textPrimary
   },
 
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: theme.border,
     borderRadius: 12,
     padding: 12,
-    backgroundColor: '#fff'
+    backgroundColor: theme.surface
   },
 
   switchRow: {
@@ -304,15 +305,15 @@ const styles = StyleSheet.create({
   },
 
   cancel: {
-    color: '#130918',
+    color: theme.textPrimary,
     fontSize: 16
   },
 
   save: {
-    color: '#130918',
+    color: theme.textPrimary,
     fontSize: 16,
     fontWeight: '600',
-    backgroundColor: '#f1aa1c',
+    backgroundColor: theme.primary,
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 8

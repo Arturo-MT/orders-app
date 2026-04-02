@@ -20,6 +20,7 @@ import {
 } from '@/hooks/api/products'
 import { useCategoriesQuery } from '@/hooks/api/categories'
 import { Picker } from '@react-native-picker/picker'
+import { theme } from '@/constants/Colors'
 
 export default function ProductsScreen() {
   const { data, isLoading, isRefetching, refetch } = useProductsQuery({
@@ -142,7 +143,7 @@ export default function ProductsScreen() {
                   <Ionicons
                     name={isOpen ? 'chevron-up' : 'chevron-down'}
                     size={20}
-                    color='#130918'
+                    color={theme.textPrimary}
                   />
                 </Pressable>
 
@@ -179,8 +180,8 @@ export default function ProductsScreen() {
                               }
                             )
                           }
-                          trackColor={{ false: '#ccc', true: '#f1aa1c' }}
-                          thumbColor={product.is_active ? '#130918' : '#f4f3f4'}
+                          trackColor={{ false: theme.border, true: theme.primary }}
+                          thumbColor={product.is_active ? theme.textPrimary : theme.borderLight}
                         />
 
                         <Pressable
@@ -196,7 +197,7 @@ export default function ProductsScreen() {
                           <Ionicons
                             name='pencil-outline'
                             size={20}
-                            color='#130918'
+                            color={theme.textPrimary}
                           />
                         </Pressable>
                       </View>
@@ -212,7 +213,7 @@ export default function ProductsScreen() {
       )}
 
       <Pressable style={styles.fab} onPress={() => setOpen(true)}>
-        <Ionicons name='add' size={32} color='#fff' />
+        <Ionicons name='add' size={32} color={theme.surface} />
       </Pressable>
 
       <Modal visible={open} transparent animationType='fade'>
@@ -341,19 +342,19 @@ export default function ProductsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ece2d0',
+    backgroundColor: theme.background,
     padding: 16
   },
   empty: {
     textAlign: 'center',
     marginTop: 40,
-    color: '#666'
+    color: theme.textSecondary
   },
   fab: {
     position: 'absolute',
     right: 16,
     bottom: 16,
-    backgroundColor: '#130918',
+    backgroundColor: theme.textPrimary,
     width: 56,
     height: 56,
     borderRadius: 28,
@@ -362,7 +363,7 @@ const styles = StyleSheet.create({
     elevation: 4
   },
   categoryHeader: {
-    backgroundColor: '#f1aa1c',
+    backgroundColor: theme.primary,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -373,10 +374,10 @@ const styles = StyleSheet.create({
   categoryTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#130918'
+    color: theme.textPrimary
   },
   row: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
@@ -390,10 +391,10 @@ const styles = StyleSheet.create({
   },
   rowText: {
     fontSize: 16,
-    color: '#130918'
+    color: theme.textPrimary
   },
   rowTextDisabled: {
-    color: '#999'
+    color: theme.textMuted
   },
   rowActions: {
     flexDirection: 'row',
@@ -406,16 +407,16 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f1aa1c'
+    backgroundColor: theme.primary
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: theme.overlay,
     justifyContent: 'center',
     padding: 24
   },
   modal: {
-    backgroundColor: '#ece2d0',
+    backgroundColor: theme.background,
     borderRadius: 16,
     padding: 20,
     gap: 16
@@ -423,14 +424,14 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#130918'
+    color: theme.textPrimary
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: theme.border,
     borderRadius: 12,
     padding: 12,
-    backgroundColor: '#fff'
+    backgroundColor: theme.surface
   },
   actionsRight: {
     flexDirection: 'row',
@@ -440,14 +441,14 @@ const styles = StyleSheet.create({
     marginTop: 12
   },
   cancel: {
-    color: '#130918',
+    color: theme.textPrimary,
     fontSize: 16
   },
   save: {
-    color: '#130918',
+    color: theme.textPrimary,
     fontSize: 16,
     fontWeight: '600',
-    backgroundColor: '#f1aa1c',
+    backgroundColor: theme.primary,
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 8
@@ -457,9 +458,9 @@ const styles = StyleSheet.create({
   },
   pickerWrapper: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: theme.border,
     borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: '#fff'
+    backgroundColor: theme.surface
   }
 })

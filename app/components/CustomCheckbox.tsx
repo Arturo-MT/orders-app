@@ -1,6 +1,7 @@
 import React from 'react'
 import { TouchableOpacity, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { theme } from '@/constants/Colors'
 
 interface Props {
   value: boolean
@@ -22,7 +23,7 @@ export default function CustomCheckbox({
       <Ionicons
         name={value ? 'checkbox-outline' : 'square-outline'}
         size={28}
-        color={'#130918'}
+        color={theme.textPrimary}
       />
     </TouchableOpacity>
   )

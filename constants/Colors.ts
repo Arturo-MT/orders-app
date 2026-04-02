@@ -1,26 +1,29 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
+export const theme = {
+  // Fondos
+  background: '#f5efe6',
+  surface: '#ffffff',
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+  // Acciones
+  primary: '#f1aa1c',
+  primaryMuted: '#e0c46c',
+  destructive: '#C0503F',
+  success: '#5A7A52',
 
-export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-  },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
-  },
-};
+  // Texto
+  textPrimary: '#130918',
+  textSecondary: '#666666',
+  textMuted: '#999999',
+
+  // Bordes y separadores
+  border: '#dddddd',
+  borderLight: '#eeeeee',
+
+  // Estados deshabilitados
+  disabled: '#e0e0e0',
+  disabledText: '#999999',
+
+  // Overlay modal
+  overlay: 'rgba(0,0,0,0.4)',
+} as const
+
+export type Theme = typeof theme

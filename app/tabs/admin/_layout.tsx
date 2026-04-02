@@ -1,11 +1,12 @@
 import { Stack } from 'expo-router'
+import { theme } from '@/constants/Colors'
 
 export default function AdminLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: '#ece2d0' },
-        headerTintColor: '#130918'
+        headerStyle: { backgroundColor: theme.background },
+        headerTintColor: theme.textPrimary
       }}
     >
       <Stack.Screen

@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase'
 import { router } from 'expo-router'
 import { useState } from 'react'
 import { View, Text, Pressable, StyleSheet, TextInput } from 'react-native'
+import { theme } from '@/constants/Colors'
 
 export default function SupabaseAuthScreen() {
   const [mode, setMode] = useState<'login' | 'signup'>('login')
@@ -146,12 +147,12 @@ export default function SupabaseAuthScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ECE2D0',
+    backgroundColor: theme.background,
     justifyContent: 'center',
     padding: 24
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderRadius: 16,
     padding: 24,
     gap: 12
@@ -159,22 +160,22 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '600',
-    color: '#130918'
+    color: theme.textPrimary
   },
   subtitle: {
     fontSize: 14,
-    color: '#130918',
+    color: theme.textPrimary,
     marginBottom: 12
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: theme.border,
     borderRadius: 12,
     padding: 12,
-    backgroundColor: '#fff'
+    backgroundColor: theme.surface
   },
   button: {
-    backgroundColor: '#f1aa1c',
+    backgroundColor: theme.primary,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
@@ -184,22 +185,22 @@ const styles = StyleSheet.create({
     opacity: 0.6
   },
   buttonText: {
-    color: '#130918',
+    color: theme.textPrimary,
     fontSize: 16,
     fontWeight: '800'
   },
   link: {
     marginTop: 12,
     textAlign: 'center',
-    color: '#130918',
+    color: theme.textPrimary,
     fontWeight: '600'
   },
   error: {
-    color: 'red',
+    color: theme.destructive,
     textAlign: 'center'
   },
   info: {
-    color: 'green',
+    color: theme.success,
     textAlign: 'center'
   }
 })

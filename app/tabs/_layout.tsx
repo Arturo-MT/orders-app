@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '@/app/context/AuthContext'
 import { useUserQuery } from '@/hooks/api/users'
+import { theme } from '@/constants/Colors'
 
 export default function TabLayout() {
   const { isSuperAdmin } = useAuth()
@@ -13,16 +14,16 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#130918',
-        tabBarInactiveTintColor: '#888',
+        tabBarActiveTintColor: theme.textPrimary,
+        tabBarInactiveTintColor: theme.textMuted,
         tabBarStyle: {
-          backgroundColor: '#ece2d0',
-          borderTopColor: '#eee'
+          backgroundColor: theme.background,
+          borderTopColor: theme.borderLight
         },
         headerStyle: {
-          backgroundColor: '#f1aa1c'
+          backgroundColor: theme.primary
         },
-        headerTintColor: '#130918'
+        headerTintColor: theme.textPrimary
       }}
     >
       <Tabs.Screen

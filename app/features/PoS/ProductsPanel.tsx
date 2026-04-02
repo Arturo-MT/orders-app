@@ -10,6 +10,7 @@ import {
 } from 'react-native'
 import Card from '@/app/components/Card'
 import { Product } from '@/types/types'
+import { theme } from '@/constants/Colors'
 import CategorySkeleton from './CategorySkeleton'
 import ProductGridSkeleton from './ProductGridSkeleton'
 
@@ -164,7 +165,7 @@ export default function ProductsPanel({
             )}
 
             {!isProductsLoading && filteredProductsBySearch.length === 0 && (
-              <Text style={{ fontSize: 16, color: '#130918' }}>
+              <Text style={{ fontSize: 16, color: theme.textPrimary }}>
                 No hay productos en esta búsqueda
               </Text>
             )}
@@ -204,19 +205,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: '#ece2d0',
+    backgroundColor: theme.background,
     width: 'auto',
     alignItems: 'center'
   },
   selectedCategory: {
-    backgroundColor: '#f1aa1c'
+    backgroundColor: theme.primary
   },
   categoryText: {
     fontSize: 16,
-    color: '#130918'
+    color: theme.textPrimary
   },
   selectedCategoryText: {
-    color: '#130918'
+    color: theme.textPrimary
   },
   productsContainer: {
     flexDirection: 'row',
@@ -228,10 +229,10 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: theme.border,
     borderRadius: 5,
     padding: 8,
-    backgroundColor: '#fff'
+    backgroundColor: theme.surface
   },
   searchWrapper: {
     padding: 10
@@ -242,6 +243,6 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     flex: 2,
-    backgroundColor: '#ece2d0'
+    backgroundColor: theme.background
   }
 })

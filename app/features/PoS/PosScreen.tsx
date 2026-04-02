@@ -17,6 +17,7 @@ import { useStoreQuery } from '@/hooks/api/store'
 import { OrderDraft, OrderItemDraft, Product } from '@/types/types'
 import { printOrder } from '../printing/print'
 
+import { theme } from '@/constants/Colors'
 import ProductsPanel from './ProductsPanel'
 import OrderPanel from './OrderPanel'
 
@@ -227,6 +228,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 10,
-    backgroundColor: '#ece2d0'
+    backgroundColor: theme.background
   }
 })

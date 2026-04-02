@@ -10,6 +10,7 @@ import {
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { OrderItemDraft } from '@/types/types'
+import { theme } from '@/constants/Colors'
 
 interface Props {
   item: OrderItemDraft
@@ -45,7 +46,7 @@ export default function OrderItemComponent({
         <Ionicons
           name={item.notes ? 'chatbubble' : 'chatbubble-outline'}
           size={18}
-          color={item.notes ? '#f1aa1c' : '#130918'}
+          color={item.notes ? theme.primary : theme.textPrimary}
         />
       </TouchableOpacity>
 
@@ -64,7 +65,7 @@ export default function OrderItemComponent({
           <Ionicons
             name='remove-circle'
             size={20}
-            color={item.quantity <= 1 ? '#ccc' : '#130918'}
+            color={item.quantity <= 1 ? theme.disabled : theme.textPrimary}
           />
         </TouchableOpacity>
 
@@ -83,7 +84,7 @@ export default function OrderItemComponent({
             onUpdate({ quantity: newQty, price: item.base_price * newQty })
           }}
         >
-          <Ionicons name='add-circle' size={20} color='#130918' />
+          <Ionicons name='add-circle' size={20} color={theme.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -113,7 +114,7 @@ export default function OrderItemComponent({
       )}
 
       <TouchableOpacity onPress={onRemove} style={styles.iconButton}>
-        <Ionicons name='trash-outline' size={18} color='#F56A57' />
+        <Ionicons name='trash-outline' size={18} color={theme.destructive} />
       </TouchableOpacity>
 
       <Modal
@@ -138,7 +139,7 @@ export default function OrderItemComponent({
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 onPress={() => setNotesModalVisible(false)}
-                style={[styles.modalButton, { backgroundColor: '#ccc' }]}
+                style={[styles.modalButton, { backgroundColor: theme.disabled }]}
               >
                 <Text>Cancelar</Text>
               </TouchableOpacity>
@@ -148,9 +149,9 @@ export default function OrderItemComponent({
                   onUpdate({ notes: tempNotes })
                   setNotesModalVisible(false)
                 }}
-                style={[styles.modalButton, { backgroundColor: '#f1aa1c' }]}
+                style={[styles.modalButton, { backgroundColor: theme.primary }]}
               >
-                <Text style={{ color: '#130918' }}>Guardar</Text>
+                <Text style={{ color: theme.textPrimary }}>Guardar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -175,7 +176,7 @@ export default function OrderItemComponent({
                   setTempQty(String(Math.max(1, Number(tempQty) - 1)))
                 }
               >
-                <Ionicons name='remove-circle' size={40} color='#130918' />
+                <Ionicons name='remove-circle' size={40} color={theme.textPrimary} />
               </TouchableOpacity>
 
               <TextInput
@@ -190,14 +191,14 @@ export default function OrderItemComponent({
                 style={styles.modalButtonAlt}
                 onPress={() => setTempQty(String(Number(tempQty) + 1))}
               >
-                <Ionicons name='add-circle' size={40} color='#130918' />
+                <Ionicons name='add-circle' size={40} color={theme.textPrimary} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 onPress={() => setQtyModalVisible(false)}
-                style={[styles.modalButton, { backgroundColor: '#ccc' }]}
+                style={[styles.modalButton, { backgroundColor: theme.disabled }]}
               >
                 <Text>Cancelar</Text>
               </TouchableOpacity>
@@ -208,9 +209,9 @@ export default function OrderItemComponent({
                   onUpdate({ quantity: newQty, price: item.base_price * newQty })
                   setQtyModalVisible(false)
                 }}
-                style={[styles.modalButton, { backgroundColor: '#f1aa1c' }]}
+                style={[styles.modalButton, { backgroundColor: theme.primary }]}
               >
-                <Text style={{ color: '#130918' }}>Guardar</Text>
+                <Text style={{ color: theme.textPrimary }}>Guardar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -242,7 +243,7 @@ export default function OrderItemComponent({
             <View style={styles.priceModalButtons}>
               <TouchableOpacity
                 onPress={() => setPriceModalVisible(false)}
-                style={[styles.modalButton, { backgroundColor: '#ccc' }]}
+                style={[styles.modalButton, { backgroundColor: theme.disabled }]}
               >
                 <Text>Cancelar</Text>
               </TouchableOpacity>
@@ -255,9 +256,9 @@ export default function OrderItemComponent({
                   onUpdate({ price: newPrice, base_price: unitPrice })
                   setPriceModalVisible(false)
                 }}
-                style={[styles.modalButton, { backgroundColor: '#f1aa1c' }]}
+                style={[styles.modalButton, { backgroundColor: theme.primary }]}
               >
-                <Text style={{ color: '#130918' }}>Guardar</Text>
+                <Text style={{ color: theme.textPrimary }}>Guardar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -274,7 +275,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 4,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: theme.borderLight,
     gap: 6
   },
   iconButton: {
@@ -284,7 +285,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '500',
-    color: '#130918'
+    color: theme.textPrimary
   },
   quantityControls: {
     flexDirection: 'row',
@@ -304,16 +305,16 @@ const styles = StyleSheet.create({
   },
   currency: {
     fontSize: 14,
-    color: '#666'
+    color: theme.textSecondary
   },
   priceInput: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: theme.border,
     borderRadius: 4,
     paddingHorizontal: 4,
     paddingVertical: 2,
     fontSize: 13,
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     textAlign: 'right'
   },
   modalOverlay: {
@@ -322,7 +323,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)'
   },
   modalContent: {
-    backgroundColor: '#ece2d0',
+    backgroundColor: theme.background,
     padding: 16,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12
@@ -334,19 +335,19 @@ const styles = StyleSheet.create({
   },
   modalSubtitle: {
     fontSize: 14,
-    color: '#666',
+    color: theme.textSecondary,
     marginBottom: 16
   },
   modalInput: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: theme.border,
     borderRadius: 8,
     padding: 12,
     minHeight: 80,
     textAlignVertical: 'top',
     marginBottom: 12,
     fontSize: 16,
-    backgroundColor: '#fff'
+    backgroundColor: theme.surface
   },
   modalButtons: {
     flexDirection: 'row',
@@ -371,17 +372,17 @@ const styles = StyleSheet.create({
   qtyModalInput: {
     width: 80,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: theme.border,
     borderRadius: 8,
     padding: 12,
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    backgroundColor: '#fff'
+    backgroundColor: theme.surface
   },
   priceBadge: {
     width: 46,
-    backgroundColor: '#e8e8e8',
+    backgroundColor: theme.borderLight,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -390,7 +391,7 @@ const styles = StyleSheet.create({
   priceBadgeText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#130918',
+    color: theme.textPrimary,
     textAlign: 'right'
   },
   priceModalControls: {
@@ -403,9 +404,9 @@ const styles = StyleSheet.create({
   priceModalInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: theme.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8
@@ -413,7 +414,7 @@ const styles = StyleSheet.create({
   priceModalCurrency: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#666',
+    color: theme.textSecondary,
     marginRight: 4
   },
   priceModalInput: {

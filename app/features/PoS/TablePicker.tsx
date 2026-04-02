@@ -2,6 +2,7 @@ import React from 'react'
 import { View, StyleSheet } from 'react-native'
 import { useTablesQuery } from '@/hooks/api/tables'
 import { Picker } from '@react-native-picker/picker'
+import { theme } from '@/constants/Colors'
 
 type Table = {
   id: string
@@ -58,14 +59,14 @@ const styles = StyleSheet.create({
   label: {
     fontWeight: '600',
     marginBottom: 6,
-    color: '#130918'
+    color: theme.textPrimary
   },
   pickerWrapper: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: theme.border,
     borderRadius: 5,
     overflow: 'hidden',
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     height: 46,
     justifyContent: 'center'
   },

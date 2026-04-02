@@ -1,6 +1,7 @@
 import React from 'react'
 import { Pressable, Text, StyleSheet } from 'react-native'
 import { View } from 'react-native'
+import { theme } from '@/constants/Colors'
 
 interface CardProps {
   data: Record<string, any>
@@ -46,11 +47,11 @@ const Card = ({ data, onPress, _hiddenFields = [] }: CardProps) => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     paddingVertical: 10,
     paddingHorizontal: 10,
     borderRadius: 12,
-    shadowColor: '#130918',
+    shadowColor: theme.textPrimary,
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 4,
@@ -63,24 +64,26 @@ const styles = StyleSheet.create({
   },
   cardText: {
     fontSize: 14,
-    color: '#333',
+    color: theme.textSecondary,
     marginBottom: 4
   },
   nameText: {
     fontSize: 16,
-    fontWeight: '600'
+    fontWeight: '600',
+    color: theme.textPrimary
   },
   priceText: {
     fontSize: 14,
-    color: '#130918',
-    backgroundColor: '#ece2d0',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    fontWeight: '600'
+    color: theme.surface,
+    backgroundColor: theme.primary,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    fontWeight: '700',
+    overflow: 'hidden'
   },
   badge: {
-    backgroundColor: '#ece2d0',
+    backgroundColor: theme.background,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -89,7 +92,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 12,
-    color: '#333',
+    color: theme.textSecondary,
     fontWeight: '600'
   },
   row: {
@@ -100,7 +103,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: '#333',
+    color: theme.textSecondary,
     fontWeight: '500',
     textAlign: 'center'
   }

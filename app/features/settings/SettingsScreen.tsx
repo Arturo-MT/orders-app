@@ -5,6 +5,7 @@ import { useUserQuery } from '@/hooks/api/users'
 import { useAuth } from '@/app/context/AuthContext'
 import { Pressable } from 'react-native'
 import StoreSelector from './StoreSelector'
+import { theme } from '@/constants/Colors'
 
 export default function SettingsScreen() {
   const { data, isLoading, error } = useUserQuery()
@@ -85,12 +86,12 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ece2d0',
+    backgroundColor: theme.background,
     padding: 20,
     gap: 24
   },
   section: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     borderRadius: 12,
     padding: 16,
     gap: 6
@@ -99,25 +100,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,
-    color: '#1f2937'
+    color: theme.textPrimary
   },
   label: {
     fontSize: 12,
-    color: '#6b7280'
+    color: theme.textSecondary
   },
   value: {
     fontSize: 14,
-    color: '#111827',
+    color: theme.textPrimary,
     marginBottom: 8
   },
   logoutButton: {
-    backgroundColor: '#F56A57',
+    backgroundColor: theme.destructive,
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center'
   },
   logoutText: {
-    color: '#130918',
+    color: theme.textPrimary,
     fontSize: 16,
     fontWeight: '600'
   },

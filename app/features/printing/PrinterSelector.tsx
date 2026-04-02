@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import { BluetoothManager } from 'react-native-bluetooth-escpos-printer'
 import { requestBluetoothPermissions } from './print'
 import Skeleton from '@/app/components/Skeleton'
+import { theme } from '@/constants/Colors'
 
 export type Device = {
   name?: string
@@ -101,7 +102,7 @@ const styles = StyleSheet.create({
     marginTop: 10
   },
   deviceButton: {
-    backgroundColor: '#eee',
+    backgroundColor: theme.borderLight,
     padding: 12,
     borderRadius: 8,
     marginBottom: 10
@@ -112,11 +113,11 @@ const styles = StyleSheet.create({
   },
   deviceAddress: {
     fontSize: 12,
-    color: '#666'
+    color: theme.textSecondary
   },
   emptyText: {
     textAlign: 'center',
-    color: '#666',
+    color: theme.textSecondary,
     marginTop: 20
   }
 })
