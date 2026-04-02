@@ -5,11 +5,11 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  TextInput
+  TextInput,
+  useWindowDimensions
 } from 'react-native'
 import Card from '@/app/components/Card'
 import { Product } from '@/types/types'
-import { useWindowDimensions } from 'react-native'
 import CategorySkeleton from './CategorySkeleton'
 import ProductGridSkeleton from './ProductGridSkeleton'
 
@@ -37,6 +37,9 @@ export default function ProductsPanel({
 }) {
   const { height, width } = useWindowDimensions()
   const isPortrait = height >= width
+
+  const [panelWidth, setPanelWidth] = useState(0)
+  const columns = panelWidth < 360 ? 2 : panelWidth < 560 ? 3 : 4
 
   const [searchText, setSearchText] = useState('')
 
@@ -86,7 +89,6 @@ export default function ProductsPanel({
     { flexDirection: isPortrait ? ('row' as const) : ('column' as const) }
   ]
 
-  const columns = isPortrait ? 3 : 4
   const columnWidth = 100 / columns
 
   const CategorySelectorScrollViewStyle = {
@@ -101,7 +103,7 @@ export default function ProductsPanel({
   ]
 
   return (
-    <View style={styles.wrapper}>
+    <View style={styles.wrapper} onLayout={(e) => setPanelWidth(e.nativeEvent.layout.width)}>
       <View style={styles.searchWrapper}>
         <TextInput
           value={searchText}

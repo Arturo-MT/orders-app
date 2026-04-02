@@ -32,6 +32,7 @@ const Card = ({ data, onPress, _hiddenFields = [] }: CardProps) => {
                     ...(key === 'name' ? styles.nameText : styles.cardText),
                     ...(key === 'price' ? styles.priceText : {})
                   }}
+                  numberOfLines={key === 'name' ? 2 : 1}
                 >
                   {key === 'price' ? `$${value}` : value}
                 </Text>
@@ -46,20 +47,19 @@ const Card = ({ data, onPress, _hiddenFields = [] }: CardProps) => {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#fff',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
     borderRadius: 12,
     shadowColor: '#130918',
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 4,
     elevation: 2,
-    margin: 8,
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: 6,
     width: '100%',
-    height: 120
+    aspectRatio: 1
   },
   cardText: {
     fontSize: 14,

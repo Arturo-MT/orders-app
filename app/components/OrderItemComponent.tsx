@@ -24,7 +24,7 @@ export default function OrderItemComponent({
 }: Props) {
   const { width, height } = useWindowDimensions()
   const isPortrait = height >= width
-  const panelWidth = isPortrait ? width : (width * 2) / 3
+  const panelWidth = isPortrait ? width : width / 2
   const isSmallDevice = panelWidth < 480
   const [notesModalVisible, setNotesModalVisible] = useState(false)
   const [qtyModalVisible, setQtyModalVisible] = useState(false)
