@@ -6,7 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Modal,
-  Dimensions
+  useWindowDimensions
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { OrderItemDraft } from '@/types/types'
@@ -22,7 +22,10 @@ export default function OrderItemComponent({
   onUpdate,
   onRemove
 }: Props) {
-  const isSmallDevice = Dimensions.get('window').width < 768
+  const { width, height } = useWindowDimensions()
+  const isPortrait = height >= width
+  const panelWidth = isPortrait ? width : (width * 2) / 3
+  const isSmallDevice = panelWidth < 480
   const [notesModalVisible, setNotesModalVisible] = useState(false)
   const [qtyModalVisible, setQtyModalVisible] = useState(false)
   const [priceModalVisible, setPriceModalVisible] = useState(false)
@@ -304,7 +307,6 @@ const styles = StyleSheet.create({
     color: '#666'
   },
   priceInput: {
-    width: 34,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 4,
@@ -378,15 +380,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff'
   },
   priceBadge: {
+    width: 46,
     backgroundColor: '#e8e8e8',
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4
+    borderRadius: 4,
+    alignItems: 'flex-end'
   },
   priceBadgeText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#130918'
+    color: '#130918',
+    textAlign: 'right'
   },
   priceModalControls: {
     flexDirection: 'row',

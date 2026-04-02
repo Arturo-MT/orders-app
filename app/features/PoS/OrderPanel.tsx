@@ -7,7 +7,8 @@ import {
   TextInput,
   TouchableOpacity,
   ToastAndroid,
-  Alert
+  Alert,
+  useWindowDimensions
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { OrderDraft, OrderItemDraft } from '@/types/types'
@@ -24,6 +25,11 @@ interface Props {
 }
 
 export default function OrderPanel({ order, total, onChange, onPrint, isLoading }: Props) {
+  const { width, height } = useWindowDimensions()
+  const isPortrait = height >= width
+  const panelWidth = isPortrait ? width : (width * 2) / 3
+  const isNarrow = panelWidth < 400
+
   const scrollRef = useRef<ScrollView | null>(null)
   const prevCountRef = useRef(order.items.length)
   const shouldScrollRef = useRef(false)
@@ -81,42 +87,42 @@ export default function OrderPanel({ order, total, onChange, onPrint, isLoading 
       )}
 
       <View style={styles.typeOrderWrapper}>
-        <Text>Para llevar</Text>
-        <CustomCheckbox
-          value={order.type === 'TAKEAWAY'}
-          onChange={() =>
-            onChange({
-              ...order,
-              type: 'TAKEAWAY'
-            })
-          }
-        />
+        <TouchableOpacity
+          style={styles.typeOption}
+          onPress={() => onChange({ ...order, type: 'TAKEAWAY' })}
+        >
+          <CustomCheckbox
+            value={order.type === 'TAKEAWAY'}
+            onChange={() => onChange({ ...order, type: 'TAKEAWAY' })}
+          />
+          <Text style={styles.typeOptionLabel}>Para llevar</Text>
+        </TouchableOpacity>
 
-        <Text>Para comer aquí</Text>
-        <CustomCheckbox
-          value={order.type === 'DINE_IN'}
-          onChange={() =>
-            onChange({
-              ...order,
-              type: 'DINE_IN'
-            })
-          }
-        />
+        <TouchableOpacity
+          style={styles.typeOption}
+          onPress={() => onChange({ ...order, type: 'DINE_IN' })}
+        >
+          <CustomCheckbox
+            value={order.type === 'DINE_IN'}
+            onChange={() => onChange({ ...order, type: 'DINE_IN' })}
+          />
+          <Text style={styles.typeOptionLabel}>Para comer aquí</Text>
+        </TouchableOpacity>
 
-        <Text>Pagado</Text>
-        <CustomCheckbox
-          value={!!order.is_paid}
-          onChange={(checked) =>
-            onChange({
-              ...order,
-              is_paid: checked
-            })
-          }
-        />
+        <TouchableOpacity
+          style={styles.typeOption}
+          onPress={() => onChange({ ...order, is_paid: !order.is_paid })}
+        >
+          <CustomCheckbox
+            value={!!order.is_paid}
+            onChange={(checked) => onChange({ ...order, is_paid: checked })}
+          />
+          <Text style={styles.typeOptionLabel}>Pagado</Text>
+        </TouchableOpacity>
       </View>
 
-      <View style={styles.buttonsWrapper}>
-        <Text style={styles.orderTitle}>Total: ${total}</Text>
+      <View style={[styles.buttonsWrapper, isNarrow && styles.buttonsWrapperNarrow]}>
+        <Text style={styles.orderTitle}>Total: ${total.toFixed(2)}</Text>
 
         <TouchableOpacity
           onPress={onPrint}
@@ -197,9 +203,19 @@ const styles = StyleSheet.create({
   },
   typeOrderWrapper: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     marginVertical: 10,
-    gap: 10
+    gap: 8
+  },
+  typeOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6
+  },
+  typeOptionLabel: {
+    fontSize: 14,
+    color: '#130918'
   },
   customerNameInput: {
     borderWidth: 1,
@@ -218,6 +234,9 @@ const styles = StyleSheet.create({
     gap: 10,
     marginVertical: 10,
     alignItems: 'center'
+  },
+  buttonsWrapperNarrow: {
+    flexWrap: 'wrap'
   },
   printButton: {
     flex: 1,
