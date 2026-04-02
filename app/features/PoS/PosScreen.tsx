@@ -1,11 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react'
-import {
-  View,
-  StyleSheet,
-  ToastAndroid,
-  useWindowDimensions,
-  ViewStyle
-} from 'react-native'
+import React, { useCallback, useMemo, useState } from 'react'
+import { View, StyleSheet, useWindowDimensions, ViewStyle } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
 
 import { useCategoriesQuery } from '@/hooks/api/categories'
@@ -20,10 +14,12 @@ import { printOrder } from '../printing/print'
 import { theme } from '@/constants/Colors'
 import ProductsPanel from './ProductsPanel'
 import OrderPanel from './OrderPanel'
+import { useToast } from '@/app/context/ToastContext'
 
 export default function PosScreen() {
+  const { showToast } = useToast()
+
   const [selectedCategory, setSelectedCategory] = useState('Todos')
-  const [total, setTotal] = useState(0)
 
   const [order, setOrder] = useState<OrderDraft>({
     type: 'TAKEAWAY',
@@ -51,10 +47,11 @@ export default function PosScreen() {
   const { refetch: userRefetch } = useUserQuery()
   const { data: storeData } = useStoreQuery()
 
-  const { mutateAsync: createOrder, isPending: isCreatingOrder } = useCreateOrder({
-    retry: 1,
-    retryDelay: 1000
-  })
+  const { mutateAsync: createOrder, isPending: isCreatingOrder } =
+    useCreateOrder({
+      retry: 1,
+      retryDelay: 1000
+    })
 
   /* ---------- productos ---------- */
 
@@ -86,17 +83,15 @@ export default function PosScreen() {
 
   const containerStyle: ViewStyle[] = [
     styles.container,
-    {
-      flexDirection: isPortrait ? 'column' : 'row'
-    }
+    { flexDirection: isPortrait ? 'column' : 'row' }
   ]
 
   /* ---------- total ---------- */
 
-  useEffect(() => {
-    const sum = order.items.reduce((acc, item) => acc + item.price, 0)
-    setTotal(sum)
-  }, [order.items])
+  const total = useMemo(
+    () => order.items.reduce((acc, item) => acc + item.price, 0),
+    [order.items]
+  )
 
   /* ---------- acciones ---------- */
 
@@ -119,14 +114,9 @@ export default function PosScreen() {
 
   const buildOrderPayload = (draft: OrderDraft): OrderDraft | null => {
     if (draft.items.length === 0) return null
-
     const hasTable = draft.table_id !== null
     const hasCustomerName = !!draft.customer_name?.trim()
-
-    if (!hasTable && !hasCustomerName) {
-      return null
-    }
-
+    if (!hasTable && !hasCustomerName) return null
     return draft
   }
 
@@ -134,17 +124,14 @@ export default function PosScreen() {
     const payload = buildOrderPayload(order)
 
     if (!payload) {
-      ToastAndroid.show(
-        'Datos incompletos para guardar la orden',
-        ToastAndroid.SHORT
-      )
+      showToast('Datos incompletos para guardar la orden', 'error')
       return
     }
 
     try {
       const response = await createOrder(payload)
 
-      ToastAndroid.show('Orden creada correctamente', ToastAndroid.SHORT)
+      showToast('Orden creada correctamente', 'success')
 
       const { success: printSuccess, error: printError } = await printOrder(
         {
@@ -166,12 +153,11 @@ export default function PosScreen() {
       )
 
       if (printSuccess) {
-        ToastAndroid.show('Orden impresa correctamente', ToastAndroid.SHORT)
+        showToast('Orden impresa correctamente', 'success')
       } else {
-        ToastAndroid.show(`Error al imprimir: ${printError}`, ToastAndroid.SHORT)
+        showToast(`Error al imprimir: ${printError}`, 'error')
       }
 
-      // reset limpio
       setOrder({
         type: 'TAKEAWAY',
         table_id: null,
@@ -181,8 +167,8 @@ export default function PosScreen() {
         items: []
       })
     } catch (error) {
-      console.error('🚫 Error al crear orden:', error)
-      ToastAndroid.show('❌ Fallo al crear la orden', ToastAndroid.SHORT)
+      console.error('Error al crear orden:', error)
+      showToast('Fallo al crear la orden', 'error')
     }
   }
 

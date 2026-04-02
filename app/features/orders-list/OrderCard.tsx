@@ -7,8 +7,7 @@ import {
   ActivityIndicator,
   LayoutAnimation,
   Platform,
-  UIManager,
-  ToastAndroid
+  UIManager
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useCloseOrderMutation, useOrderQuery } from '@/hooks/api/orders'
@@ -17,6 +16,7 @@ import { printOrder, PrintOrder } from '../printing/print'
 import CustomCheckbox from '@/app/components/CustomCheckbox'
 import { getOrderState, setOrderExpanded, setOrderPaidItem } from './orderStates'
 import { theme } from '@/constants/Colors'
+import { useToast } from '@/app/context/ToastContext'
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true)
@@ -39,6 +39,7 @@ interface Props {
 }
 
 export default function OrderCard({ order, variant = 'default', onOpenOrder, onRemove }: Props) {
+  const { showToast } = useToast()
   const state = getOrderState(order.id)
   const [expanded, setExpanded] = useState(state.expanded)
   const [paidItems, setPaidItems] = useState(state.paidItems)
@@ -68,10 +69,10 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
   const handleCloseOrder = async () => {
     try {
       await closeOrderMutation.mutateAsync({ order_id: order.id, table_id: order.table_id })
-      ToastAndroid.show('Orden cerrada', ToastAndroid.SHORT)
+      showToast('Orden cerrada', 'success')
       onRemove?.(order.id)
     } catch {
-      ToastAndroid.show('Error al cerrar la orden', ToastAndroid.SHORT)
+      showToast('Error al cerrar la orden', 'error')
     }
   }
 
@@ -97,9 +98,9 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
     }
     const { success, error } = await printOrder(printPayload, storeData?.printer_address)
     if (success) {
-      ToastAndroid.show('Orden impresa correctamente', ToastAndroid.SHORT)
+      showToast('Orden impresa correctamente', 'success')
     } else {
-      ToastAndroid.show(`Error al imprimir: ${error}`, ToastAndroid.SHORT)
+      showToast(`Error al imprimir: ${error}`, 'error')
     }
   }
 

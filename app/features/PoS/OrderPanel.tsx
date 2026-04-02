@@ -6,7 +6,7 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  ToastAndroid,
+  ActivityIndicator,
   Alert,
   Modal,
   useWindowDimensions
@@ -16,6 +16,7 @@ import { OrderDraft, OrderItemDraft } from '@/types/types'
 import { useTablesQuery } from '@/hooks/api/tables'
 import { theme } from '@/constants/Colors'
 import OrderItemComponent from '@/app/components/OrderItemComponent'
+import { useToast } from '@/app/context/ToastContext'
 
 interface Props {
   order: OrderDraft
@@ -37,6 +38,7 @@ export default function OrderPanel({
   const panelWidth = isPortrait ? width : width / 2
   const isNarrow = panelWidth < 400
 
+  const { showToast } = useToast()
   const [tableModalVisible, setTableModalVisible] = useState(false)
 
   const { data: tables } = useTablesQuery()
@@ -83,7 +85,7 @@ export default function OrderPanel({
               is_paid: false,
               items: []
             })
-            ToastAndroid.show('Orden limpiada', ToastAndroid.SHORT)
+            showToast('Orden limpiada', 'success')
           }
         }
       ]
@@ -276,23 +278,23 @@ export default function OrderPanel({
             (!canSendToKitchen || isLoading) && styles.disabled
           ]}
         >
-          <Ionicons
-            name='print'
-            size={20}
-            color={
-              !canSendToKitchen || isLoading
-                ? theme.disabledText
-                : theme.textPrimary
-            }
-            style={{ marginRight: 6 }}
-          />
+          {isLoading ? (
+            <ActivityIndicator size='small' color={theme.disabledText} style={{ marginRight: 6 }} />
+          ) : (
+            <Ionicons
+              name='print'
+              size={20}
+              color={!canSendToKitchen ? theme.disabledText : theme.textPrimary}
+              style={{ marginRight: 6 }}
+            />
+          )}
           <Text
             style={[
               styles.printButtonText,
               (!canSendToKitchen || isLoading) && styles.disabledText
             ]}
           >
-            Enviar a cocina
+            {isLoading ? 'Enviando...' : 'Enviar a cocina'}
           </Text>
         </TouchableOpacity>
 
