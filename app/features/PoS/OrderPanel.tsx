@@ -25,7 +25,13 @@ interface Props {
   isLoading?: boolean
 }
 
-export default function OrderPanel({ order, total, onChange, onPrint, isLoading }: Props) {
+export default function OrderPanel({
+  order,
+  total,
+  onChange,
+  onPrint,
+  isLoading
+}: Props) {
   const { width, height } = useWindowDimensions()
   const isPortrait = height >= width
   const panelWidth = isPortrait ? width : width / 2
@@ -46,7 +52,10 @@ export default function OrderPanel({ order, total, onChange, onPrint, isLoading 
     prevCountRef.current = order.items.length
   }, [order.items.length])
 
-  const handleUpdateItem = (index: number, updates: Partial<OrderItemDraft>) => {
+  const handleUpdateItem = (
+    index: number,
+    updates: Partial<OrderItemDraft>
+  ) => {
     const updatedItems = [...order.items]
     updatedItems[index] = { ...updatedItems[index], ...updates }
     onChange({ ...order, items: updatedItems })
@@ -82,7 +91,12 @@ export default function OrderPanel({ order, total, onChange, onPrint, isLoading 
   }
 
   const handleSelectTable = (table: { id: string; name: string }) => {
-    onChange({ ...order, table_id: table.id, table_name: table.name, type: 'DINE_IN' })
+    onChange({
+      ...order,
+      table_id: table.id,
+      table_name: table.name,
+      type: 'DINE_IN'
+    })
     setTableModalVisible(false)
   }
 
@@ -96,10 +110,14 @@ export default function OrderPanel({ order, total, onChange, onPrint, isLoading 
 
   return (
     <View style={styles.wrapper}>
-
       {/* Input combinado: nombre + mesa */}
       <View style={styles.combinedInput}>
-        <Ionicons name='person-outline' size={18} color={theme.textMuted} style={styles.inputIcon} />
+        <Ionicons
+          name='person-outline'
+          size={18}
+          color={theme.textMuted}
+          style={styles.inputIcon}
+        />
         <TextInput
           style={styles.nameInput}
           value={order.customer_name ?? ''}
@@ -113,17 +131,35 @@ export default function OrderPanel({ order, total, onChange, onPrint, isLoading 
             <View style={styles.inputDivider} />
             {order.table_id ? (
               <View style={styles.tableSelected}>
-                <Ionicons name='restaurant-outline' size={15} color={theme.textPrimary} />
+                <Ionicons
+                  name='restaurant-outline'
+                  size={15}
+                  color={theme.textPrimary}
+                />
                 <Text style={styles.tableSelectedText} numberOfLines={1}>
                   {order.table_name}
                 </Text>
-                <TouchableOpacity onPress={handleClearTable} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <Ionicons name='close-circle' size={16} color={theme.textMuted} />
+                <TouchableOpacity
+                  onPress={handleClearTable}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons
+                    name='close-circle'
+                    size={16}
+                    color={theme.textMuted}
+                  />
                 </TouchableOpacity>
               </View>
             ) : (
-              <TouchableOpacity style={styles.tableButton} onPress={() => setTableModalVisible(true)}>
-                <Ionicons name='restaurant-outline' size={15} color={theme.textSecondary} />
+              <TouchableOpacity
+                style={styles.tableButton}
+                onPress={() => setTableModalVisible(true)}
+              >
+                <Ionicons
+                  name='restaurant-outline'
+                  size={15}
+                  color={theme.textSecondary}
+                />
                 <Text style={styles.tableButtonText}>Mesa...</Text>
               </TouchableOpacity>
             )}
@@ -135,19 +171,44 @@ export default function OrderPanel({ order, total, onChange, onPrint, isLoading 
       <View style={[styles.controlsRow, isNarrow && styles.controlsRowNarrow]}>
         <View style={styles.segmentedControl}>
           <TouchableOpacity
-            style={[styles.segmentButton, styles.segmentLeft, order.type === 'TAKEAWAY' && styles.segmentActive]}
-            onPress={() => onChange({ ...order, type: 'TAKEAWAY', table_id: null, table_name: '' })}
+            style={[
+              styles.segmentButton,
+              styles.segmentLeft,
+              order.type === 'TAKEAWAY' && styles.segmentActive
+            ]}
+            onPress={() =>
+              onChange({
+                ...order,
+                type: 'TAKEAWAY',
+                table_id: null,
+                table_name: ''
+              })
+            }
           >
-            <Text style={[styles.segmentText, order.type === 'TAKEAWAY' && styles.segmentTextActive]}>
+            <Text
+              style={[
+                styles.segmentText,
+                order.type === 'TAKEAWAY' && styles.segmentTextActive
+              ]}
+            >
               Para llevar
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.segmentButton, styles.segmentRight, order.type === 'DINE_IN' && styles.segmentActive]}
+            style={[
+              styles.segmentButton,
+              styles.segmentRight,
+              order.type === 'DINE_IN' && styles.segmentActive
+            ]}
             onPress={() => onChange({ ...order, type: 'DINE_IN' })}
           >
-            <Text style={[styles.segmentText, order.type === 'DINE_IN' && styles.segmentTextActive]}>
+            <Text
+              style={[
+                styles.segmentText,
+                order.type === 'DINE_IN' && styles.segmentTextActive
+              ]}
+            >
               Comer aquí
             </Text>
           </TouchableOpacity>
@@ -163,7 +224,11 @@ export default function OrderPanel({ order, total, onChange, onPrint, isLoading 
             color={order.is_paid ? theme.surface : theme.textSecondary}
             style={{ marginRight: 4 }}
           />
-          <Text style={[styles.paidText, order.is_paid && styles.paidTextActive]}>Pagado</Text>
+          <Text
+            style={[styles.paidText, order.is_paid && styles.paidTextActive]}
+          >
+            Pagado
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -182,7 +247,9 @@ export default function OrderPanel({ order, total, onChange, onPrint, isLoading 
           {order.items.length === 0 ? (
             <View style={styles.emptyState}>
               <Ionicons name='cart-outline' size={48} color={theme.border} />
-              <Text style={styles.emptyStateText}>Agrega productos a la orden</Text>
+              <Text style={styles.emptyStateText}>
+                Agrega productos a la orden
+              </Text>
             </View>
           ) : (
             order.items.map((item, index) => (
@@ -204,25 +271,46 @@ export default function OrderPanel({ order, total, onChange, onPrint, isLoading 
         <TouchableOpacity
           onPress={onPrint}
           disabled={!canSendToKitchen || isLoading}
-          style={[styles.printButton, (!canSendToKitchen || isLoading) && styles.disabled]}
+          style={[
+            styles.printButton,
+            (!canSendToKitchen || isLoading) && styles.disabled
+          ]}
         >
           <Ionicons
             name='print'
             size={20}
-            color={(!canSendToKitchen || isLoading) ? theme.disabledText : theme.textPrimary}
+            color={
+              !canSendToKitchen || isLoading
+                ? theme.disabledText
+                : theme.textPrimary
+            }
             style={{ marginRight: 6 }}
           />
-          <Text style={[styles.printButtonText, (!canSendToKitchen || isLoading) && styles.disabledText]}>
+          <Text
+            style={[
+              styles.printButtonText,
+              (!canSendToKitchen || isLoading) && styles.disabledText
+            ]}
+          >
             Enviar a cocina
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           disabled={order.items.length === 0}
-          style={[styles.clearButton, order.items.length === 0 && styles.disabled]}
+          style={[
+            styles.clearButton,
+            order.items.length === 0 && styles.disabled
+          ]}
           onPress={handleClearOrder}
         >
-          <Ionicons name='trash' size={20} color={order.items.length === 0 ? theme.disabledText : theme.surface} />
+          <Ionicons
+            name='trash'
+            size={20}
+            color={
+              order.items.length === 0 ? theme.disabledText : theme.surface
+            }
+          />
         </TouchableOpacity>
       </View>
 
@@ -249,27 +337,43 @@ export default function OrderPanel({ order, total, onChange, onPrint, isLoading 
                   style={[
                     styles.tableItem,
                     order.table_id === table.id && styles.tableItemActive,
-                    table.is_occupied && order.table_id !== table.id && styles.tableItemOccupied
+                    table.is_occupied &&
+                      order.table_id !== table.id &&
+                      styles.tableItemOccupied
                   ]}
-                  onPress={() => handleSelectTable({ id: table.id, name: table.name })}
+                  onPress={() =>
+                    handleSelectTable({ id: table.id, name: table.name })
+                  }
                 >
                   <Ionicons
                     name='restaurant-outline'
                     size={20}
-                    color={order.table_id === table.id ? theme.textPrimary : theme.textSecondary}
+                    color={
+                      order.table_id === table.id
+                        ? theme.textPrimary
+                        : theme.textSecondary
+                    }
                   />
-                  <Text style={[
-                    styles.tableItemText,
-                    order.table_id === table.id && styles.tableItemTextActive,
-                    table.is_occupied && order.table_id !== table.id && styles.tableItemTextOccupied
-                  ]}>
+                  <Text
+                    style={[
+                      styles.tableItemText,
+                      order.table_id === table.id && styles.tableItemTextActive,
+                      table.is_occupied &&
+                        order.table_id !== table.id &&
+                        styles.tableItemTextOccupied
+                    ]}
+                  >
                     {table.name}
                   </Text>
                   {table.is_occupied && order.table_id !== table.id && (
                     <Text style={styles.occupiedBadge}>ocupada</Text>
                   )}
                   {order.table_id === table.id && (
-                    <Ionicons name='checkmark-circle' size={18} color={theme.textPrimary} />
+                    <Ionicons
+                      name='checkmark-circle'
+                      size={18}
+                      color={theme.textPrimary}
+                    />
                   )}
                 </TouchableOpacity>
               ))}
@@ -285,9 +389,7 @@ const styles = StyleSheet.create({
   wrapper: {
     flex: 2,
     padding: 10,
-    backgroundColor: theme.background,
-    borderLeftWidth: 1,
-    borderLeftColor: theme.border
+    backgroundColor: theme.background
   },
 
   // Combined input
