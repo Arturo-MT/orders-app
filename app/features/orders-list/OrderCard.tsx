@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -15,6 +15,11 @@ import { useCloseOrderMutation, useOrderQuery } from '@/hooks/api/orders'
 import { useStoreQuery } from '@/hooks/api/store'
 import { printOrder, PrintOrder } from '../printing/print'
 import CustomCheckbox from '@/app/components/CustomCheckbox'
+import {
+  getOrderState,
+  setOrderExpanded,
+  setOrderPaidItem
+} from './orderStates'
 
 if (
   Platform.OS === 'android' &&
@@ -36,21 +41,34 @@ interface Props {
   }
   variant?: 'default' | 'open'
   onOpenOrder?: (orderId: string) => void
+  onRemove?: (orderId: string) => void
 }
 
 export default function OrderCard({
   order,
   variant = 'default',
-  onOpenOrder
+  onOpenOrder,
+  onRemove
 }: Props) {
-  const [expanded, setExpanded] = useState(false)
-  const [paidItems, setPaidItems] = useState<Record<string, boolean>>({})
+  const state = getOrderState(order.id)
+  const [expanded, setExpanded] = useState(state.expanded)
+  const [paidItems, setPaidItems] = useState(state.paidItems)
+
+  useEffect(() => {
+    setOrderExpanded(order.id, expanded)
+  }, [expanded, order.id])
+
+  useEffect(() => {
+    Object.entries(paidItems).forEach(([key, value]) => {
+      setOrderPaidItem(order.id, key, value)
+    })
+  }, [paidItems, order.id])
 
   const toggleItemPaid = (key: string) => {
-    setPaidItems((prev) => ({
-      ...prev,
-      [key]: !prev[key]
-    }))
+    setPaidItems((prev) => {
+      const newPaidItems = { ...prev, [key]: !prev[key] }
+      return newPaidItems
+    })
   }
 
   const { data: orderData, isLoading } = useOrderQuery({
@@ -80,6 +98,7 @@ export default function OrderCard({
         table_id: order.table_id
       })
       ToastAndroid.show('Orden cerrada', ToastAndroid.SHORT)
+      onRemove?.(order.id)
     } catch {
       ToastAndroid.show('Error al cerrar la orden', ToastAndroid.SHORT)
     }
