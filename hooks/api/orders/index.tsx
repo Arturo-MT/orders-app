@@ -4,6 +4,7 @@ import { ORDERS_KEY } from './constants'
 import { OrderDraft } from '@/types/types'
 import { useStore } from '@/app/context/StoreContext'
 import { findOpenOrderByTable, orderCreate } from './mutations'
+import { clearOrderState } from '@/app/features/orders-list/orderStates'
 
 export function useCreateOrder(config = {}) {
   const { client } = useFetch()
@@ -75,6 +76,78 @@ export function useOrderQuery({ order_id }: { order_id: string }) {
         status: data.status,
         customer_name: data.customer_name,
         table_name: data.dining_table?.name ?? null,
+        created_at: data.created_at,
+        closed_at: data.closed_at,
+        items: data.order_item.map((item: any) => ({
+          product_id: item.product_id,
+          product_name: item.product?.name ?? '',
+          quantity: item.quantity,
+          base_price: item.base_price,
+          total_price: item.total_price,
+          notes: item.notes
+        }))
+      }
+    }
+  })
+}
+
+export function useOpenOrderIds() {
+  const { client } = useFetch()
+  const { activeStore } = useStore()
+
+  return useQuery({
+    queryKey: ['openOrderIds', activeStore?.id],
+
+    queryFn: async () => {
+      const { data, error } = await client
+        .from('order')
+        .select('id, order_number, type, status, customer_name, table_id, dining_table (id, name), created_at')
+        .eq('store_id', activeStore!.id)
+        .in('status', ['OPEN', 'UNPAID'])
+
+      if (error) throw error
+      return data ?? []
+    }
+  })
+}
+
+export function useOpenOrder(orderId: string) {
+  const { client } = useFetch()
+
+  return useQuery({
+    queryKey: ['openOrder', orderId],
+    enabled: !!orderId,
+
+    queryFn: async () => {
+      const { data, error } = await client
+        .from('order')
+        .select(
+          `
+          *,
+          dining_table (id, name),
+          order_item (
+            product_id,
+            quantity,
+            base_price,
+            total_price,
+            notes,
+            product (name)
+          )
+          `
+        )
+        .eq('id', orderId)
+        .single()
+
+      if (error) throw error
+
+      return {
+        id: data.id,
+        order_number: data.order_number,
+        type: data.type,
+        status: data.status,
+        customer_name: data.customer_name,
+        table_name: data.dining_table?.name ?? null,
+        table_id: data.table_id,
         created_at: data.created_at,
         closed_at: data.closed_at,
         items: data.order_item.map((item: any) => ({
@@ -188,10 +261,8 @@ export function useCloseOrderMutation() {
     },
 
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: [ORDERS_KEY] })
-      queryClient.invalidateQueries({
-        queryKey: ['order', variables.order_id]
-      })
+      queryClient.removeQueries({ queryKey: ['openOrder', variables.order_id] })
+      clearOrderState(variables.order_id)
     }
   })
 }
