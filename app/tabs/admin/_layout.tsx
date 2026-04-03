@@ -1,7 +1,9 @@
 import { Stack } from 'expo-router'
-import { theme } from '@/constants/Colors'
+import { useTheme } from '@/app/context/ThemeContext'
 
 export default function AdminLayout() {
+  const { theme } = useTheme()
+
   return (
     <Stack
       screenOptions={{

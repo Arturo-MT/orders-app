@@ -10,7 +10,8 @@ import {
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { OrderItemDraft } from '@/types/types'
-import { theme } from '@/constants/Colors'
+import { useTheme } from '@/app/context/ThemeContext'
+import { Theme } from '@/constants/Colors'
 
 interface Props {
   item: OrderItemDraft
@@ -18,15 +19,14 @@ interface Props {
   onRemove: () => void
 }
 
-export default function OrderItemComponent({
-  item,
-  onUpdate,
-  onRemove
-}: Props) {
+export default function OrderItemComponent({ item, onUpdate, onRemove }: Props) {
   const { width, height } = useWindowDimensions()
   const isPortrait = height >= width
   const panelWidth = isPortrait ? width : width / 2
   const isSmallDevice = panelWidth < 480
+  const { theme } = useTheme()
+  const styles = makeStyles(theme)
+
   const [notesModalVisible, setNotesModalVisible] = useState(false)
   const [qtyModalVisible, setQtyModalVisible] = useState(false)
   const [priceModalVisible, setPriceModalVisible] = useState(false)
@@ -50,9 +50,7 @@ export default function OrderItemComponent({
         />
       </TouchableOpacity>
 
-      <Text style={styles.name} numberOfLines={1}>
-        {item.name}
-      </Text>
+      <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
 
       <View style={styles.quantityControls}>
         <TouchableOpacity
@@ -117,16 +115,10 @@ export default function OrderItemComponent({
         <Ionicons name='trash-outline' size={18} color={theme.destructive} />
       </TouchableOpacity>
 
-      <Modal
-        visible={notesModalVisible}
-        animationType='slide'
-        transparent
-        onRequestClose={() => setNotesModalVisible(false)}
-      >
+      <Modal visible={notesModalVisible} animationType='slide' transparent onRequestClose={() => setNotesModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Notas</Text>
-
             <TextInput
               style={styles.modalInput}
               value={tempNotes}
@@ -135,50 +127,30 @@ export default function OrderItemComponent({
               multiline
               autoFocus
             />
-
             <View style={styles.modalButtons}>
-              <TouchableOpacity
-                onPress={() => setNotesModalVisible(false)}
-                style={[styles.modalButton, { backgroundColor: theme.disabled }]}
-              >
-                <Text>Cancelar</Text>
+              <TouchableOpacity onPress={() => setNotesModalVisible(false)} style={[styles.modalButton, { backgroundColor: theme.disabled }]}>
+                <Text style={styles.cancelText}>Cancelar</Text>
               </TouchableOpacity>
-
               <TouchableOpacity
-                onPress={() => {
-                  onUpdate({ notes: tempNotes })
-                  setNotesModalVisible(false)
-                }}
+                onPress={() => { onUpdate({ notes: tempNotes }); setNotesModalVisible(false) }}
                 style={[styles.modalButton, { backgroundColor: theme.primary }]}
               >
-                <Text style={{ color: theme.textPrimary }}>Guardar</Text>
+                <Text style={styles.confirmText}>Guardar</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
 
-      <Modal
-        visible={qtyModalVisible}
-        animationType='slide'
-        transparent
-        onRequestClose={() => setQtyModalVisible(false)}
-      >
+      <Modal visible={qtyModalVisible} animationType='slide' transparent onRequestClose={() => setQtyModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Cantidad</Text>
             <Text style={styles.modalSubtitle}>{item.name}</Text>
-
             <View style={styles.qtyModalControls}>
-              <TouchableOpacity
-                style={styles.modalButtonAlt}
-                onPress={() =>
-                  setTempQty(String(Math.max(1, Number(tempQty) - 1)))
-                }
-              >
+              <TouchableOpacity style={styles.modalButtonAlt} onPress={() => setTempQty(String(Math.max(1, Number(tempQty) - 1)))}>
                 <Ionicons name='remove-circle' size={40} color={theme.textPrimary} />
               </TouchableOpacity>
-
               <TextInput
                 style={styles.qtyModalInput}
                 keyboardType='numeric'
@@ -186,49 +158,34 @@ export default function OrderItemComponent({
                 onChangeText={setTempQty}
                 autoFocus
               />
-
-              <TouchableOpacity
-                style={styles.modalButtonAlt}
-                onPress={() => setTempQty(String(Number(tempQty) + 1))}
-              >
+              <TouchableOpacity style={styles.modalButtonAlt} onPress={() => setTempQty(String(Number(tempQty) + 1))}>
                 <Ionicons name='add-circle' size={40} color={theme.textPrimary} />
               </TouchableOpacity>
             </View>
-
             <View style={styles.modalButtons}>
-              <TouchableOpacity
-                onPress={() => setQtyModalVisible(false)}
-                style={[styles.modalButton, { backgroundColor: theme.disabled }]}
-              >
-                <Text>Cancelar</Text>
+              <TouchableOpacity onPress={() => setQtyModalVisible(false)} style={[styles.modalButton, { backgroundColor: theme.disabled }]}>
+                <Text style={styles.cancelText}>Cancelar</Text>
               </TouchableOpacity>
-
               <TouchableOpacity
                 onPress={() => {
-                  const newQty = Number(tempQty) || 1
+                  const newQty = Math.max(1, Number(tempQty) || 1)
                   onUpdate({ quantity: newQty, price: item.base_price * newQty })
                   setQtyModalVisible(false)
                 }}
                 style={[styles.modalButton, { backgroundColor: theme.primary }]}
               >
-                <Text style={{ color: theme.textPrimary }}>Guardar</Text>
+                <Text style={styles.confirmText}>Guardar</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
 
-      <Modal
-        visible={priceModalVisible}
-        animationType='slide'
-        transparent
-        onRequestClose={() => setPriceModalVisible(false)}
-      >
+      <Modal visible={priceModalVisible} animationType='slide' transparent onRequestClose={() => setPriceModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Precio</Text>
             <Text style={styles.modalSubtitle}>{item.name}</Text>
-
             <View style={styles.priceModalInputWrapper}>
               <Text style={styles.priceModalCurrency}>$</Text>
               <TextInput
@@ -239,26 +196,20 @@ export default function OrderItemComponent({
                 autoFocus
               />
             </View>
-
-            <View style={styles.priceModalButtons}>
-              <TouchableOpacity
-                onPress={() => setPriceModalVisible(false)}
-                style={[styles.modalButton, { backgroundColor: theme.disabled }]}
-              >
-                <Text>Cancelar</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity onPress={() => setPriceModalVisible(false)} style={[styles.modalButton, { backgroundColor: theme.disabled }]}>
+                <Text style={styles.cancelText}>Cancelar</Text>
               </TouchableOpacity>
-
               <TouchableOpacity
                 onPress={() => {
                   const newPrice = Number(tempPrice) || 0
-                  const unitPrice =
-                    item.quantity > 0 ? newPrice / item.quantity : newPrice
+                  const unitPrice = item.quantity > 0 ? newPrice / item.quantity : newPrice
                   onUpdate({ price: newPrice, base_price: unitPrice })
                   setPriceModalVisible(false)
                 }}
                 style={[styles.modalButton, { backgroundColor: theme.primary }]}
               >
-                <Text style={{ color: theme.textPrimary }}>Guardar</Text>
+                <Text style={styles.confirmText}>Guardar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -268,166 +219,99 @@ export default function OrderItemComponent({
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.borderLight,
-    gap: 6
-  },
-  iconButton: {
-    padding: 4
-  },
-  name: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '500',
-    color: theme.textPrimary
-  },
-  quantityControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4
-  },
-  quantityText: {
-    fontSize: 14,
-    fontWeight: '600',
-    minWidth: 20,
-    textAlign: 'center'
-  },
-  priceWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2
-  },
-  currency: {
-    fontSize: 14,
-    color: theme.textSecondary
-  },
-  priceInput: {
-    borderWidth: 1,
-    borderColor: theme.border,
-    borderRadius: 4,
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    fontSize: 13,
-    backgroundColor: theme.surface,
-    textAlign: 'right'
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)'
-  },
-  modalContent: {
-    backgroundColor: theme.background,
-    padding: 16,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    color: theme.textSecondary,
-    marginBottom: 16
-  },
-  modalInput: {
-    borderWidth: 1,
-    borderColor: theme.border,
-    borderRadius: 8,
-    padding: 12,
-    minHeight: 80,
-    textAlignVertical: 'top',
-    marginBottom: 12,
-    fontSize: 16,
-    backgroundColor: theme.surface
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 8
-  },
-  modalButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8
-  },
-  modalButtonAlt: {
-    padding: 8
-  },
-  qtyModalControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 24,
-    marginBottom: 16
-  },
-  qtyModalInput: {
-    width: 80,
-    borderWidth: 1,
-    borderColor: theme.border,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    backgroundColor: theme.surface
-  },
-  priceBadge: {
-    width: 46,
-    backgroundColor: theme.borderLight,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    alignItems: 'flex-end'
-  },
-  priceBadgeText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.textPrimary,
-    textAlign: 'right'
-  },
-  priceModalControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 24,
-    marginBottom: 16
-  },
-  priceModalInputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.surface,
-    borderWidth: 1,
-    borderColor: theme.border,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8
-  },
-  priceModalCurrency: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: theme.textSecondary,
-    marginRight: 4
-  },
-  priceModalInput: {
-    width: '100%',
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    padding: 0
-  },
-  priceModalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 12,
-    marginTop: 12
-  }
-})
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 6,
+      paddingHorizontal: 4,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderLight,
+      gap: 6
+    },
+    iconButton: { padding: 4 },
+    name: { flex: 1, fontSize: 14, fontWeight: '500', color: theme.textPrimary },
+    quantityControls: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    quantityText: { fontSize: 14, fontWeight: '600', minWidth: 20, textAlign: 'center', color: theme.textPrimary },
+    priceWrapper: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+    currency: { fontSize: 14, color: theme.textSecondary },
+    priceInput: {
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: 4,
+      paddingHorizontal: 4,
+      paddingVertical: 2,
+      fontSize: 13,
+      backgroundColor: theme.surface,
+      color: theme.textPrimary,
+      textAlign: 'right'
+    },
+    priceBadge: {
+      width: 46,
+      backgroundColor: theme.borderLight,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+      alignItems: 'flex-end'
+    },
+    priceBadgeText: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, textAlign: 'right' },
+    modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: theme.overlay },
+    modalContent: {
+      backgroundColor: theme.surface,
+      padding: 16,
+      borderTopLeftRadius: 12,
+      borderTopRightRadius: 12
+    },
+    modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 4, color: theme.textPrimary },
+    modalSubtitle: { fontSize: 14, color: theme.textSecondary, marginBottom: 16 },
+    modalInput: {
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: 8,
+      padding: 12,
+      minHeight: 80,
+      textAlignVertical: 'top',
+      marginBottom: 12,
+      fontSize: 16,
+      backgroundColor: theme.background,
+      color: theme.textPrimary
+    },
+    modalButtons: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
+    modalButton: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8 },
+    modalButtonAlt: { padding: 8 },
+    cancelText: { color: theme.textPrimary },
+    confirmText: { color: theme.textOnPrimary },
+    qtyModalControls: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 24,
+      marginBottom: 16
+    },
+    qtyModalInput: {
+      width: 80,
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: 8,
+      padding: 12,
+      fontSize: 24,
+      fontWeight: 'bold',
+      textAlign: 'center',
+      backgroundColor: theme.background,
+      color: theme.textPrimary
+    },
+    priceModalInputWrapper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.background,
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      marginBottom: 12
+    },
+    priceModalCurrency: { fontSize: 24, fontWeight: 'bold', color: theme.textSecondary, marginRight: 4 },
+    priceModalInput: { flex: 1, fontSize: 24, fontWeight: 'bold', textAlign: 'center', padding: 0, color: theme.textPrimary }
+  })

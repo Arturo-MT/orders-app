@@ -2,7 +2,8 @@ import React from 'react'
 import { View, StyleSheet } from 'react-native'
 import { useTablesQuery } from '@/hooks/api/tables'
 import { Picker } from '@react-native-picker/picker'
-import { theme } from '@/constants/Colors'
+import { useTheme } from '@/app/context/ThemeContext'
+import { Theme } from '@/constants/Colors'
 
 type Table = {
   id: string
@@ -16,16 +17,14 @@ interface Props {
 
 export default function TablePicker({ value, onChange }: Props) {
   const { data: tables, isLoading } = useTablesQuery()
+  const { theme } = useTheme()
+  const styles = makeStyles(theme)
+
   const handleChange = (tableId: string | null) => {
     if (!tableId) return
-
     const table = tables?.find((t) => t.id === tableId)
     if (!table) return
-
-    onChange({
-      id: table.id,
-      name: table.name
-    })
+    onChange({ id: table.id, name: table.name })
   }
 
   return (
@@ -36,14 +35,22 @@ export default function TablePicker({ value, onChange }: Props) {
           selectedValue={value}
           enabled={!isLoading}
           onValueChange={handleChange}
-          style={styles.picker}
+          style={{ color: theme.textPrimary }}
+          dropdownIconColor={theme.textSecondary}
         >
-          <Picker.Item label='Selecciona una mesa' value={null} />
+          <Picker.Item
+            label='Selecciona una mesa'
+            value={null}
+            color={theme.textPrimary}
+            style={{ backgroundColor: theme.surface }}
+          />
           {tables?.map((table) => (
             <Picker.Item
               key={table.id}
               label={table.is_occupied ? `${table.name} (ocupada)` : table.name}
               value={table.id}
+              color={theme.textPrimary}
+              style={{ backgroundColor: theme.surface }}
             />
           ))}
         </Picker>
@@ -51,27 +58,19 @@ export default function TablePicker({ value, onChange }: Props) {
     </View>
   )
 }
-const styles = StyleSheet.create({
-  wrapper: {
-    marginBottom: 0
-  },
 
-  label: {
-    fontWeight: '600',
-    marginBottom: 6,
-    color: theme.textPrimary
-  },
-  pickerWrapper: {
-    borderWidth: 1,
-    borderColor: theme.border,
-    borderRadius: 5,
-    overflow: 'hidden',
-    backgroundColor: theme.surface,
-    height: 46,
-    justifyContent: 'center'
-  },
-  picker: {
-    height: 46,
-    width: '100%'
-  }
-})
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
+    wrapper: {
+      marginBottom: 0
+    },
+    pickerWrapper: {
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: 5,
+      overflow: 'hidden',
+      backgroundColor: theme.surface,
+      height: 46,
+      justifyContent: 'center'
+    }
+  })

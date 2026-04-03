@@ -14,12 +14,15 @@ import { useDebouncedValue } from '@/hooks/utils/useDebouncedValue'
 import { Ionicons } from '@expo/vector-icons'
 import { useOrdersQuery } from '@/hooks/api/orders'
 import OpenOrdersList from './OpenOrdersList'
-import { theme } from '@/constants/Colors'
+import { useTheme } from '@/app/context/ThemeContext'
+import { Theme } from '@/constants/Colors'
 
 export default function OrdersListScreen() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const debouncedSearch = useDebouncedValue(search, 500)
+  const { theme } = useTheme()
+  const styles = makeStyles(theme)
 
   const { data: ordersListData, isLoading, isFetching, refetch } = useOrdersQuery({
     page,
@@ -47,7 +50,7 @@ export default function OrdersListScreen() {
   return (
     <View style={styles.container}>
       <FlatList
-        data={isFetching ? [] : orders}
+        data={orders}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => <OrderCard order={item} />}
         ListHeaderComponent={
@@ -87,7 +90,7 @@ export default function OrdersListScreen() {
           disabled={page <= 1}
           style={[styles.pageButton, page <= 1 && styles.disabledButton]}
         >
-          <Ionicons name='chevron-back' size={20} color={theme.textPrimary} />
+          <Ionicons name='chevron-back' size={20} color={theme.textOnPrimary} />
         </TouchableOpacity>
 
         <Text style={styles.pageText}>Página {page} de {totalPages}</Text>
@@ -97,57 +100,58 @@ export default function OrdersListScreen() {
           disabled={page >= totalPages}
           style={[styles.pageButton, page >= totalPages && styles.disabledButton]}
         >
-          <Ionicons name='chevron-forward' size={20} color={theme.textPrimary} />
+          <Ionicons name='chevron-forward' size={20} color={theme.textOnPrimary} />
         </TouchableOpacity>
       </View>
     </View>
   )
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background, paddingTop: 16 },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: theme.border,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    marginBottom: 16,
-    backgroundColor: theme.surface,
-    marginHorizontal: 16,
-    gap: 8
-  },
-  searchInput: { flex: 1, color: theme.textPrimary },
-  sectionTitle: { textAlign: 'center', marginBottom: 8, fontSize: 18, color: theme.textPrimary },
-  pagination: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderTopWidth: 1,
-    borderColor: theme.border,
-    backgroundColor: theme.background
-  },
-  pageButton: {
-    backgroundColor: theme.primary,
-    padding: 10,
-    borderRadius: 8,
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  disabledButton: { backgroundColor: theme.disabled },
-  pageText: { fontSize: 16, fontWeight: '500', color: theme.textPrimary },
-  skeleton: { height: 16, backgroundColor: theme.background, borderRadius: 4, marginBottom: 8 },
-  orderSkeleton: {
-    backgroundColor: theme.surface,
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 10,
-    marginHorizontal: 16
-  },
-  skeletonRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }
-})
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background, paddingTop: 16 },
+    searchContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      marginBottom: 16,
+      backgroundColor: theme.surface,
+      marginHorizontal: 16,
+      gap: 8
+    },
+    searchInput: { flex: 1, color: theme.textPrimary },
+    sectionTitle: { textAlign: 'center', marginBottom: 8, fontSize: 18, color: theme.textPrimary },
+    pagination: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 16,
+      borderTopWidth: 1,
+      borderColor: theme.border,
+      backgroundColor: theme.background
+    },
+    pageButton: {
+      backgroundColor: theme.primary,
+      padding: 10,
+      borderRadius: 8,
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    disabledButton: { backgroundColor: theme.disabled },
+    pageText: { fontSize: 16, fontWeight: '500', color: theme.textPrimary },
+    skeleton: { height: 16, backgroundColor: theme.borderLight, borderRadius: 4, marginBottom: 8 },
+    orderSkeleton: {
+      backgroundColor: theme.surface,
+      padding: 12,
+      borderRadius: 8,
+      marginBottom: 10,
+      marginHorizontal: 16
+    },
+    skeletonRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }
+  })

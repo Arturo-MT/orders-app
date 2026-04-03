@@ -13,6 +13,7 @@ export const lightTheme = {
   textPrimary: '#130918',
   textSecondary: '#666666',
   textMuted: '#999999',
+  textOnPrimary: '#130918',
 
   // Bordes y separadores
   border: '#dddddd',
@@ -41,6 +42,7 @@ export const darkTheme = {
   textPrimary: '#f2f2f7',
   textSecondary: '#aeaeb2',
   textMuted: '#636366',
+  textOnPrimary: '#130918',
 
   // Bordes y separadores
   border: '#3a3a3c',

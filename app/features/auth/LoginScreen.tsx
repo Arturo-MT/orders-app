@@ -14,10 +14,13 @@ import {
 } from 'react-native'
 import { useAuth } from '../../context/AuthContext'
 import { Href, router } from 'expo-router'
-import { theme } from '@/constants/Colors'
+import { useTheme } from '@/app/context/ThemeContext'
+import { Theme } from '@/constants/Colors'
 
 export default function LoginScreen() {
   const { loginWithPassword } = useAuth()
+  const { theme } = useTheme()
+  const styles = makeStyles(theme)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -89,60 +92,24 @@ export default function LoginScreen() {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: theme.background,
-    justifyContent: 'center'
-  },
-
-  headerImage: {
-    height: 220,
-    width: 220,
-    alignSelf: 'center',
-    marginBottom: 24
-  },
-
-  formContainer: {
-    width: '100%',
-    alignSelf: 'center'
-  },
-
-  label: {
-    fontSize: 16,
-    marginBottom: 6,
-    color: theme.textPrimary,
-    fontWeight: '600'
-  },
-
-  input: {
-    borderWidth: 1,
-    borderColor: theme.border,
-    borderRadius: 6,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    marginBottom: 16,
-    fontSize: 16,
-    color: theme.textPrimary,
-    backgroundColor: theme.surface
-  },
-
-  button: {
-    backgroundColor: theme.primary,
-    paddingVertical: 14,
-    borderRadius: 6,
-    alignItems: 'center',
-    marginTop: 8
-  },
-
-  buttonDisabled: {
-    opacity: 0.6
-  },
-
-  buttonText: {
-    color: theme.textPrimary,
-    fontSize: 16,
-    fontWeight: 'bold'
-  }
-})
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: { flex: 1, padding: 20, backgroundColor: theme.background, justifyContent: 'center' },
+    headerImage: { height: 220, width: 220, alignSelf: 'center', marginBottom: 24 },
+    formContainer: { width: '100%', alignSelf: 'center' },
+    label: { fontSize: 16, marginBottom: 6, color: theme.textPrimary, fontWeight: '600' },
+    input: {
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: 6,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
+      marginBottom: 16,
+      fontSize: 16,
+      color: theme.textPrimary,
+      backgroundColor: theme.surface
+    },
+    button: { backgroundColor: theme.primary, paddingVertical: 14, borderRadius: 6, alignItems: 'center', marginTop: 8 },
+    buttonDisabled: { opacity: 0.6 },
+    buttonText: { color: theme.textOnPrimary, fontSize: 16, fontWeight: 'bold' }
+  })

@@ -12,28 +12,21 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { useFocusEffect } from 'expo-router'
 import Skeleton from '@/app/components/Skeleton'
-import {
-  useTablesQuery,
-  useCreateTable,
-  useUpdateTable
-} from '@/hooks/api/tables'
-import { theme } from '@/constants/Colors'
+import { useTablesQuery, useCreateTable, useUpdateTable } from '@/hooks/api/tables'
+import { useTheme } from '@/app/context/ThemeContext'
+import { Theme } from '@/constants/Colors'
 
 export default function TablesScreen() {
   const { data, isLoading, isRefetching, refetch } = useTablesQuery()
   const { mutate: createTable, isPending: isCreating } = useCreateTable()
   const { mutate: updateTable, isPending: isUpdating } = useUpdateTable()
+  const { theme } = useTheme()
+  const styles = makeStyles(theme)
 
   const [open, setOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
-
   const [name, setName] = useState('')
-  const [editingTable, setEditingTable] = useState<{
-    id: string
-    name: string
-    is_active: boolean
-  } | null>(null)
-
+  const [editingTable, setEditingTable] = useState<{ id: string; name: string; is_active: boolean } | null>(null)
   const [editName, setEditName] = useState('')
   const [editActive, setEditActive] = useState(true)
 
@@ -42,20 +35,10 @@ export default function TablesScreen() {
 
   const handleCreate = () => {
     if (saveDisabled) return
-
-    createTable(name.trim(), {
-      onSuccess: () => {
-        setName('')
-        setOpen(false)
-      }
-    })
+    createTable(name.trim(), { onSuccess: () => { setName(''); setOpen(false) } })
   }
 
-  useFocusEffect(
-    useCallback(() => {
-      refetch()
-    }, [refetch])
-  )
+  useFocusEffect(useCallback(() => { refetch() }, [refetch]))
 
   return (
     <View style={styles.container}>
@@ -74,28 +57,16 @@ export default function TablesScreen() {
           contentContainerStyle={{ gap: 12, paddingBottom: 96 }}
           renderItem={({ item }) => (
             <View style={styles.row}>
-              <Text
-                style={[
-                  styles.rowText,
-                  !item.is_active && styles.rowTextDisabled
-                ]}
-              >
+              <Text style={[styles.rowText, !item.is_active && styles.rowTextDisabled]}>
                 {item.name}
               </Text>
-
               <View style={styles.rowActions}>
                 <Switch
                   value={item.is_active}
-                  onValueChange={(value) =>
-                    updateTable({
-                      id: item.id,
-                      is_active: value
-                    })
-                  }
+                  onValueChange={(value) => updateTable({ id: item.id, is_active: value })}
                   trackColor={{ false: theme.border, true: theme.primary }}
                   thumbColor={item.is_active ? theme.textPrimary : theme.borderLight}
                 />
-
                 <Pressable
                   style={styles.iconButton}
                   onPress={() => {
@@ -105,7 +76,7 @@ export default function TablesScreen() {
                     setEditOpen(true)
                   }}
                 >
-                  <Ionicons name='pencil-outline' size={20} color={theme.textPrimary} />
+                  <Ionicons name='pencil-outline' size={20} color={theme.textOnPrimary} />
                 </Pressable>
               </View>
             </View>
@@ -118,28 +89,23 @@ export default function TablesScreen() {
         <Ionicons name='add' size={32} color={theme.surface} />
       </Pressable>
 
-      {/* MODAL CREAR */}
       <Modal visible={open} transparent animationType='fade'>
         <View style={styles.modalOverlay}>
           <View style={styles.modal}>
             <Text style={styles.modalTitle}>Nueva mesa</Text>
-
             <TextInput
               value={name}
               onChangeText={setName}
               placeholder='Nombre de la mesa'
+              placeholderTextColor={theme.textMuted}
               style={styles.input}
             />
-
             <View style={styles.actionsRight}>
               <Pressable onPress={() => setOpen(false)}>
                 <Text style={styles.cancel}>Cancelar</Text>
               </Pressable>
-
               <Pressable disabled={saveDisabled} onPress={handleCreate}>
-                <Text
-                  style={[styles.save, saveDisabled && styles.saveDisabled]}
-                >
+                <Text style={[styles.save, saveDisabled && styles.saveDisabled]}>
                   {isCreating ? 'Guardando...' : 'Guardar'}
                 </Text>
               </Pressable>
@@ -148,47 +114,35 @@ export default function TablesScreen() {
         </View>
       </Modal>
 
-      {/* MODAL EDITAR */}
       <Modal visible={editOpen} transparent animationType='fade'>
         <View style={styles.modalOverlay}>
           <View style={styles.modal}>
             <Text style={styles.modalTitle}>Editar mesa</Text>
-
             <TextInput
               value={editName}
               onChangeText={setEditName}
               placeholder='Nombre'
+              placeholderTextColor={theme.textMuted}
               style={styles.input}
             />
-
             <View style={styles.switchRow}>
-              <Text>Activa</Text>
+              <Text style={styles.switchLabel}>Activa</Text>
               <Switch value={editActive} onValueChange={setEditActive} />
             </View>
-
             <View style={styles.actionsRight}>
               <Pressable onPress={() => setEditOpen(false)}>
                 <Text style={styles.cancel}>Cancelar</Text>
               </Pressable>
-
               <Pressable
                 disabled={editDisabled}
                 onPress={() => {
                   if (!editingTable) return
-
-                  updateTable({
-                    id: editingTable.id,
-                    name: editName.trim(),
-                    is_active: editActive
-                  })
-
+                  updateTable({ id: editingTable.id, name: editName.trim(), is_active: editActive })
                   setEditOpen(false)
                   setEditingTable(null)
                 }}
               >
-                <Text
-                  style={[styles.save, editDisabled && styles.saveDisabled]}
-                >
+                <Text style={[styles.save, editDisabled && styles.saveDisabled]}>
                   {isUpdating ? 'Guardando...' : 'Guardar'}
                 </Text>
               </Pressable>
@@ -200,126 +154,40 @@ export default function TablesScreen() {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.background,
-    padding: 16
-  },
-
-  empty: {
-    textAlign: 'center',
-    marginTop: 40,
-    color: theme.textSecondary
-  },
-
-  fab: {
-    position: 'absolute',
-    right: 16,
-    bottom: 16,
-    backgroundColor: theme.textPrimary,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4
-  },
-
-  row: {
-    backgroundColor: theme.surface,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
-
-  rowText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: theme.textPrimary
-  },
-
-  rowTextDisabled: {
-    color: theme.textMuted
-  },
-
-  rowActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12
-  },
-
-  iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.primary
-  },
-
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: theme.overlay,
-    justifyContent: 'center',
-    padding: 24
-  },
-
-  modal: {
-    backgroundColor: theme.background,
-    borderRadius: 16,
-    padding: 20,
-    gap: 16
-  },
-
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.textPrimary
-  },
-
-  input: {
-    borderWidth: 1,
-    borderColor: theme.border,
-    borderRadius: 12,
-    padding: 12,
-    backgroundColor: theme.surface
-  },
-
-  switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 4
-  },
-
-  actionsRight: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    gap: 12,
-    marginTop: 12
-  },
-
-  cancel: {
-    color: theme.textPrimary,
-    fontSize: 16
-  },
-
-  save: {
-    color: theme.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
-    backgroundColor: theme.primary,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8
-  },
-
-  saveDisabled: {
-    opacity: 0.6
-  }
-})
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background, padding: 16 },
+    empty: { textAlign: 'center', marginTop: 40, color: theme.textSecondary },
+    fab: {
+      position: 'absolute', right: 16, bottom: 16,
+      backgroundColor: theme.textPrimary, width: 56, height: 56,
+      borderRadius: 28, alignItems: 'center', justifyContent: 'center', elevation: 4
+    },
+    row: {
+      backgroundColor: theme.surface, paddingHorizontal: 16, paddingVertical: 12,
+      borderRadius: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'
+    },
+    rowText: { fontSize: 16, fontWeight: '500', color: theme.textPrimary },
+    rowTextDisabled: { color: theme.textMuted },
+    rowActions: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    iconButton: {
+      width: 36, height: 36, borderRadius: 6,
+      alignItems: 'center', justifyContent: 'center', backgroundColor: theme.primary
+    },
+    modalOverlay: { flex: 1, backgroundColor: theme.overlay, justifyContent: 'center', padding: 24 },
+    modal: { backgroundColor: theme.surface, borderRadius: 16, padding: 20, gap: 16 },
+    modalTitle: { fontSize: 18, fontWeight: '600', color: theme.textPrimary },
+    input: {
+      borderWidth: 1, borderColor: theme.border, borderRadius: 12,
+      padding: 12, backgroundColor: theme.background, color: theme.textPrimary
+    },
+    switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 4 },
+    switchLabel: { color: theme.textPrimary },
+    actionsRight: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 12, marginTop: 12 },
+    cancel: { color: theme.textPrimary, fontSize: 16 },
+    save: {
+      color: theme.textOnPrimary, fontSize: 16, fontWeight: '600',
+      backgroundColor: theme.primary, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8
+    },
+    saveDisabled: { opacity: 0.6 }
+  })

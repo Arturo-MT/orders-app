@@ -12,7 +12,8 @@ import DateTimePicker from '@react-native-community/datetimepicker'
 import { Ionicons } from '@expo/vector-icons'
 import { useSummaryQuery } from '@/hooks/api/summary'
 import TopProductsCard from './TopProducts'
-import { theme } from '@/constants/Colors'
+import { useTheme } from '@/app/context/ThemeContext'
+import { Theme } from '@/constants/Colors'
 
 type Period = 'day' | 'week' | 'month' | 'year'
 
@@ -43,6 +44,8 @@ export default function SummaryScreen() {
   const [period, setPeriod] = useState<Period>('day')
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [showPicker, setShowPicker] = useState(false)
+  const { theme } = useTheme()
+  const styles = makeStyles(theme)
 
   const { data, isLoading, isError, error } = useSummaryQuery({
     period,
@@ -147,50 +150,43 @@ export default function SummaryScreen() {
   )
 }
 
-const styles = StyleSheet.create({
-  wrapper: { flex: 1, backgroundColor: theme.background },
-  scrollContent: { padding: 10, paddingBottom: 24 },
-  card: { borderRadius: 5, padding: 12, marginBottom: 10 },
-  periodRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
-  periodButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-    backgroundColor: theme.background
-  },
-  periodButtonActive: { backgroundColor: theme.primary },
-  periodText: { color: theme.textPrimary, fontWeight: 'bold' },
-  periodTextActive: { color: theme.textPrimary },
-  dateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    padding: 8,
-    borderWidth: 1,
-    borderColor: theme.border,
-    backgroundColor: theme.surface,
-    borderRadius: 5
-  },
-  dateText: { fontWeight: 'bold', color: theme.textPrimary },
-  doneButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.primary,
-    borderRadius: 5,
-    paddingVertical: 8
-  },
-  doneText: { color: theme.textPrimary, fontWeight: 'bold' },
-  placeholderText: { color: theme.textMuted },
-  errorText: { color: theme.destructive },
-  kpiRow: { flexDirection: 'row', gap: 10, marginBottom: 12 },
-  kpiCard: {
-    flex: 1,
-    backgroundColor: theme.surface,
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center'
-  },
-  kpiPrimary: { backgroundColor: theme.primary },
-  kpiValue: { fontSize: 26, fontWeight: 'bold', color: theme.textPrimary },
-  kpiLabel: { fontSize: 12, color: theme.textPrimary }
-})
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
+    wrapper: { flex: 1, backgroundColor: theme.background },
+    scrollContent: { padding: 10, paddingBottom: 24 },
+    card: { borderRadius: 5, padding: 12, marginBottom: 10 },
+    periodRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
+    periodButton: {
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      borderRadius: 5,
+      backgroundColor: theme.surface
+    },
+    periodButtonActive: { backgroundColor: theme.primary },
+    periodText: { color: theme.textSecondary, fontWeight: 'bold' },
+    periodTextActive: { color: theme.textOnPrimary },
+    dateButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      padding: 8,
+      borderWidth: 1,
+      borderColor: theme.border,
+      backgroundColor: theme.surface,
+      borderRadius: 5
+    },
+    dateText: { fontWeight: 'bold', color: theme.textPrimary },
+    placeholderText: { color: theme.textMuted },
+    errorText: { color: theme.destructive },
+    kpiRow: { flexDirection: 'row', gap: 10, marginBottom: 12 },
+    kpiCard: {
+      flex: 1,
+      backgroundColor: theme.surface,
+      padding: 12,
+      borderRadius: 8,
+      alignItems: 'center'
+    },
+    kpiPrimary: { backgroundColor: theme.primary },
+    kpiValue: { fontSize: 26, fontWeight: 'bold', color: theme.textOnPrimary },
+    kpiLabel: { fontSize: 12, color: theme.textOnPrimary }
+  })

@@ -4,7 +4,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native'
 import OrderCard from './OrderCard'
 import { Ionicons } from '@expo/vector-icons'
 import Skeleton from '@/app/components/Skeleton'
-import { theme } from '@/constants/Colors'
+import { useTheme } from '@/app/context/ThemeContext'
+import { Theme } from '@/constants/Colors'
 
 type OrderSummary = {
   id: string
@@ -42,6 +43,8 @@ const OrderCardWrapper = memo(function OrderCardWrapper({
 export default function OpenOrdersList() {
   const { data: orderIds, isLoading, refetch, isRefetching } = useOpenOrderIds()
   const [orders, dispatch] = useReducer(orderListReducer, [])
+  const { theme } = useTheme()
+  const styles = makeStyles(theme)
 
   React.useEffect(() => {
     if (orderIds) dispatch({ type: 'SET', orders: orderIds as OrderSummary[] })
@@ -96,24 +99,26 @@ export default function OpenOrdersList() {
       ))}
 
       {!isLoadingTotal && orders.length === 0 && (
-        <Text style={{ textAlign: 'center', marginTop: 16 }}>No hay órdenes abiertas</Text>
+        <Text style={styles.empty}>No hay órdenes abiertas</Text>
       )}
     </View>
   )
 }
 
-const styles = StyleSheet.create({
-  title: { textAlign: 'center', marginBottom: 8, fontSize: 18, color: theme.textPrimary },
-  titleContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  tableHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: theme.borderLight,
-    padding: 8,
-    borderRadius: 8,
-    marginBottom: 6
-  },
-  tableTitle: { fontWeight: '600', fontSize: 15 },
-  count: { fontSize: 12, color: theme.textSecondary }
-})
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
+    title: { textAlign: 'center', marginBottom: 8, fontSize: 18, color: theme.textPrimary },
+    titleContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    tableHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: theme.borderLight,
+      padding: 8,
+      borderRadius: 8,
+      marginBottom: 6
+    },
+    tableTitle: { fontWeight: '600', fontSize: 15, color: theme.textPrimary },
+    count: { fontSize: 12, color: theme.textSecondary },
+    empty: { textAlign: 'center', marginTop: 16, color: theme.textSecondary }
+  })

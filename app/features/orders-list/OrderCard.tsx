@@ -15,7 +15,8 @@ import { useStoreQuery } from '@/hooks/api/store'
 import { printOrder, PrintOrder } from '../printing/print'
 import CustomCheckbox from '@/app/components/CustomCheckbox'
 import { getOrderState, setOrderExpanded, setOrderPaidItem } from './orderStates'
-import { theme } from '@/constants/Colors'
+import { useTheme } from '@/app/context/ThemeContext'
+import { Theme } from '@/constants/Colors'
 import { useToast } from '@/app/context/ToastContext'
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -40,6 +41,8 @@ interface Props {
 
 export default function OrderCard({ order, variant = 'default', onOpenOrder, onRemove }: Props) {
   const { showToast } = useToast()
+  const { theme } = useTheme()
+  const styles = makeStyles(theme)
   const state = getOrderState(order.id)
   const [expanded, setExpanded] = useState(state.expanded)
   const [paidItems, setPaidItems] = useState(state.paidItems)
@@ -59,11 +62,11 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
   const { data: orderData, isLoading } = useOrderQuery({ order_id: order.id, enabled: expanded })
   const paidTotal = orderData?.items.reduce((acc: number, item: any, i: number) => {
     const key = `${item.product_name}-${i}`
-    return paidItems[key] ? acc + Number(item.total_price) : acc
+    return paidItems[key] ? acc + (Number(item.total_price) || 0) : acc
   }, 0) ?? 0
 
   const { data: storeData } = useStoreQuery()
-  const orderTotal = orderData?.items.reduce((acc: number, item: any) => acc + Number(item.total_price), 0) ?? 0
+  const orderTotal = orderData?.items.reduce((acc: number, item: any) => acc + (Number(item.total_price) || 0), 0) ?? 0
   const closeOrderMutation = useCloseOrderMutation()
 
   const handleCloseOrder = async () => {
@@ -158,14 +161,14 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
                       ) : null}
                     </View>
                     <Text style={[styles.itemPrice, isPaid && styles.itemPaidText]}>
-                      ${item.total_price.toFixed(2)}
+                      ${(Number(item.total_price) || 0).toFixed(2)}
                     </Text>
                   </View>
                 )
               })}
 
-              <Text style={{ textAlign: 'right' }}>Pagado: ${paidTotal.toFixed(2)}</Text>
-              <Text style={{ textAlign: 'right' }}>Pendiente: ${(orderTotal - paidTotal).toFixed(2)}</Text>
+              <Text style={styles.summaryText}>Pagado: ${paidTotal.toFixed(2)}</Text>
+              <Text style={styles.summaryText}>Pendiente: ${(orderTotal - paidTotal).toFixed(2)}</Text>
 
               <View style={styles.actions}>
                 <TouchableOpacity onPress={handlePrint} style={styles.printButton} disabled={closeOrderMutation.isPending}>
@@ -177,7 +180,7 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
                     style={[styles.closeButton, closeOrderMutation.isPending && styles.disabledButton]}
                     disabled={closeOrderMutation.isPending}
                   >
-                    <Ionicons name='checkmark-done-outline' size={26} color={theme.textPrimary} />
+                    <Ionicons name='checkmark-done-outline' size={26} color={theme.textOnPrimary} />
                   </TouchableOpacity>
                 )}
               </View>
@@ -189,33 +192,33 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
   )
 }
 
-const styles = StyleSheet.create({
-  card: { backgroundColor: theme.surface, borderRadius: 8, marginBottom: 10 },
-  cardHeader: { backgroundColor: theme.borderLight, padding: 12, borderRadius: 8 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  headerLeft: { flex: 1, marginRight: 8 },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  title: { fontSize: 16, fontWeight: '600', color: theme.textPrimary },
-  subtitle: { fontSize: 12, color: theme.textSecondary, marginTop: 2 },
-  typeBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 },
-  takeawayBadge: { backgroundColor: '#f1aa1c33' },
-  dineInBadge: { backgroundColor: '#5A7A5233' },
-  typeBadgeText: { fontSize: 11, fontWeight: '700' },
-  takeawayText: { color: '#a07010' },
-  dineInText: { color: theme.success },
-  totalHeader: { fontSize: 14, fontWeight: '700', color: theme.textPrimary },
-  openButton: { backgroundColor: theme.primary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
-  openText: { fontWeight: '600', color: theme.textPrimary },
-  details: { padding: 12 },
-  status: { fontWeight: '500', marginBottom: 6 },
-  itemRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6, alignItems: 'center' },
-  itemName: { fontSize: 14, fontWeight: '500' },
-  itemNotes: { fontSize: 12, color: theme.textSecondary },
-  itemPrice: { fontSize: 14, fontWeight: '600' },
-  actions: { marginTop: 8, display: 'flex', justifyContent: 'flex-end', flexDirection: 'row', gap: 6 },
-  closeButton: { marginTop: 8, padding: 6, backgroundColor: theme.primary, borderRadius: 6 },
-  printButton: { marginTop: 8, padding: 6, borderRadius: 6 },
-  itemInfo: { flex: 1, marginLeft: 6 },
-  itemPaidText: { textDecorationLine: 'line-through', color: theme.textMuted },
-  disabledButton: { opacity: 0.6 }
-})
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
+    card: { backgroundColor: theme.surface, borderRadius: 8, marginBottom: 10 },
+    cardHeader: { backgroundColor: theme.borderLight, padding: 12, borderRadius: 8 },
+    headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    headerLeft: { flex: 1, marginRight: 8 },
+    headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    title: { fontSize: 16, fontWeight: '600', color: theme.textPrimary },
+    subtitle: { fontSize: 12, color: theme.textSecondary, marginTop: 2 },
+    typeBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 },
+    takeawayBadge: { backgroundColor: '#f1aa1c33' },
+    dineInBadge: { backgroundColor: '#5A7A5233' },
+    typeBadgeText: { fontSize: 11, fontWeight: '700' },
+    takeawayText: { color: '#a07010' },
+    dineInText: { color: theme.success },
+    totalHeader: { fontSize: 14, fontWeight: '700', color: theme.textPrimary },
+    details: { padding: 12 },
+    status: { fontWeight: '500', marginBottom: 6, color: theme.textPrimary },
+    summaryText: { textAlign: 'right', color: theme.textSecondary },
+    itemRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6, alignItems: 'center' },
+    itemName: { fontSize: 14, fontWeight: '500', color: theme.textPrimary },
+    itemNotes: { fontSize: 12, color: theme.textSecondary },
+    itemPrice: { fontSize: 14, fontWeight: '600', color: theme.textPrimary },
+    actions: { marginTop: 8, display: 'flex', justifyContent: 'flex-end', flexDirection: 'row', gap: 6 },
+    closeButton: { marginTop: 8, padding: 6, backgroundColor: theme.primary, borderRadius: 6 },
+    printButton: { marginTop: 8, padding: 6, borderRadius: 6 },
+    itemInfo: { flex: 1, marginLeft: 6 },
+    itemPaidText: { textDecorationLine: 'line-through', color: theme.textMuted },
+    disabledButton: { opacity: 0.6 }
+  })

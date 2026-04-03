@@ -10,7 +10,8 @@ import {
 } from 'react-native'
 import Card from '@/app/components/Card'
 import { Product } from '@/types/types'
-import { theme } from '@/constants/Colors'
+import { useTheme } from '@/app/context/ThemeContext'
+import { Theme } from '@/constants/Colors'
 import CategorySkeleton from './CategorySkeleton'
 import ProductGridSkeleton from './ProductGridSkeleton'
 
@@ -38,6 +39,8 @@ export default function ProductsPanel({
 }) {
   const { height, width } = useWindowDimensions()
   const isPortrait = height >= width
+  const { theme } = useTheme()
+  const styles = makeStyles(theme)
 
   const [panelWidth, setPanelWidth] = useState(0)
   const columns = panelWidth < 360 ? 2 : panelWidth < 560 ? 3 : 4
@@ -110,6 +113,7 @@ export default function ProductsPanel({
           value={searchText}
           onChangeText={setSearchText}
           placeholder='Buscar categoría o producto'
+          placeholderTextColor={theme.textMuted}
           style={styles.searchInput}
         />
       </View>
@@ -154,9 +158,7 @@ export default function ProductsPanel({
             style={{ flex: 1 }}
             contentContainerStyle={[
               styles.productsContainer,
-              {
-                alignItems: 'flex-start'
-              }
+              { alignItems: 'flex-start' }
             ]}
             showsVerticalScrollIndicator
           >
@@ -165,7 +167,7 @@ export default function ProductsPanel({
             )}
 
             {!isProductsLoading && filteredProductsBySearch.length === 0 && (
-              <Text style={{ fontSize: 16, color: theme.textPrimary }}>
+              <Text style={styles.emptyText}>
                 No hay productos en esta búsqueda
               </Text>
             )}
@@ -197,52 +199,55 @@ export default function ProductsPanel({
   )
 }
 
-const styles = StyleSheet.create({
-  categorySelector: {
-    gap: 10
-  },
-  categoryButton: {
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: theme.background,
-    width: 'auto',
-    alignItems: 'center'
-  },
-  selectedCategory: {
-    backgroundColor: theme.primary
-  },
-  categoryText: {
-    fontSize: 16,
-    color: theme.textPrimary
-  },
-  selectedCategoryText: {
-    color: theme.textPrimary
-  },
-  productsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingRight: 10
-  },
-  card: {
-    flexGrow: 1
-  },
-  searchInput: {
-    borderWidth: 1,
-    borderColor: theme.border,
-    borderRadius: 5,
-    padding: 8,
-    backgroundColor: theme.surface
-  },
-  searchWrapper: {
-    padding: 10
-  },
-  mainContent: {
-    flex: 1,
-    flexDirection: 'row'
-  },
-  wrapper: {
-    flex: 2,
-    backgroundColor: theme.background
-  }
-})
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
+    categorySelector: {
+      gap: 10
+    },
+    categoryButton: {
+      paddingHorizontal: 15,
+      paddingVertical: 10,
+      borderRadius: 20,
+      backgroundColor: theme.surface,
+      width: 'auto',
+      alignItems: 'center'
+    },
+    selectedCategory: {
+      backgroundColor: theme.primary
+    },
+    categoryText: {
+      fontSize: 16,
+      color: theme.textSecondary
+    },
+    selectedCategoryText: {
+      color: theme.textOnPrimary
+    },
+    productsContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      paddingRight: 10
+    },
+    searchInput: {
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: 5,
+      padding: 8,
+      backgroundColor: theme.surface,
+      color: theme.textPrimary
+    },
+    searchWrapper: {
+      padding: 10
+    },
+    mainContent: {
+      flex: 1,
+      flexDirection: 'row'
+    },
+    wrapper: {
+      flex: 2,
+      backgroundColor: theme.background
+    },
+    emptyText: {
+      fontSize: 16,
+      color: theme.textSecondary
+    }
+  })

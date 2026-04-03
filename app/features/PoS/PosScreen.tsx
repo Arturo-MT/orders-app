@@ -11,13 +11,16 @@ import { useStoreQuery } from '@/hooks/api/store'
 import { OrderDraft, OrderItemDraft, Product } from '@/types/types'
 import { printOrder } from '../printing/print'
 
-import { theme } from '@/constants/Colors'
+import { useTheme } from '@/app/context/ThemeContext'
+import { Theme } from '@/constants/Colors'
 import ProductsPanel from './ProductsPanel'
 import OrderPanel from './OrderPanel'
 import { useToast } from '@/app/context/ToastContext'
 
 export default function PosScreen() {
   const { showToast } = useToast()
+  const { theme } = useTheme()
+  const styles = makeStyles(theme)
 
   const [selectedCategory, setSelectedCategory] = useState('Todos')
 
@@ -210,10 +213,11 @@ export default function PosScreen() {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 10,
-    backgroundColor: theme.background
-  }
-})
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 10,
+      backgroundColor: theme.background
+    }
+  })

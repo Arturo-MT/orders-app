@@ -1,7 +1,7 @@
 import React from 'react'
 import { TouchableOpacity, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { theme } from '@/constants/Colors'
+import { useTheme } from '@/app/context/ThemeContext'
 
 interface Props {
   value: boolean
@@ -14,9 +14,11 @@ export default function CustomCheckbox({
   onChange,
   disabled = false
 }: Props) {
+  const { theme } = useTheme()
+
   return (
     <TouchableOpacity
-      style={!disabled ? styles.container : styles.disabledContainer}
+      style={disabled ? styles.disabledContainer : styles.container}
       onPress={() => onChange(!value)}
       disabled={disabled}
     >
