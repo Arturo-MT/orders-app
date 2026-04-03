@@ -97,7 +97,7 @@ export default function SettingsScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Tienda</Text>
-        <Text style={styles.value}>{store_member_data?.store.name ?? '—'}</Text>
+        <Text style={styles.value}>{store_member_data?.store?.name ?? '—'}</Text>
         {stores.length > 1 && <StoreSelector />}
       </View>
 
@@ -181,7 +181,7 @@ const makeStyles = (theme: Theme) =>
       color: theme.textSecondary
     },
     themeButtonTextActive: {
-      color: '#ffffff'
+      color: theme.textOnPrimary
     },
     logoutButton: {
       marginTop: 4,
