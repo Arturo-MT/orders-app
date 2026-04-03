@@ -23,6 +23,7 @@ export default function PosScreen() {
   const styles = makeStyles(theme)
 
   const [selectedCategory, setSelectedCategory] = useState('Todos')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [order, setOrder] = useState<OrderDraft>({
     type: 'TAKEAWAY',
@@ -131,6 +132,7 @@ export default function PosScreen() {
       return
     }
 
+    setIsSubmitting(true)
     try {
       const response = await createOrder(payload)
 
@@ -158,7 +160,7 @@ export default function PosScreen() {
       if (printSuccess) {
         showToast('Orden impresa correctamente', 'success')
       } else {
-        showToast(`Error al imprimir: ${printError}`, 'error')
+        showToast(`Orden #${response.order_number} guardada. Error al imprimir: ${printError}`, 'error')
       }
 
       setOrder({
@@ -172,6 +174,8 @@ export default function PosScreen() {
     } catch (error) {
       console.error('Error al crear orden:', error)
       showToast('Fallo al crear la orden', 'error')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -207,7 +211,7 @@ export default function PosScreen() {
         total={total}
         onChange={setOrder}
         onPrint={handlePrintOrder}
-        isLoading={isCreatingOrder}
+        isLoading={isCreatingOrder || isSubmitting}
       />
     </View>
   )
