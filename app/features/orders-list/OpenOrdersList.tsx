@@ -1,11 +1,12 @@
 import { useOpenOrderIds } from '@/hooks/api/orders'
-import React, { memo, useCallback, useReducer } from 'react'
+import React, { memo, useCallback, useEffect, useReducer } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import OrderCard from './OrderCard'
 import { Ionicons } from '@expo/vector-icons'
 import Skeleton from '@/app/components/Skeleton'
 import { useTheme } from '@/app/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
+import { clearAllOrderStates } from './orderStates'
 
 type OrderSummary = {
   id: string
@@ -49,6 +50,12 @@ export default function OpenOrdersList() {
   React.useEffect(() => {
     if (orderIds) dispatch({ type: 'SET', orders: orderIds as OrderSummary[] })
   }, [orderIds])
+
+  useEffect(() => {
+    if (!isLoading && !isRefetching && orders.length === 0) {
+      clearAllOrderStates()
+    }
+  }, [orders.length, isLoading, isRefetching])
 
   const handleRemove = useCallback((id: string) => {
     dispatch({ type: 'REMOVE', id })
