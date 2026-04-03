@@ -29,3 +29,7 @@ export function setOrderPaidItem(
 export function clearOrderState(orderId: string) {
   delete orderStates[orderId]
 }
+
+export function clearAllOrderStates() {
+  Object.keys(orderStates).forEach((key) => delete orderStates[key])
+}
