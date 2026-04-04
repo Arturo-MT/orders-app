@@ -26,7 +26,29 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-    "plugins": ["expo-router", "expo-secure-store"],
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "./plugins/withProductFlavors",
+        {
+          "flavors": {
+            "production": {
+              "applicationId": "com.signemammoth.tacoloco",
+              "appName": "Taco Loco"
+            },
+            "beta": {
+              "applicationId": "com.signemammoth.tacoloco.beta",
+              "appName": "Taco Loco (BETA)"
+            },
+            "dev": {
+              "applicationId": "com.signemammoth.tacoloco.dev",
+              "appName": "Taco Loco DEV"
+            }
+          }
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     },
