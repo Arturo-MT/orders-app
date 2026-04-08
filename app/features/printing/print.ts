@@ -87,11 +87,10 @@ const connectWithTimeout = (address: string): Promise<void> =>
 const executePrint = async (order: PrintOrder): Promise<void> => {
   /* ---------- LOGO ---------- */
   await BluetoothEscposPrinter.printPic(logoBase64, {
-    width: 576,
-    left: 80
+    width: 300,
+    left: 130
   })
-  // Esperar a que la impresora termine de renderizar el bitmap antes de enviar más comandos
-  await new Promise<void>((resolve) => setTimeout(resolve, 300))
+  await new Promise<void>((resolve) => setTimeout(resolve, 800))
 
   await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT)
 
@@ -190,6 +189,71 @@ const executePrint = async (order: PrintOrder): Promise<void> => {
   await BluetoothEscposPrinter.cutOnePoint()
 }
 
+const executePrintKitchen = async (order: PrintOrder): Promise<void> => {
+  /* ---------- LOGO ---------- */
+  await BluetoothEscposPrinter.printPic(logoBase64, {
+    width: 300,
+    left: 130
+  })
+  await new Promise<void>((resolve) => setTimeout(resolve, 800))
+
+  await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.CENTER)
+
+  /* ---------- ENCABEZADO ---------- */
+  await BluetoothEscposPrinter.printText(`#${order.order_number}\n`, fontConfig)
+
+  if (order.table_name) {
+    await BluetoothEscposPrinter.printText(
+      `Mesa: ${order.table_name}\n`,
+      fontConfig
+    )
+  }
+
+  if (order.customer_name) {
+    await BluetoothEscposPrinter.printText(
+      `Cliente: ${normalizeTextForPrinter(order.customer_name)}\n`,
+      fontConfig
+    )
+  }
+
+  await BluetoothEscposPrinter.printText(
+    `${order.type === 'DINE_IN' ? 'Para aqui' : 'Para llevar'}\n`,
+    fontConfig
+  )
+
+  await BluetoothEscposPrinter.printText('========================\n\n', {})
+
+  await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT)
+
+  /* ---------- ITEMS ---------- */
+  for (const item of order.items) {
+    const name = normalizeTextForPrinter(item.name)
+
+    await BluetoothEscposPrinter.printColumn(
+      [5, 19],
+      [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.LEFT],
+      [`x${item.quantity}`, name],
+      fontConfig
+    )
+
+    if (item.notes?.trim()) {
+      await BluetoothEscposPrinter.printText(
+        `  >> ${normalizeTextForPrinter(item.notes)}\n`,
+        fontConfig
+      )
+    }
+
+    await BluetoothEscposPrinter.printText('\n', {})
+  }
+
+  await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.CENTER)
+
+  await BluetoothEscposPrinter.printText('========================\n', {})
+
+  await BluetoothEscposPrinter.printText('\n\n\n', {})
+  await BluetoothEscposPrinter.cutOnePoint()
+}
+
 export const printOrder = async (
   order: PrintOrder,
   printerAddress?: string
@@ -236,6 +300,60 @@ export const printOrder = async (
       return { success: true }
     } catch (secondError: any) {
       console.error('Segundo intento de impresión fallido:', secondError)
+      return {
+        success: false,
+        error: secondError?.message || 'Error desconocido al imprimir'
+      }
+    }
+  }
+}
+
+export const printKitchenOrder = async (
+  order: PrintOrder,
+  printerAddress?: string
+): Promise<{ success: boolean; error?: string }> => {
+  if (!printerAddress) {
+    return { success: false, error: 'No hay impresora configurada' }
+  }
+
+  const hasPermission = await requestBluetoothPermissions()
+  if (!hasPermission) {
+    return {
+      success: false,
+      error: 'Permisos de Bluetooth no concedidos'
+    }
+  }
+
+  const attempt = async (): Promise<void> => {
+    await connectWithTimeout(printerAddress)
+    await executePrintKitchen(order)
+    try {
+      await BluetoothManager.disconnect(printerAddress)
+    } catch {
+      /* ignorar */
+    }
+  }
+
+  try {
+    await attempt()
+    return { success: true }
+  } catch (firstError: any) {
+    console.warn(
+      'Primer intento de impresión cocina fallido, reintentando...',
+      firstError?.message
+    )
+    try {
+      await BluetoothManager.disconnect(printerAddress)
+    } catch {
+      /* ignorar */
+    }
+    await new Promise<void>((resolve) => setTimeout(resolve, 800))
+
+    try {
+      await attempt()
+      return { success: true }
+    } catch (secondError: any) {
+      console.error('Segundo intento de impresión cocina fallido:', secondError)
       return {
         success: false,
         error: secondError?.message || 'Error desconocido al imprimir'

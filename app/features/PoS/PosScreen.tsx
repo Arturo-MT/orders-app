@@ -9,7 +9,7 @@ import { useCreateOrder } from '@/hooks/api/orders'
 import { useStoreQuery } from '@/hooks/api/store'
 
 import { OrderDraft, OrderItemDraft, Product } from '@/types/types'
-import { printOrder } from '../printing/print'
+import { printKitchenOrder } from '../printing/print'
 
 import { useTheme } from '@/app/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
@@ -138,7 +138,7 @@ export default function PosScreen() {
 
       showToast('Orden creada correctamente', 'success')
 
-      const { success: printSuccess, error: printError } = await printOrder(
+      const { success: printSuccess, error: printError } = await printKitchenOrder(
         {
           order_number: response.order_number,
           type: order.type,
@@ -146,7 +146,7 @@ export default function PosScreen() {
           table_name: order.table_name,
           is_paid: order.is_paid ?? false,
           items: order.items
-            .sort((a, b) => a.name.localeCompare(b.name))
+            .sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }))
             .map((i) => ({
               name: i.name,
               quantity: i.quantity,

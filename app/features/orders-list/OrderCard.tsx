@@ -12,7 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { useCloseOrderMutation, useOrderQuery } from '@/hooks/api/orders'
 import { useStoreQuery } from '@/hooks/api/store'
-import { printOrder, PrintOrder } from '../printing/print'
+import { printKitchenOrder, PrintOrder } from '../printing/print'
 import CustomCheckbox from '@/app/components/CustomCheckbox'
 import { getOrderState, setOrderExpanded, setOrderPaidItem } from './orderStates'
 import { useTheme } from '@/app/context/ThemeContext'
@@ -92,14 +92,16 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
       customer_name: orderData.customer_name,
       table_name: orderData.table_name,
       is_paid: orderData.status === 'CLOSED',
-      items: orderData.items.map((item: any) => ({
+      items: orderData.items
+        .sort((a: any, b: any) => a.product_name.localeCompare(b.product_name, 'es', { sensitivity: 'base' }))
+        .map((item: any) => ({
         name: item.product_name,
         quantity: item.quantity,
         price: item.base_price,
         notes: item.notes ?? undefined
       }))
     }
-    const { success, error } = await printOrder(printPayload, storeData?.printer_address)
+    const { success, error } = await printKitchenOrder(printPayload, storeData?.printer_address)
     if (success) {
       showToast('Orden impresa correctamente', 'success')
     } else {
