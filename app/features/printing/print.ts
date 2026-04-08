@@ -90,6 +90,8 @@ const executePrint = async (order: PrintOrder): Promise<void> => {
     width: 576,
     left: 80
   })
+  // Esperar a que la impresora termine de renderizar el bitmap antes de enviar más comandos
+  await new Promise<void>((resolve) => setTimeout(resolve, 300))
 
   await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT)
 
@@ -177,9 +179,7 @@ const executePrint = async (order: PrintOrder): Promise<void> => {
     0
   )
 
-  await BluetoothEscposPrinter.printerAlign(
-    BluetoothEscposPrinter.ALIGN.RIGHT
-  )
+  await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.RIGHT)
 
   await BluetoothEscposPrinter.printText(
     `Total: ${total.toFixed(2)}\n\n`,
@@ -209,15 +209,26 @@ export const printOrder = async (
   const attempt = async (): Promise<void> => {
     await connectWithTimeout(printerAddress)
     await executePrint(order)
-    try { await BluetoothManager.disconnect() } catch { /* ignorar */ }
+    try {
+      await BluetoothManager.disconnect(printerAddress)
+    } catch {
+      /* ignorar */
+    }
   }
 
   try {
     await attempt()
     return { success: true }
   } catch (firstError: any) {
-    console.warn('Primer intento de impresión fallido, reintentando...', firstError?.message)
-    try { await BluetoothManager.disconnect() } catch { /* ignorar */ }
+    console.warn(
+      'Primer intento de impresión fallido, reintentando...',
+      firstError?.message
+    )
+    try {
+      await BluetoothManager.disconnect(printerAddress)
+    } catch {
+      /* ignorar */
+    }
     await new Promise<void>((resolve) => setTimeout(resolve, 800))
 
     try {

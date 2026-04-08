@@ -15,15 +15,16 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk",
-        "gradleCommand": ":app:assembleRelease"
+        "gradleCommand": ":app:assembleBetaRelease"
       }
     },
     "production": {
-      "android": {
-        "buildType": "apk"
-      },
       "distribution": "internal",
-      "channel": "production"
+      "channel": "production",
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleProductionRelease"
+      }
     }
   },
   "submit": {
