@@ -4,10 +4,7 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
-  LayoutAnimation,
-  Platform,
-  UIManager
+  ActivityIndicator
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useCloseOrderMutation, useOrderQuery } from '@/hooks/api/orders'
@@ -19,9 +16,6 @@ import { useTheme } from '@/app/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
 import { useToast } from '@/app/context/ToastContext'
 
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true)
-}
 
 interface Props {
   order: {
@@ -49,20 +43,15 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
 
   useEffect(() => { setOrderExpanded(order.id, expanded) }, [expanded, order.id])
 
-  useEffect(() => {
-    Object.entries(paidItems).forEach(([key, value]) => {
-      setOrderPaidItem(order.id, key, value)
-    })
-  }, [paidItems, order.id])
-
   const toggleItemPaid = (key: string) => {
-    setPaidItems((prev) => ({ ...prev, [key]: !prev[key] }))
+    const newValue = !paidItems[key]
+    setPaidItems((prev) => ({ ...prev, [key]: newValue }))
+    setOrderPaidItem(order.id, key, newValue)
   }
 
   const { data: orderData, isLoading } = useOrderQuery({ order_id: order.id, enabled: expanded })
-  const paidTotal = orderData?.items.reduce((acc: number, item: any, i: number) => {
-    const key = `${item.product_name}-${i}`
-    return paidItems[key] ? acc + (Number(item.total_price) || 0) : acc
+  const paidTotal = orderData?.items.reduce((acc: number, item: any) => {
+    return paidItems[item.id] ? acc + (Number(item.total_price) || 0) : acc
   }, 0) ?? 0
 
   const { data: storeData } = useStoreQuery()
@@ -80,7 +69,6 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
   }
 
   const toggle = () => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
     setExpanded((prev) => !prev)
   }
 
@@ -144,12 +132,8 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
             <ActivityIndicator size='small' color={theme.textPrimary} />
           ) : (
             <>
-              <Text style={styles.status}>{orderData?.table_name || orderData?.customer_name}</Text>
-              <Text style={styles.status}>Estado: {orderData?.status === 'OPEN' || orderData?.status === 'UNPAID' ? 'Abierta' : 'Cerrada'}</Text>
-              <Text style={styles.status}>Tipo: {orderData?.type === 'TAKEAWAY' ? 'Para llevar' : 'Para aqui'}</Text>
-
-              {orderData?.items.map((item: any, i: number) => {
-                const itemKey = `${item.product_name}-${i}`
+              {orderData?.items.map((item: any) => {
+                const itemKey = item.id
                 const isPaid = !!paidItems[itemKey]
                 return (
                   <View key={itemKey} style={styles.itemRow}>
@@ -218,8 +202,8 @@ const makeStyles = (theme: Theme) =>
     itemNotes: { fontSize: 12, color: theme.textSecondary },
     itemPrice: { fontSize: 14, fontWeight: '600', color: theme.textPrimary },
     actions: { marginTop: 8, display: 'flex', justifyContent: 'flex-end', flexDirection: 'row', gap: 6 },
-    closeButton: { marginTop: 8, padding: 6, backgroundColor: theme.primary, borderRadius: 6 },
-    printButton: { marginTop: 8, padding: 6, borderRadius: 6 },
+    closeButton: { padding: 6, backgroundColor: theme.primary, borderRadius: 6 },
+    printButton: { padding: 6, borderRadius: 6 },
     itemInfo: { flex: 1, marginLeft: 6 },
     itemPaidText: { textDecorationLine: 'line-through', color: theme.textMuted },
     disabledButton: { opacity: 0.6 }

@@ -1,8 +1,8 @@
 import { useOpenOrderIds } from '@/hooks/api/orders'
+import { useFocusEffect } from 'expo-router'
 import React, { memo, useCallback, useEffect, useReducer } from 'react'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import OrderCard from './OrderCard'
-import { Ionicons } from '@expo/vector-icons'
 import Skeleton from '@/app/components/Skeleton'
 import { useTheme } from '@/app/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
@@ -42,7 +42,9 @@ const OrderCardWrapper = memo(function OrderCardWrapper({
 })
 
 export default function OpenOrdersList() {
-  const { data: orderIds, isLoading, refetch, isRefetching } = useOpenOrderIds()
+  const { data: orderIds, isLoading, isRefetching, refetch } = useOpenOrderIds()
+
+  useFocusEffect(useCallback(() => { refetch() }, [refetch]))
   const [orders, dispatch] = useReducer(orderListReducer, [])
   const { theme } = useTheme()
   const styles = makeStyles(theme)
@@ -69,7 +71,12 @@ export default function OpenOrdersList() {
       if (!map[key]) map[key] = []
       map[key].push(order)
     })
-    return Object.entries(map).map(([tableName, ordersList]) => ({ tableName, orders: ordersList }))
+    return Object.entries(map)
+      .sort(([a], [b]) => a.localeCompare(b, 'es', { numeric: true, sensitivity: 'base' }))
+      .map(([tableName, ordersList]) => ({
+        tableName,
+        orders: ordersList.sort((a, b) => Number(a.order_number) - Number(b.order_number))
+      }))
   }, [orders])
 
   const isLoadingTotal = isLoading || isRefetching
@@ -78,9 +85,6 @@ export default function OpenOrdersList() {
     <View>
       <View style={styles.titleContainer}>
         <Text style={styles.title}>Órdenes abiertas</Text>
-        <Pressable onPress={() => refetch()}>
-          <Ionicons name='refresh' size={24} color={theme.textPrimary} />
-        </Pressable>
       </View>
 
       {isLoadingTotal && (
