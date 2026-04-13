@@ -36,7 +36,6 @@ const Card = ({ data, onPress, _hiddenFields = [] }: CardProps) => {
                     ...(key === 'name' ? styles.nameText : styles.cardText),
                     ...(key === 'price' ? styles.priceText : {})
                   }}
-                  numberOfLines={key === 'name' ? 2 : 1}
                 >
                   {key === 'price' ? `$${value}` : value}
                 </Text>
@@ -64,7 +63,7 @@ const makeStyles = (theme: Theme) =>
       justifyContent: 'space-between',
       gap: 6,
       width: '100%',
-      aspectRatio: 1
+      flex: 1
     },
     cardText: {
       fontSize: 14,

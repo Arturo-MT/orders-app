@@ -156,10 +156,7 @@ export default function ProductsPanel({
         <View style={{ flex: 1 }}>
           <ScrollView
             style={{ flex: 1 }}
-            contentContainerStyle={[
-              styles.productsContainer,
-              { alignItems: 'flex-start' }
-            ]}
+            contentContainerStyle={styles.productsContainer}
             showsVerticalScrollIndicator
           >
             {(isProductsLoading || isProductsRefetching) && (
@@ -182,7 +179,8 @@ export default function ProductsPanel({
                     flexBasis: `${columnWidth}%`,
                     maxWidth: `${columnWidth}%`,
                     paddingHorizontal: 6,
-                    paddingVertical: 6
+                    paddingVertical: 6,
+                    flex: 1
                   }}
                 >
                   <Card

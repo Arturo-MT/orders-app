@@ -45,12 +45,12 @@ export default function OrderItemComponent({ item, onUpdate, onRemove }: Props) 
       >
         <Ionicons
           name={item.notes ? 'chatbubble' : 'chatbubble-outline'}
-          size={18}
+          size={22}
           color={item.notes ? theme.primary : theme.textPrimary}
         />
       </TouchableOpacity>
 
-      <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
+      <Text style={styles.name}>{item.name}</Text>
 
       <View style={styles.quantityControls}>
         <TouchableOpacity
@@ -112,7 +112,7 @@ export default function OrderItemComponent({ item, onUpdate, onRemove }: Props) 
       )}
 
       <TouchableOpacity onPress={onRemove} style={styles.iconButton}>
-        <Ionicons name='trash-outline' size={18} color={theme.destructive} />
+        <Ionicons name='trash-outline' size={22} color={theme.destructive} />
       </TouchableOpacity>
 
       <Modal visible={notesModalVisible} animationType='slide' transparent onRequestClose={() => setNotesModalVisible(false)}>
@@ -230,7 +230,7 @@ const makeStyles = (theme: Theme) =>
       borderBottomColor: theme.borderLight,
       gap: 6
     },
-    iconButton: { padding: 4 },
+    iconButton: { padding: 6 },
     name: { flex: 1, fontSize: 14, fontWeight: '500', color: theme.textPrimary },
     quantityControls: { flexDirection: 'row', alignItems: 'center', gap: 4 },
     quantityText: { fontSize: 14, fontWeight: '600', minWidth: 20, textAlign: 'center', color: theme.textPrimary },
