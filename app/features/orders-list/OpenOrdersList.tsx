@@ -83,9 +83,7 @@ export default function OpenOrdersList() {
 
   return (
     <View>
-      <View style={styles.titleContainer}>
-        <Text style={styles.title}>Órdenes abiertas</Text>
-      </View>
+      <Text style={styles.title}>ÓRDENES ABIERTAS</Text>
 
       {isLoadingTotal && (
         <View style={{ gap: 12 }}>
@@ -99,9 +97,9 @@ export default function OpenOrdersList() {
         <View key={item.tableName} style={{ marginBottom: 16 }}>
           <View style={styles.tableHeader}>
             <Text style={styles.tableTitle}>
-              {item.tableName === 'BAR' ? 'Barra' : item.tableName}
+              {item.tableName === 'BAR' ? 'BARRA' : item.tableName.toUpperCase()}
             </Text>
-            <Text style={styles.count}>{item.orders.length} orden(es)</Text>
+            <Text style={styles.count}>{item.orders.length}</Text>
           </View>
           {item.orders.map((order) => (
             <OrderCardWrapper key={order.id} order={order} onRemove={handleRemove} />
@@ -118,18 +116,15 @@ export default function OpenOrdersList() {
 
 const makeStyles = (theme: Theme) =>
   StyleSheet.create({
-    title: { textAlign: 'center', marginBottom: 8, fontSize: 18, color: theme.textPrimary },
-    titleContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    title: { fontSize: 11, fontWeight: '700', color: theme.textMuted, letterSpacing: 1, marginBottom: 12 },
     tableHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      backgroundColor: theme.borderLight,
-      padding: 8,
-      borderRadius: 8,
-      marginBottom: 6
+      marginBottom: 6,
+      paddingHorizontal: 2
     },
-    tableTitle: { fontWeight: '600', fontSize: 15, color: theme.textPrimary },
-    count: { fontSize: 12, color: theme.textSecondary },
+    tableTitle: { fontSize: 11, fontWeight: '700', color: theme.textMuted, letterSpacing: 0.5 },
+    count: { fontSize: 11, color: theme.textMuted },
     empty: { textAlign: 'center', marginTop: 16, color: theme.textSecondary }
   })

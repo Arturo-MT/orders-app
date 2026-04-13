@@ -56,7 +56,7 @@ export default function OrdersListScreen() {
         ListHeaderComponent={
           <>
             <OpenOrdersList />
-            <Text style={styles.sectionTitle}>Historial</Text>
+            <Text style={styles.sectionTitle}>HISTORIAL</Text>
             <View style={styles.searchContainer}>
               <Ionicons name='search-outline' size={18} color={theme.textMuted} />
               <TextInput
@@ -124,7 +124,7 @@ const makeStyles = (theme: Theme) =>
       gap: 8
     },
     searchInput: { flex: 1, color: theme.textPrimary },
-    sectionTitle: { textAlign: 'center', marginBottom: 8, fontSize: 18, color: theme.textPrimary },
+    sectionTitle: { fontSize: 11, fontWeight: '700', color: theme.textMuted, letterSpacing: 1, marginBottom: 12, marginHorizontal: 16 },
     pagination: {
       flexDirection: 'row',
       justifyContent: 'space-between',

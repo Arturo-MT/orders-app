@@ -100,20 +100,23 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
   const displayName = order.table_name || order.customer_name
   const isTakeaway = order.type === 'TAKEAWAY'
 
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    const isToday = date.toDateString() === new Date().toDateString()
+    return isToday
+      ? date.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })
+      : date.toLocaleDateString('es', { day: '2-digit', month: 'short' })
+  }
+
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { borderLeftColor: isTakeaway ? '#e0a020' : theme.success }]}>
       <TouchableOpacity onPress={toggle} style={styles.cardHeader}>
         <View style={styles.headerRow}>
           <View style={styles.headerLeft}>
-            <Text style={styles.title}>(#{order.order_number}) {displayName}</Text>
-            <Text style={styles.subtitle}>{new Date(order.created_at).toLocaleString()}</Text>
+            <Text style={styles.title}>{displayName}</Text>
+            <Text style={styles.subtitle}>#{order.order_number} · {formatDate(order.created_at)}</Text>
           </View>
           <View style={styles.headerRight}>
-            <View style={[styles.typeBadge, isTakeaway ? styles.takeawayBadge : styles.dineInBadge]}>
-              <Text style={[styles.typeBadgeText, isTakeaway ? styles.takeawayText : styles.dineInText]}>
-                {isTakeaway ? 'Llevar' : 'Aquí'}
-              </Text>
-            </View>
             {orderTotal > 0 && (
               <Text style={styles.totalHeader}>${orderTotal.toFixed(2)}</Text>
             )}
@@ -180,19 +183,13 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
 
 const makeStyles = (theme: Theme) =>
   StyleSheet.create({
-    card: { backgroundColor: theme.surface, borderRadius: 8, marginBottom: 10 },
-    cardHeader: { backgroundColor: theme.borderLight, padding: 12, borderRadius: 8 },
+    card: { backgroundColor: theme.surface, borderRadius: 8, marginBottom: 8, borderLeftWidth: 3 },
+    cardHeader: { padding: 12 },
     headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     headerLeft: { flex: 1, marginRight: 8 },
     headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    title: { fontSize: 16, fontWeight: '600', color: theme.textPrimary },
-    subtitle: { fontSize: 12, color: theme.textSecondary, marginTop: 2 },
-    typeBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 },
-    takeawayBadge: { backgroundColor: '#f1aa1c33' },
-    dineInBadge: { backgroundColor: '#5A7A5233' },
-    typeBadgeText: { fontSize: 11, fontWeight: '700' },
-    takeawayText: { color: '#a07010' },
-    dineInText: { color: theme.success },
+    title: { fontSize: 15, fontWeight: '600', color: theme.textPrimary },
+    subtitle: { fontSize: 12, color: theme.textMuted, marginTop: 2 },
     totalHeader: { fontSize: 14, fontWeight: '700', color: theme.textPrimary },
     details: { padding: 12 },
     status: { fontWeight: '500', marginBottom: 6, color: theme.textPrimary },
