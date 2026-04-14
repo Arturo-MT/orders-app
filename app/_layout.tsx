@@ -5,23 +5,26 @@ import { FetchProvider } from './context/FetchContext'
 import { StoreProvider } from './context/StoreContext'
 import { ToastProvider } from './context/ToastContext'
 import { ThemeProvider } from './context/ThemeContext'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 
 const queryClient = new QueryClient()
 
 export default function RootLayout() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <StoreProvider>
-            <FetchProvider>
-              <ToastProvider>
-                <Slot />
-              </ToastProvider>
-            </FetchProvider>
-          </StoreProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
+            <StoreProvider>
+              <FetchProvider>
+                <ToastProvider>
+                  <Slot />
+                </ToastProvider>
+              </FetchProvider>
+            </StoreProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   )
 }

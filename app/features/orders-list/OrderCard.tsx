@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react'
+import React, { useRef, useState, useEffect } from 'react'
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator
+  ActivityIndicator,
+  Animated
 } from 'react-native'
+import Swipeable from 'react-native-gesture-handler/Swipeable'
 import { Ionicons } from '@expo/vector-icons'
 import { useCloseOrderMutation, useOrderQuery } from '@/hooks/api/orders'
 import { useStoreQuery } from '@/hooks/api/store'
@@ -40,6 +42,8 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
   const state = getOrderState(order.id)
   const [expanded, setExpanded] = useState(state.expanded)
   const [paidItems, setPaidItems] = useState(state.paidItems)
+  const swipeableRef = useRef<Swipeable>(null)
+  const canClose = order.status === 'OPEN' || order.status === 'UNPAID'
 
   useEffect(() => { setOrderExpanded(order.id, expanded) }, [expanded, order.id])
 
@@ -59,12 +63,14 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
   const closeOrderMutation = useCloseOrderMutation()
 
   const handleCloseOrder = async () => {
+    if (closeOrderMutation.isPending) return
     try {
       await closeOrderMutation.mutateAsync({ order_id: order.id, table_id: order.table_id })
       showToast('Orden cerrada', 'success')
       onRemove?.(order.id)
     } catch {
       showToast('Error al cerrar la orden', 'error')
+      swipeableRef.current?.close()
     }
   }
 
@@ -108,7 +114,25 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
       : date.toLocaleDateString('es', { day: '2-digit', month: 'short' })
   }
 
-  return (
+  const renderRightActions = (progress: Animated.AnimatedInterpolation<number>) => {
+    const scale = progress.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1], extrapolate: 'clamp' })
+    const opacity = progress.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 0.7, 1], extrapolate: 'clamp' })
+    return (
+      <Animated.View style={[styles.swipeAction, { opacity }]}>
+        <Animated.View style={{ alignItems: 'center', transform: [{ scale }] }}>
+          {closeOrderMutation.isPending
+            ? <ActivityIndicator size='small' color='white' />
+            : <>
+                <Ionicons name='checkmark-done-outline' size={22} color='white' />
+                <Text style={styles.swipeText}>Cerrar</Text>
+              </>
+          }
+        </Animated.View>
+      </Animated.View>
+    )
+  }
+
+  const card = (
     <View style={[styles.card, { borderLeftColor: isTakeaway ? '#e0a020' : theme.success }]}>
       <TouchableOpacity onPress={toggle} style={styles.cardHeader}>
         <View style={styles.headerRow}>
@@ -179,6 +203,20 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
       )}
     </View>
   )
+
+  if (!canClose) return card
+
+  return (
+    <Swipeable
+      ref={swipeableRef}
+      renderRightActions={renderRightActions}
+      rightThreshold={80}
+      overshootRight={false}
+      onSwipeableOpen={handleCloseOrder}
+    >
+      {card}
+    </Swipeable>
+  )
 }
 
 const makeStyles = (theme: Theme) =>
@@ -202,6 +240,8 @@ const makeStyles = (theme: Theme) =>
     closeButton: { padding: 6, backgroundColor: theme.primary, borderRadius: 6 },
     printButton: { padding: 6, borderRadius: 6 },
     itemInfo: { flex: 1, marginLeft: 6 },
+    swipeAction: { backgroundColor: theme.primary, justifyContent: 'center', alignItems: 'center', width: 80, marginBottom: 8, borderRadius: 8 },
+    swipeText: { color: 'white', fontSize: 11, fontWeight: '600', marginTop: 2 },
     itemPaidText: { textDecorationLine: 'line-through', color: theme.textMuted },
     disabledButton: { opacity: 0.6 }
   })
