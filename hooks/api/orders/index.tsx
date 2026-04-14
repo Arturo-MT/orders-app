@@ -53,6 +53,7 @@ export function useOrderQuery({ order_id, enabled = true }: { order_id: string; 
             name
           ),
           order_item (
+            id,
             product_id,
             quantity,
             base_price,
@@ -79,6 +80,7 @@ export function useOrderQuery({ order_id, enabled = true }: { order_id: string; 
         created_at: data.created_at,
         closed_at: data.closed_at,
         items: data.order_item.map((item: any) => ({
+          id: item.id,
           product_id: item.product_id,
           product_name: item.product?.name ?? '',
           quantity: item.quantity,
