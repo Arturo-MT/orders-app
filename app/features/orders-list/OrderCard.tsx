@@ -42,6 +42,7 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
   const state = getOrderState(order.id)
   const [expanded, setExpanded] = useState(state.expanded)
   const [paidItems, setPaidItems] = useState(state.paidItems)
+  const [isPrinting, setIsPrinting] = useState(false)
   const swipeableRef = useRef<Swipeable>(null)
   const canClose = order.status === 'OPEN' || order.status === 'UNPAID'
 
@@ -79,7 +80,8 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
   }
 
   const handlePrint = async () => {
-    if (!orderData) return
+    if (!orderData || isPrinting) return
+    setIsPrinting(true)
     const printPayload: PrintOrder = {
       order_number: orderData.order_number,
       type: orderData.type,
@@ -95,11 +97,15 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
         notes: item.notes ?? undefined
       }))
     }
-    const { success, error } = await printKitchenOrder(printPayload, storeData?.printer_address)
-    if (success) {
-      showToast('Orden impresa correctamente', 'success')
-    } else {
-      showToast(`Error al imprimir: ${error}`, 'error')
+    try {
+      const { success, error } = await printKitchenOrder(printPayload, storeData?.printer_address)
+      if (success) {
+        showToast('Orden impresa correctamente', 'success')
+      } else {
+        showToast(`Error al imprimir: ${error}`, 'error')
+      }
+    } finally {
+      setIsPrinting(false)
     }
   }
 
@@ -184,8 +190,11 @@ export default function OrderCard({ order, variant = 'default', onOpenOrder, onR
               <Text style={styles.summaryText}>Pendiente: ${(orderTotal - paidTotal).toFixed(2)}</Text>
 
               <View style={styles.actions}>
-                <TouchableOpacity onPress={handlePrint} style={styles.printButton} disabled={closeOrderMutation.isPending}>
-                  <Ionicons name='print-outline' size={26} color={theme.textPrimary} />
+                <TouchableOpacity onPress={handlePrint} style={styles.printButton} disabled={closeOrderMutation.isPending || isPrinting}>
+                  {isPrinting
+                    ? <ActivityIndicator size='small' color={theme.textPrimary} />
+                    : <Ionicons name='print-outline' size={26} color={theme.textPrimary} />
+                  }
                 </TouchableOpacity>
                 {(orderData?.status === 'OPEN' || orderData?.status === 'UNPAID') && (
                   <TouchableOpacity

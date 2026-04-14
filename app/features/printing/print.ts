@@ -67,22 +67,46 @@ const normalizeTextForPrinter = (text: string): string =>
     .replace(/[^\x20-\x7E]/g, '')
     .replace(/\s+/g, ' ')
 
+const wrapWords = (text: string, maxWidth: number): string[] => {
+  const words = text.trim().split(' ')
+  const lines: string[] = []
+  let current = ''
+
+  for (const word of words) {
+    if (current.length === 0) {
+      current = word
+    } else if (current.length + 1 + word.length <= maxWidth) {
+      current += ' ' + word
+    } else {
+      lines.push(current)
+      current = word
+    }
+  }
+  if (current.length > 0) lines.push(current)
+  return lines
+}
+
 /* =========================
    FUNCIÓN PRINCIPAL
    ========================= */
 
 const CONNECT_TIMEOUT_MS = 10_000
 
-const connectWithTimeout = (address: string): Promise<void> =>
-  Promise.race([
-    BluetoothManager.connect(address) as Promise<void>,
-    new Promise<never>((_, reject) =>
-      setTimeout(
+const connectWithTimeout = (address: string): Promise<void> => {
+  let timerId: ReturnType<typeof setTimeout>
+  return Promise.race([
+    (BluetoothManager.connect(address) as Promise<void>).then((v) => {
+      clearTimeout(timerId)
+      return v
+    }),
+    new Promise<never>((_, reject) => {
+      timerId = setTimeout(
         () => reject(new Error('Tiempo de conexión agotado (10s)')),
         CONNECT_TIMEOUT_MS
       )
-    )
+    })
   ])
+}
 
 const executePrint = async (order: PrintOrder): Promise<void> => {
   /* ---------- LOGO ---------- */
@@ -90,7 +114,7 @@ const executePrint = async (order: PrintOrder): Promise<void> => {
     width: 300,
     left: 130
   })
-  await new Promise<void>((resolve) => setTimeout(resolve, 800))
+  await new Promise<void>((resolve) => setTimeout(resolve, 1200))
 
   await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT)
 
@@ -100,11 +124,11 @@ const executePrint = async (order: PrintOrder): Promise<void> => {
   headerLines.push(`Comanda: ${order.order_number}`)
 
   if (order.table_name) {
-    headerLines.push(`Mesa: ${order.table_name ?? '-'}`)
+    headerLines.push(`Mesa: ${normalizeTextForPrinter(order.table_name)}`)
   }
 
   if (order.customer_name) {
-    headerLines.push(`Cliente: ${order.customer_name}`)
+    headerLines.push(`Cliente: ${normalizeTextForPrinter(order.customer_name)}`)
   }
 
   headerLines.push(`Estado: ${order.is_paid ? 'Pagada' : 'Pendiente'}`)
@@ -148,16 +172,34 @@ const executePrint = async (order: PrintOrder): Promise<void> => {
     const quantity = item.quantity.toString()
     const price = (item.price * item.quantity).toFixed(2)
 
-    await BluetoothEscposPrinter.printColumn(
-      columnWidths,
-      [
-        BluetoothEscposPrinter.ALIGN.LEFT,
-        BluetoothEscposPrinter.ALIGN.CENTER,
-        BluetoothEscposPrinter.ALIGN.RIGHT
-      ],
-      [name, quantity, price],
-      fontConfig
-    )
+    if (name.length <= columnWidths[0]) {
+      await BluetoothEscposPrinter.printColumn(
+        columnWidths,
+        [
+          BluetoothEscposPrinter.ALIGN.LEFT,
+          BluetoothEscposPrinter.ALIGN.CENTER,
+          BluetoothEscposPrinter.ALIGN.RIGHT
+        ],
+        [name, quantity, price],
+        fontConfig
+      )
+    } else {
+      const lineWidth = columnWidths.reduce((a, b) => a + b, 0)
+      const nameLines = wrapWords(name, lineWidth)
+      for (const line of nameLines) {
+        await BluetoothEscposPrinter.printText(`${line}\n`, fontConfig)
+      }
+      await BluetoothEscposPrinter.printColumn(
+        columnWidths,
+        [
+          BluetoothEscposPrinter.ALIGN.LEFT,
+          BluetoothEscposPrinter.ALIGN.CENTER,
+          BluetoothEscposPrinter.ALIGN.RIGHT
+        ],
+        ['', quantity, price],
+        fontConfig
+      )
+    }
 
     if (item.notes?.trim()) {
       await BluetoothEscposPrinter.printText(
@@ -187,6 +229,8 @@ const executePrint = async (order: PrintOrder): Promise<void> => {
 
   await BluetoothEscposPrinter.printText('\n\n\n', {})
   await BluetoothEscposPrinter.cutOnePoint()
+  /* Dar tiempo a que la impresora vacíe su buffer antes de desconectar */
+  await new Promise<void>((resolve) => setTimeout(resolve, 600))
 }
 
 const executePrintKitchen = async (order: PrintOrder): Promise<void> => {
@@ -195,7 +239,7 @@ const executePrintKitchen = async (order: PrintOrder): Promise<void> => {
     width: 300,
     left: 130
   })
-  await new Promise<void>((resolve) => setTimeout(resolve, 800))
+  await new Promise<void>((resolve) => setTimeout(resolve, 1200))
 
   await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.CENTER)
 
@@ -204,7 +248,7 @@ const executePrintKitchen = async (order: PrintOrder): Promise<void> => {
 
   if (order.table_name) {
     await BluetoothEscposPrinter.printText(
-      `Mesa: ${order.table_name}\n`,
+      `Mesa: ${normalizeTextForPrinter(order.table_name)}\n`,
       fontConfig
     )
   }
@@ -229,12 +273,22 @@ const executePrintKitchen = async (order: PrintOrder): Promise<void> => {
   for (const item of order.items) {
     const name = normalizeTextForPrinter(item.name)
 
-    await BluetoothEscposPrinter.printColumn(
-      [5, 19],
-      [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.LEFT],
-      [`x${item.quantity}`, name],
-      fontConfig
-    )
+    if (name.length <= 19) {
+      await BluetoothEscposPrinter.printColumn(
+        [5, 19],
+        [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.LEFT],
+        [`x${item.quantity}`, name],
+        fontConfig
+      )
+    } else {
+      const prefix = `x${item.quantity} `
+      const nameLines = wrapWords(name, 24 - prefix.length)
+      await BluetoothEscposPrinter.printText(`${prefix}${nameLines[0]}\n`, fontConfig)
+      const indent = ' '.repeat(prefix.length)
+      for (const line of nameLines.slice(1)) {
+        await BluetoothEscposPrinter.printText(`${indent}${line}\n`, fontConfig)
+      }
+    }
 
     if (item.notes?.trim()) {
       await BluetoothEscposPrinter.printText(
@@ -252,6 +306,8 @@ const executePrintKitchen = async (order: PrintOrder): Promise<void> => {
 
   await BluetoothEscposPrinter.printText('\n\n\n', {})
   await BluetoothEscposPrinter.cutOnePoint()
+  /* Dar tiempo a que la impresora vacíe su buffer antes de desconectar */
+  await new Promise<void>((resolve) => setTimeout(resolve, 600))
 }
 
 export const printOrder = async (
@@ -270,15 +326,23 @@ export const printOrder = async (
     }
   }
 
-  const attempt = async (): Promise<void> => {
-    await connectWithTimeout(printerAddress)
-    await executePrint(order)
+  const disconnect = async () => {
     try {
       await BluetoothManager.disconnect(printerAddress)
     } catch {
       /* ignorar */
     }
   }
+
+  const attempt = async (): Promise<void> => {
+    await connectWithTimeout(printerAddress)
+    await executePrint(order)
+    await disconnect()
+  }
+
+  /* Limpiar posible conexión colgada antes del primer intento */
+  await disconnect()
+  await new Promise<void>((resolve) => setTimeout(resolve, 400))
 
   try {
     await attempt()
@@ -288,12 +352,8 @@ export const printOrder = async (
       'Primer intento de impresión fallido, reintentando...',
       firstError?.message
     )
-    try {
-      await BluetoothManager.disconnect(printerAddress)
-    } catch {
-      /* ignorar */
-    }
-    await new Promise<void>((resolve) => setTimeout(resolve, 800))
+    await disconnect()
+    await new Promise<void>((resolve) => setTimeout(resolve, 1500))
 
     try {
       await attempt()
@@ -324,15 +384,23 @@ export const printKitchenOrder = async (
     }
   }
 
-  const attempt = async (): Promise<void> => {
-    await connectWithTimeout(printerAddress)
-    await executePrintKitchen(order)
+  const disconnect = async () => {
     try {
       await BluetoothManager.disconnect(printerAddress)
     } catch {
       /* ignorar */
     }
   }
+
+  const attempt = async (): Promise<void> => {
+    await connectWithTimeout(printerAddress)
+    await executePrintKitchen(order)
+    await disconnect()
+  }
+
+  /* Limpiar posible conexión colgada antes del primer intento */
+  await disconnect()
+  await new Promise<void>((resolve) => setTimeout(resolve, 400))
 
   try {
     await attempt()
@@ -342,12 +410,8 @@ export const printKitchenOrder = async (
       'Primer intento de impresión cocina fallido, reintentando...',
       firstError?.message
     )
-    try {
-      await BluetoothManager.disconnect(printerAddress)
-    } catch {
-      /* ignorar */
-    }
-    await new Promise<void>((resolve) => setTimeout(resolve, 800))
+    await disconnect()
+    await new Promise<void>((resolve) => setTimeout(resolve, 1500))
 
     try {
       await attempt()
