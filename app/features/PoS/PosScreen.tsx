@@ -93,7 +93,7 @@ export default function PosScreen() {
   /* ---------- total ---------- */
 
   const total = useMemo(
-    () => order.items.reduce((acc, item) => acc + item.price, 0),
+    () => order.items.reduce((acc, item) => acc + item.price * item.quantity, 0),
     [order.items]
   )
 

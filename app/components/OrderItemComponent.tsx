@@ -55,10 +55,7 @@ export default function OrderItemComponent({ item, onUpdate, onRemove }: Props) 
       <View style={styles.quantityControls}>
         <TouchableOpacity
           disabled={item.quantity <= 1}
-          onPress={() => {
-            const newQty = item.quantity - 1
-            onUpdate({ quantity: newQty, price: item.base_price * newQty })
-          }}
+          onPress={() => onUpdate({ quantity: item.quantity - 1 })}
         >
           <Ionicons
             name='remove-circle'
@@ -77,10 +74,7 @@ export default function OrderItemComponent({ item, onUpdate, onRemove }: Props) 
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => {
-            const newQty = item.quantity + 1
-            onUpdate({ quantity: newQty, price: item.base_price * newQty })
-          }}
+          onPress={() => onUpdate({ quantity: item.quantity + 1 })}
         >
           <Ionicons name='add-circle' size={20} color={theme.textPrimary} />
         </TouchableOpacity>
@@ -94,7 +88,7 @@ export default function OrderItemComponent({ item, onUpdate, onRemove }: Props) 
             setPriceModalVisible(true)
           }}
         >
-          <Text style={styles.priceBadgeText}>${item.price.toFixed(0)}</Text>
+          <Text style={styles.priceBadgeText}>${(item.price * item.quantity).toFixed(0)}</Text>
         </TouchableOpacity>
       ) : (
         <View style={styles.priceWrapper}>
@@ -168,8 +162,7 @@ export default function OrderItemComponent({ item, onUpdate, onRemove }: Props) 
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => {
-                  const newQty = Math.max(1, Number(tempQty) || 1)
-                  onUpdate({ quantity: newQty, price: item.base_price * newQty })
+                  onUpdate({ quantity: Math.max(1, Number(tempQty) || 1) })
                   setQtyModalVisible(false)
                 }}
                 style={[styles.modalButton, { backgroundColor: theme.primary }]}
@@ -203,8 +196,7 @@ export default function OrderItemComponent({ item, onUpdate, onRemove }: Props) 
               <TouchableOpacity
                 onPress={() => {
                   const newPrice = Number(tempPrice) || 0
-                  const unitPrice = item.quantity > 0 ? newPrice / item.quantity : newPrice
-                  onUpdate({ price: newPrice, base_price: unitPrice })
+                  onUpdate({ price: newPrice, base_price: newPrice })
                   setPriceModalVisible(false)
                 }}
                 style={[styles.modalButton, { backgroundColor: theme.primary }]}
