@@ -12,6 +12,7 @@ import {
 import Swipeable from 'react-native-gesture-handler/Swipeable'
 import { Ionicons } from '@expo/vector-icons'
 import { useChangeTableMutation, useCloseOrderMutation, useOrderQuery, useReopenOrderMutation } from '@/hooks/api/orders'
+import { useElapsedTime } from '@/hooks/utils/useElapsedTime'
 import { useStoreQuery } from '@/hooks/api/store'
 import { useTablesQuery } from '@/hooks/api/tables'
 import { printKitchenOrder, PrintOrder } from '../printing/print'
@@ -50,6 +51,7 @@ export default function OrderCard({ order, onRemove }: Props) {
   const [tableModalVisible, setTableModalVisible] = useState(false)
   const swipeableRef = useRef<Swipeable>(null)
   const canClose = order.status === 'OPEN' || order.status === 'UNPAID'
+  const elapsedLabel = useElapsedTime(order.created_at)
 
   useEffect(() => {
     setOrderExpanded(order.id, expanded)
@@ -217,9 +219,16 @@ export default function OrderCard({ order, onRemove }: Props) {
         <View style={styles.headerRow}>
           <View style={styles.headerLeft}>
             <Text style={styles.title}>{displayName}</Text>
-            <Text style={styles.subtitle}>
-              #{order.order_number} · {formatDate(order.created_at)}
-            </Text>
+            <View style={styles.subtitleRow}>
+              <Text style={styles.subtitle}>
+                #{order.order_number} · {formatDate(order.created_at)}
+              </Text>
+              {canClose && (
+                <View style={styles.elapsedBadge}>
+                  <Text style={styles.elapsedText}>{elapsedLabel}</Text>
+                </View>
+              )}
+            </View>
           </View>
           <View style={styles.headerRight}>
             <Ionicons
@@ -487,5 +496,8 @@ const makeStyles = (theme: Theme) =>
     tableItemText: { flex: 1, fontSize: 15, fontWeight: '600', color: theme.textPrimary },
     tableItemTextActive: { color: theme.textOnPrimary },
     tableItemTextMuted: { color: theme.textMuted },
-    occupiedBadge: { fontSize: 11, color: theme.textMuted, fontStyle: 'italic' }
+    occupiedBadge: { fontSize: 11, color: theme.textMuted, fontStyle: 'italic' },
+    subtitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
+    elapsedBadge: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4, backgroundColor: theme.borderLight },
+    elapsedText: { fontSize: 11, fontWeight: '600', color: theme.textSecondary }
   })
