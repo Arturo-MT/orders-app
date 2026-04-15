@@ -264,8 +264,7 @@ export default function OrderPanel({
                   key={table.id}
                   style={[
                     styles.tableItem,
-                    order.table_id === table.id && styles.tableItemActive,
-                    table.is_occupied && order.table_id !== table.id && styles.tableItemOccupied
+                    order.table_id === table.id && styles.tableItemActive
                   ]}
                   onPress={() => handleSelectTable({ id: table.id, name: table.name })}
                 >
@@ -277,8 +276,7 @@ export default function OrderPanel({
                   <Text
                     style={[
                       styles.tableItemText,
-                      order.table_id === table.id && styles.tableItemTextActive,
-                      table.is_occupied && order.table_id !== table.id && styles.tableItemTextOccupied
+                      order.table_id === table.id && styles.tableItemTextActive
                     ]}
                   >
                     {table.name}

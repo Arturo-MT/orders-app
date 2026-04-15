@@ -372,8 +372,7 @@ export default function OrderCard({ order, onRemove }: Props) {
                   key={table.id}
                   style={[
                     styles.tableItem,
-                    table.id === order.table_id && styles.tableItemActive,
-                    table.is_occupied && table.id !== order.table_id && styles.tableItemOccupied
+                    table.id === order.table_id && styles.tableItemActive
                   ]}
                   onPress={() => handleChangeTable(table.id)}
                 >
@@ -384,8 +383,7 @@ export default function OrderCard({ order, onRemove }: Props) {
                   />
                   <Text style={[
                     styles.tableItemText,
-                    table.id === order.table_id && styles.tableItemTextActive,
-                    table.is_occupied && table.id !== order.table_id && styles.tableItemTextMuted
+                    table.id === order.table_id && styles.tableItemTextActive
                   ]}>
                     {table.name}
                   </Text>
