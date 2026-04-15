@@ -76,7 +76,7 @@ export function useOrderQuery({ order_id, enabled = true }: { order_id: string; 
         type: data.type,
         status: data.status,
         customer_name: data.customer_name,
-        table_name: (data.dining_table as any)?.[0]?.name ?? null,
+        table_name: (data.dining_table as any)?.name ?? null,
         created_at: data.created_at,
         closed_at: data.closed_at,
         items: data.order_item.map((item: any) => ({
