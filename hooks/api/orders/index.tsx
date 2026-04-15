@@ -18,7 +18,7 @@ export function useCreateOrder(config = {}) {
         payload,
         storeId: activeStore!.id
       }),
-    onSuccess: (data, variables) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [ORDERS_KEY] })
       if (data?.order_id) {
         queryClient.invalidateQueries({
@@ -76,7 +76,7 @@ export function useOrderQuery({ order_id, enabled = true }: { order_id: string; 
         type: data.type,
         status: data.status,
         customer_name: data.customer_name,
-        table_name: data.dining_table?.name ?? null,
+        table_name: (data.dining_table as any)?.[0]?.name ?? null,
         created_at: data.created_at,
         closed_at: data.closed_at,
         items: data.order_item.map((item: any) => ({
@@ -222,6 +222,93 @@ export function useCloseOrderMutation() {
       queryClient.invalidateQueries({ queryKey: ['openOrderIds'] })
       queryClient.invalidateQueries({ queryKey: [ORDERS_KEY] })
       clearOrderState(variables.order_id)
+    }
+  })
+}
+
+export function useChangeTableMutation() {
+  const { client } = useFetch()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      order_id,
+      old_table_id,
+      new_table_id
+    }: {
+      order_id: string
+      old_table_id: string | null
+      new_table_id: string
+    }) => {
+      const { error } = await client
+        .from('order')
+        .update({ table_id: new_table_id })
+        .eq('id', order_id)
+
+      if (error) throw error
+
+      if (old_table_id) {
+        const { error: oldTableError } = await client
+          .from('dining_table')
+          .update({ is_occupied: false })
+          .eq('id', old_table_id)
+
+        if (oldTableError) throw oldTableError
+      }
+
+      const { error: newTableError } = await client
+        .from('dining_table')
+        .update({ is_occupied: true })
+        .eq('id', new_table_id)
+
+      if (newTableError) throw newTableError
+    },
+
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['order', variables.order_id] })
+      queryClient.invalidateQueries({ queryKey: ['openOrderIds'] })
+      queryClient.invalidateQueries({ queryKey: ['table_order'] })
+    }
+  })
+}
+
+export function useReopenOrderMutation() {
+  const { client } = useFetch()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      order_id,
+      order_type,
+      table_id
+    }: {
+      order_id: string
+      order_type: 'DINE_IN' | 'TAKEAWAY'
+      table_id?: string | null
+    }) => {
+      const newStatus = order_type === 'DINE_IN' ? 'OPEN' : 'UNPAID'
+
+      const { error } = await client
+        .from('order')
+        .update({ status: newStatus, closed_at: null })
+        .eq('id', order_id)
+
+      if (error) throw error
+
+      if (table_id) {
+        const { error: tableError } = await client
+          .from('dining_table')
+          .update({ is_occupied: true })
+          .eq('id', table_id)
+
+        if (tableError) throw tableError
+      }
+    },
+
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['order', variables.order_id] })
+      queryClient.invalidateQueries({ queryKey: ['openOrderIds'] })
+      queryClient.invalidateQueries({ queryKey: [ORDERS_KEY] })
     }
   })
 }

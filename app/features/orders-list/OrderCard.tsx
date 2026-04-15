@@ -5,12 +5,15 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Animated
+  Animated,
+  Modal,
+  ScrollView
 } from 'react-native'
 import Swipeable from 'react-native-gesture-handler/Swipeable'
 import { Ionicons } from '@expo/vector-icons'
-import { useCloseOrderMutation, useOrderQuery } from '@/hooks/api/orders'
+import { useChangeTableMutation, useCloseOrderMutation, useOrderQuery, useReopenOrderMutation } from '@/hooks/api/orders'
 import { useStoreQuery } from '@/hooks/api/store'
+import { useTablesQuery } from '@/hooks/api/tables'
 import { printKitchenOrder, PrintOrder } from '../printing/print'
 import CustomCheckbox from '@/app/components/CustomCheckbox'
 import {
@@ -33,17 +36,10 @@ interface Props {
     table_id: string | null
     created_at: string
   }
-  variant?: 'default' | 'open'
-  onOpenOrder?: (orderId: string) => void
   onRemove?: (orderId: string) => void
 }
 
-export default function OrderCard({
-  order,
-  variant = 'default',
-  onOpenOrder,
-  onRemove
-}: Props) {
+export default function OrderCard({ order, onRemove }: Props) {
   const { showToast } = useToast()
   const { theme } = useTheme()
   const styles = makeStyles(theme)
@@ -51,6 +47,7 @@ export default function OrderCard({
   const [expanded, setExpanded] = useState(state.expanded)
   const [paidItems, setPaidItems] = useState(state.paidItems)
   const [isPrinting, setIsPrinting] = useState(false)
+  const [tableModalVisible, setTableModalVisible] = useState(false)
   const swipeableRef = useRef<Swipeable>(null)
   const canClose = order.status === 'OPEN' || order.status === 'UNPAID'
 
@@ -80,6 +77,38 @@ export default function OrderCard({
       0
     ) ?? 0
   const closeOrderMutation = useCloseOrderMutation()
+  const reopenOrderMutation = useReopenOrderMutation()
+  const changeTableMutation = useChangeTableMutation()
+  const { data: tables } = useTablesQuery()
+
+  const handleChangeTable = async (newTableId: string) => {
+    setTableModalVisible(false)
+    if (newTableId === order.table_id) return
+    try {
+      await changeTableMutation.mutateAsync({
+        order_id: order.id,
+        old_table_id: order.table_id,
+        new_table_id: newTableId
+      })
+      showToast('Mesa actualizada', 'success')
+    } catch {
+      showToast('Error al cambiar la mesa', 'error')
+    }
+  }
+
+  const handleReopenOrder = async () => {
+    if (reopenOrderMutation.isPending) return
+    try {
+      await reopenOrderMutation.mutateAsync({
+        order_id: order.id,
+        order_type: order.type,
+        table_id: order.table_id
+      })
+      showToast('Orden reabierta', 'success')
+    } catch {
+      showToast('Error al reabrir la orden', 'error')
+    }
+  }
 
   const handleCloseOrder = async () => {
     if (closeOrderMutation.isPending) return
@@ -266,6 +295,31 @@ export default function OrderCard({
                     />
                   )}
                 </TouchableOpacity>
+                {orderData?.status === 'CLOSED' && (
+                  <TouchableOpacity
+                    onPress={handleReopenOrder}
+                    style={[
+                      styles.reopenButton,
+                      reopenOrderMutation.isPending && styles.disabledButton
+                    ]}
+                    disabled={reopenOrderMutation.isPending}
+                  >
+                    {reopenOrderMutation.isPending
+                      ? <ActivityIndicator size='small' color={theme.textOnPrimary} />
+                      : <Ionicons name='arrow-undo-outline' size={26} color={theme.textOnPrimary} />
+                    }
+                  </TouchableOpacity>
+                )}
+                {(orderData?.status === 'OPEN' || orderData?.status === 'UNPAID') &&
+                  order.type === 'DINE_IN' && (
+                  <TouchableOpacity
+                    onPress={() => setTableModalVisible(true)}
+                    style={styles.tableButton}
+                    disabled={changeTableMutation.isPending}
+                  >
+                    <Ionicons name='restaurant-outline' size={26} color={theme.textPrimary} />
+                  </TouchableOpacity>
+                )}
                 {(orderData?.status === 'OPEN' ||
                   orderData?.status === 'UNPAID') && (
                   <TouchableOpacity
@@ -288,6 +342,56 @@ export default function OrderCard({
           )}
         </View>
       )}
+
+      <Modal
+        visible={tableModalVisible}
+        transparent
+        animationType='slide'
+        onRequestClose={() => setTableModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Cambiar mesa</Text>
+              <TouchableOpacity onPress={() => setTableModalVisible(false)}>
+                <Ionicons name='close' size={24} color={theme.textPrimary} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView contentContainerStyle={styles.tableList}>
+              {tables?.map((table) => (
+                <TouchableOpacity
+                  key={table.id}
+                  style={[
+                    styles.tableItem,
+                    table.id === order.table_id && styles.tableItemActive,
+                    table.is_occupied && table.id !== order.table_id && styles.tableItemOccupied
+                  ]}
+                  onPress={() => handleChangeTable(table.id)}
+                >
+                  <Ionicons
+                    name='restaurant-outline'
+                    size={20}
+                    color={table.id === order.table_id ? theme.textOnPrimary : theme.textSecondary}
+                  />
+                  <Text style={[
+                    styles.tableItemText,
+                    table.id === order.table_id && styles.tableItemTextActive,
+                    table.is_occupied && table.id !== order.table_id && styles.tableItemTextMuted
+                  ]}>
+                    {table.name}
+                  </Text>
+                  {table.is_occupied && table.id !== order.table_id && (
+                    <Text style={styles.occupiedBadge}>ocupada</Text>
+                  )}
+                  {table.id === order.table_id && (
+                    <Ionicons name='checkmark-circle' size={18} color={theme.textOnPrimary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   )
 
@@ -369,5 +473,19 @@ const makeStyles = (theme: Theme) =>
       textDecorationLine: 'line-through',
       color: theme.textMuted
     },
-    disabledButton: { opacity: 0.6 }
+    disabledButton: { opacity: 0.6 },
+    reopenButton: { width: 42, height: 42, backgroundColor: theme.textSecondary, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
+    tableButton: { width: 42, height: 42, borderRadius: 6, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.border },
+    modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: theme.overlay },
+    modalContent: { backgroundColor: theme.background, borderTopLeftRadius: 16, borderTopRightRadius: 16, maxHeight: '60%', paddingBottom: 20 },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: theme.border },
+    modalTitle: { fontSize: 17, fontWeight: 'bold', color: theme.textPrimary },
+    tableList: { padding: 12, gap: 8 },
+    tableItem: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 14, backgroundColor: theme.surface, borderRadius: 10, borderWidth: 1, borderColor: theme.border },
+    tableItemActive: { backgroundColor: theme.primary, borderColor: theme.primary },
+    tableItemOccupied: { opacity: 0.5 },
+    tableItemText: { flex: 1, fontSize: 15, fontWeight: '600', color: theme.textPrimary },
+    tableItemTextActive: { color: theme.textOnPrimary },
+    tableItemTextMuted: { color: theme.textMuted },
+    occupiedBadge: { fontSize: 11, color: theme.textMuted, fontStyle: 'italic' }
   })

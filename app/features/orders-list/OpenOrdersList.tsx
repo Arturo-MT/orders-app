@@ -38,7 +38,7 @@ const OrderCardWrapper = memo(function OrderCardWrapper({
   order: OrderSummary
   onRemove: (id: string) => void
 }) {
-  return <OrderCard order={order} variant='open' onRemove={() => onRemove(order.id)} />
+  return <OrderCard order={order} onRemove={() => onRemove(order.id)} />
 })
 
 export default function OpenOrdersList() {
