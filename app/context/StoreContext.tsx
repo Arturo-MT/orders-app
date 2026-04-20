@@ -2,11 +2,9 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from './AuthContext'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { Store, userStoresQuery } from '@/hooks/api/store/queries'
 
-export type Store = {
-  id: string
-  name: string
-}
+export type { Store }
 
 type StoreContextType = {
   stores: Store[]
@@ -53,23 +51,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const loadStores = async () => {
       setLoading(true)
 
-      const { data, error } = await supabase
-        .from('store_member')
-        .select('store(id, name)')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-
-      if (error) {
-        console.error('[StoreContext]', error)
+      let userStores: Store[] = []
+      try {
+        userStores = await userStoresQuery({ client: supabase, userId: user.id })
+      } catch (err) {
+        console.error('[StoreContext]', err)
         setStores([])
         _setActiveStore(null)
         setLoading(false)
         return
       }
-
-      const userStores = data
-        ?.map((row) => row.store)
-        .filter(Boolean) as unknown as Store[]
 
       setStores(userStores)
 

@@ -6,21 +6,6 @@ export type OrderCreateResponse = {
   order_number: string
 }
 
-export async function findOpenOrderByTable(
-  client: SupabaseClient,
-  tableId: string
-): Promise<{ id: string; order_number: string } | null> {
-  const { data, error } = await client
-    .from('order')
-    .select('id, order_number')
-    .eq('table_id', tableId)
-    .eq('status', 'OPEN')
-    .maybeSingle()
-
-  if (error) throw error
-  return data
-}
-
 export async function orderCreate({
   client,
   payload,
@@ -56,12 +41,7 @@ export async function orderCreate({
 
     orderId = data.order_id
     orderNumber = data.order_number
-  }
-
-  // =========================
-  // TAKEAWAY
-  // =========================
-  else {
+  } else {
     const hasCustomerName = !!payload.customer_name?.trim()
 
     if (!hasCustomerName) {
@@ -92,8 +72,106 @@ export async function orderCreate({
 
   if (itemsError) throw itemsError
 
-  return {
-    order_id: orderId,
-    order_number: orderNumber
+  return { order_id: orderId, order_number: orderNumber }
+}
+
+export async function closeOrder({
+  client,
+  orderId,
+  tableId
+}: {
+  client: SupabaseClient
+  orderId: string
+  tableId?: string | null
+}) {
+  const { data, error } = await client
+    .from('order')
+    .update({
+      status: 'CLOSED',
+      payment_status: 'PAID',
+      closed_at: new Date().toISOString()
+    })
+    .eq('id', orderId)
+    .select()
+
+  if (error) throw error
+  if (!data || data.length === 0) {
+    throw new Error('No se cerró ninguna orden (0 rows affected)')
+  }
+
+  if (tableId) {
+    const { error: tableError } = await client
+      .from('dining_table')
+      .update({ is_occupied: false })
+      .eq('id', tableId)
+
+    if (tableError) throw tableError
+  }
+}
+
+export async function changeOrderTable({
+  client,
+  orderId,
+  oldTableId,
+  newTableId
+}: {
+  client: SupabaseClient
+  orderId: string
+  oldTableId: string | null
+  newTableId: string
+}) {
+  const { error } = await client
+    .from('order')
+    .update({ table_id: newTableId })
+    .eq('id', orderId)
+
+  if (error) throw error
+
+  if (oldTableId) {
+    const { error: oldTableError } = await client
+      .from('dining_table')
+      .update({ is_occupied: false })
+      .eq('id', oldTableId)
+
+    if (oldTableError) throw oldTableError
+  }
+
+  const { error: newTableError } = await client
+    .from('dining_table')
+    .update({ is_occupied: true })
+    .eq('id', newTableId)
+
+  if (newTableError) throw newTableError
+}
+
+export async function reopenOrder({
+  client,
+  orderId,
+  tableId,
+  preparedAt,
+  dispatchedAt
+}: {
+  client: SupabaseClient
+  orderId: string
+  tableId?: string | null
+  preparedAt?: string | null
+  dispatchedAt?: string | null
+}) {
+  const status = dispatchedAt ? 'DISPATCHED' : preparedAt ? 'PREPARING' : 'OPEN'
+
+  const { error } = await client
+    .from('order')
+    .update({ status, payment_status: 'PENDING', closed_at: null })
+    .eq('id', orderId)
+
+  if (error) throw error
+
+  if (tableId) {
+    const { error: tableError } = await client
+      .from('dining_table')
+      .update({ is_occupied: true })
+      .eq('id', tableId)
+
+    if (tableError) throw tableError
   }
 }

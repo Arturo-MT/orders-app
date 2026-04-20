@@ -1,13 +1,14 @@
-import { supabase } from '@/lib/supabase'
 import { router } from 'expo-router'
 import { useState } from 'react'
 import { View, Text, Pressable, StyleSheet, TextInput } from 'react-native'
 import { useTheme } from '@/app/context/ThemeContext'
+import { useAuth } from '@/app/context/AuthContext'
 import { Theme } from '@/constants/Colors'
 
 export default function SupabaseAuthScreen() {
   const { theme } = useTheme()
   const styles = makeStyles(theme)
+  const { loginWithPassword, signUp } = useAuth()
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -20,8 +21,8 @@ export default function SupabaseAuthScreen() {
     try {
       setLoading(true)
       setError('')
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) { setError(error.message); return }
+      const { error } = await loginWithPassword({ email, password })
+      if (error) { setError(error); return }
       router.replace('/tabs/pos')
     } catch {
       setError('Ocurrió un error inesperado')
@@ -35,8 +36,8 @@ export default function SupabaseAuthScreen() {
       setLoading(true)
       setError('')
       if (password !== confirmPassword) { setError('Las contraseñas no coinciden'); return }
-      const { error } = await supabase.auth.signUp({ email, password })
-      if (error) { setError(error.message); return }
+      const { error } = await signUp({ email, password })
+      if (error) { setError(error); return }
       setMode('login')
       setInfo('Cuenta creada. Espera a que un administrador te asigne una tienda.')
     } catch {

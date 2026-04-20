@@ -129,15 +129,14 @@ export interface AuthContextType {
   loginWithPassword: (credentials: {
     email: string
     password: string
-  }) => Promise<void>
+  }) => Promise<{ error: string | null }>
+  signUp: (credentials: {
+    email: string
+    password: string
+  }) => Promise<{ error: string | null }>
   logout: () => void
   loading: boolean
   loginError: string | null
-  registerUser?: (details: {
-    username: string
-    email: string
-    password: string
-  }) => Promise<void>
 }
 
 export interface AuthState {

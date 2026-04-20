@@ -4,7 +4,8 @@
       "WebSearch",
       "Bash(claude mcp *)",
       "mcp__supabase__execute_sql",
-      "Read(//c/Users/artur/.claude/plans//**)"
+      "Read(//c/Users/artur/.claude/plans//**)",
+      "Bash(npx tsc *)"
     ]
   },
   "enabledMcpjsonServers": [

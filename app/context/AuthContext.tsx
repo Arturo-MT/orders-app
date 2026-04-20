@@ -45,11 +45,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         password
       })
 
-      if (error) {
-        setLoginError(error.message)
-      }
-
+      if (error) setLoginError(error.message)
       setLoading(false)
+
+      return { error: error?.message ?? null }
+    },
+    []
+  )
+
+  const signUp = useCallback(
+    async ({ email, password }: { email: string; password: string }) => {
+      const { error } = await supabase.auth.signUp({ email, password })
+      return { error: error?.message ?? null }
     },
     []
   )
@@ -66,9 +73,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       loading,
       loginError,
       loginWithPassword,
+      signUp,
       logout
     }),
-    [user, isSuperAdmin, loading, loginError, loginWithPassword, logout]
+    [user, isSuperAdmin, loading, loginError, loginWithPassword, signUp, logout]
   )
 
   if (loading) return null
