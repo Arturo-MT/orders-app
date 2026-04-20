@@ -11,7 +11,12 @@ import {
 } from 'react-native'
 import Swipeable from 'react-native-gesture-handler/Swipeable'
 import { Ionicons } from '@expo/vector-icons'
-import { useChangeTableMutation, useCloseOrderMutation, useOrderQuery, useReopenOrderMutation } from '@/hooks/api/orders'
+import {
+  useChangeTableMutation,
+  useCloseOrderMutation,
+  useOrderQuery,
+  useReopenOrderMutation
+} from '@/hooks/api/orders'
 import { useElapsedTime } from '@/hooks/utils/useElapsedTime'
 import { useStoreQuery } from '@/hooks/api/store'
 import { useTablesQuery } from '@/hooks/api/tables'
@@ -31,13 +36,62 @@ interface Props {
     id: string
     order_number: string
     type: 'DINE_IN' | 'TAKEAWAY'
-    status: 'OPEN' | 'CLOSED' | 'UNPAID'
+    status: 'OPEN' | 'PREPARING' | 'DISPATCHED' | 'CLOSED'
+    payment_status: string | null
     customer_name: string | null
     table_name: string | null
     table_id: string | null
     created_at: string
+    opened_at?: string | null
+    prepared_at?: string | null
+    dispatched_at?: string | null
   }
   onRemove?: (orderId: string) => void
+}
+
+const statusLabel = (status: string) => {
+  if (status === 'OPEN') return 'Abierta'
+  if (status === 'PREPARING') return 'Preparando'
+  if (status === 'DISPATCHED') return 'Despachada'
+  if (status === 'CLOSED') return 'Cerrada'
+  return status
+}
+
+const paymentLabel = (payment: string | null) =>
+  payment === 'PAID' ? 'Pagado' : 'Pendiente'
+
+const statusBadge = (status: string, theme: Theme) => {
+  if (status === 'OPEN')
+    return {
+      container: { backgroundColor: '#e0a02022' },
+      text: { color: '#e0a020' }
+    }
+  if (status === 'PREPARING')
+    return {
+      container: { backgroundColor: '#5b8def22' },
+      text: { color: '#5b8def' }
+    }
+  if (status === 'DISPATCHED')
+    return {
+      container: { backgroundColor: theme.success + '22' },
+      text: { color: theme.success }
+    }
+  return {
+    container: { backgroundColor: theme.borderLight },
+    text: { color: theme.textMuted }
+  }
+}
+
+const paymentBadge = (payment: string | null, theme: Theme) => {
+  if (payment === 'PAID')
+    return {
+      container: { backgroundColor: theme.success + '22' },
+      text: { color: theme.success }
+    }
+  return {
+    container: { backgroundColor: '#e0a02022' },
+    text: { color: '#e0a020' }
+  }
 }
 
 export default function OrderCard({ order, onRemove }: Props) {
@@ -50,8 +104,11 @@ export default function OrderCard({ order, onRemove }: Props) {
   const [isPrinting, setIsPrinting] = useState(false)
   const [tableModalVisible, setTableModalVisible] = useState(false)
   const swipeableRef = useRef<Swipeable>(null)
-  const canClose = order.status === 'OPEN' || order.status === 'UNPAID'
-  const elapsedLabel = useElapsedTime(order.created_at)
+  const canClose =
+    order.status === 'OPEN' ||
+    order.status === 'PREPARING' ||
+    order.status === 'DISPATCHED'
+  const elapsedLabel = useElapsedTime(order.opened_at ?? order.created_at)
 
   useEffect(() => {
     setOrderExpanded(order.id, expanded)
@@ -103,8 +160,9 @@ export default function OrderCard({ order, onRemove }: Props) {
     try {
       await reopenOrderMutation.mutateAsync({
         order_id: order.id,
-        order_type: order.type,
-        table_id: order.table_id
+        table_id: order.table_id,
+        prepared_at: order.prepared_at,
+        dispatched_at: order.dispatched_at
       })
       showToast('Orden reabierta', 'success')
     } catch {
@@ -139,7 +197,7 @@ export default function OrderCard({ order, onRemove }: Props) {
       type: orderData.type,
       customer_name: orderData.customer_name,
       table_name: orderData.table_name,
-      is_paid: orderData.status === 'CLOSED',
+      is_paid: orderData.payment_status === 'PAID',
       items: orderData.items
         .sort((a: any, b: any) =>
           a.product_name.localeCompare(b.product_name, 'es', {
@@ -229,6 +287,38 @@ export default function OrderCard({ order, onRemove }: Props) {
                 </View>
               )}
             </View>
+            <View style={styles.badgeRow}>
+              <View
+                style={[
+                  styles.badge,
+                  statusBadge(order.status, theme).container
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.badgeText,
+                    statusBadge(order.status, theme).text
+                  ]}
+                >
+                  {statusLabel(order.status)}
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.badge,
+                  paymentBadge(order.payment_status, theme).container
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.badgeText,
+                    paymentBadge(order.payment_status, theme).text
+                  ]}
+                >
+                  {paymentLabel(order.payment_status)}
+                </Text>
+              </View>
+            </View>
           </View>
           <View style={styles.headerRight}>
             <Ionicons
@@ -313,24 +403,39 @@ export default function OrderCard({ order, onRemove }: Props) {
                     ]}
                     disabled={reopenOrderMutation.isPending}
                   >
-                    {reopenOrderMutation.isPending
-                      ? <ActivityIndicator size='small' color={theme.textOnPrimary} />
-                      : <Ionicons name='arrow-undo-outline' size={26} color={theme.textOnPrimary} />
-                    }
-                  </TouchableOpacity>
-                )}
-                {(orderData?.status === 'OPEN' || orderData?.status === 'UNPAID') &&
-                  order.type === 'DINE_IN' && (
-                  <TouchableOpacity
-                    onPress={() => setTableModalVisible(true)}
-                    style={styles.tableButton}
-                    disabled={changeTableMutation.isPending}
-                  >
-                    <Ionicons name='restaurant-outline' size={26} color={theme.textPrimary} />
+                    {reopenOrderMutation.isPending ? (
+                      <ActivityIndicator
+                        size='small'
+                        color={theme.textOnPrimary}
+                      />
+                    ) : (
+                      <Ionicons
+                        name='arrow-undo-outline'
+                        size={26}
+                        color={theme.textOnPrimary}
+                      />
+                    )}
                   </TouchableOpacity>
                 )}
                 {(orderData?.status === 'OPEN' ||
-                  orderData?.status === 'UNPAID') && (
+                  orderData?.status === 'PREPARING' ||
+                  orderData?.status === 'DISPATCHED') &&
+                  order.type === 'DINE_IN' && (
+                    <TouchableOpacity
+                      onPress={() => setTableModalVisible(true)}
+                      style={styles.tableButton}
+                      disabled={changeTableMutation.isPending}
+                    >
+                      <Ionicons
+                        name='restaurant-outline'
+                        size={26}
+                        color={theme.textPrimary}
+                      />
+                    </TouchableOpacity>
+                  )}
+                {(orderData?.status === 'OPEN' ||
+                  orderData?.status === 'PREPARING' ||
+                  orderData?.status === 'DISPATCHED') && (
                   <TouchableOpacity
                     onPress={handleCloseOrder}
                     style={[
@@ -379,19 +484,29 @@ export default function OrderCard({ order, onRemove }: Props) {
                   <Ionicons
                     name='restaurant-outline'
                     size={20}
-                    color={table.id === order.table_id ? theme.textOnPrimary : theme.textSecondary}
+                    color={
+                      table.id === order.table_id
+                        ? theme.textOnPrimary
+                        : theme.textSecondary
+                    }
                   />
-                  <Text style={[
-                    styles.tableItemText,
-                    table.id === order.table_id && styles.tableItemTextActive
-                  ]}>
+                  <Text
+                    style={[
+                      styles.tableItemText,
+                      table.id === order.table_id && styles.tableItemTextActive
+                    ]}
+                  >
                     {table.name}
                   </Text>
                   {table.is_occupied && table.id !== order.table_id && (
                     <Text style={styles.occupiedBadge}>ocupada</Text>
                   )}
                   {table.id === order.table_id && (
-                    <Ionicons name='checkmark-circle' size={18} color={theme.textOnPrimary} />
+                    <Ionicons
+                      name='checkmark-circle'
+                      size={18}
+                      color={theme.textOnPrimary}
+                    />
                   )}
                 </TouchableOpacity>
               ))}
@@ -481,21 +596,92 @@ const makeStyles = (theme: Theme) =>
       color: theme.textMuted
     },
     disabledButton: { opacity: 0.6 },
-    reopenButton: { width: 42, height: 42, backgroundColor: theme.textSecondary, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
-    tableButton: { width: 42, height: 42, borderRadius: 6, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.border },
-    modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: theme.overlay },
-    modalContent: { backgroundColor: theme.background, borderTopLeftRadius: 16, borderTopRightRadius: 16, maxHeight: '60%', paddingBottom: 20 },
-    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: theme.border },
+    reopenButton: {
+      width: 42,
+      height: 42,
+      backgroundColor: theme.textSecondary,
+      borderRadius: 6,
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    tableButton: {
+      width: 42,
+      height: 42,
+      borderRadius: 6,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: theme.border
+    },
+    modalOverlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      backgroundColor: theme.overlay
+    },
+    modalContent: {
+      backgroundColor: theme.background,
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
+      maxHeight: '60%',
+      paddingBottom: 20
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border
+    },
     modalTitle: { fontSize: 17, fontWeight: 'bold', color: theme.textPrimary },
     tableList: { padding: 12, gap: 8 },
-    tableItem: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 14, backgroundColor: theme.surface, borderRadius: 10, borderWidth: 1, borderColor: theme.border },
-    tableItemActive: { backgroundColor: theme.primary, borderColor: theme.primary },
+    tableItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
+      backgroundColor: theme.surface,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: theme.border
+    },
+    tableItemActive: {
+      backgroundColor: theme.primary,
+      borderColor: theme.primary
+    },
     tableItemOccupied: { opacity: 0.5 },
-    tableItemText: { flex: 1, fontSize: 15, fontWeight: '600', color: theme.textPrimary },
+    tableItemText: {
+      flex: 1,
+      fontSize: 15,
+      fontWeight: '600',
+      color: theme.textPrimary
+    },
     tableItemTextActive: { color: theme.textOnPrimary },
     tableItemTextMuted: { color: theme.textMuted },
-    occupiedBadge: { fontSize: 11, color: theme.textMuted, fontStyle: 'italic' },
-    subtitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
-    elapsedBadge: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4, backgroundColor: theme.borderLight },
-    elapsedText: { fontSize: 11, fontWeight: '600', color: theme.textSecondary }
+    occupiedBadge: {
+      fontSize: 11,
+      color: theme.textMuted,
+      fontStyle: 'italic'
+    },
+    subtitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginTop: 2
+    },
+    elapsedBadge: {
+      paddingHorizontal: 6,
+      paddingVertical: 1,
+      borderRadius: 4,
+      backgroundColor: theme.borderLight
+    },
+    elapsedText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: theme.textSecondary
+    },
+    badgeRow: { flexDirection: 'row', gap: 6, marginTop: 4 },
+    badge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+    badgeText: { fontSize: 11, fontWeight: '700' }
   })

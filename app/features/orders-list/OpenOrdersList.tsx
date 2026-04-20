@@ -12,12 +12,14 @@ type OrderSummary = {
   id: string
   order_number: string
   type: 'DINE_IN' | 'TAKEAWAY'
-  status: 'OPEN' | 'UNPAID'
+  status: 'OPEN' | 'PREPARING' | 'DISPATCHED'
+  payment_status: string | null
   customer_name: string | null
   table_name: string | null
   table_id: string | null
   dining_table?: { id: string; name: string }
   created_at: string
+  opened_at?: string | null
 }
 
 const orderListReducer = (

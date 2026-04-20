@@ -93,7 +93,8 @@ export default function PosScreen() {
   /* ---------- total ---------- */
 
   const total = useMemo(
-    () => order.items.reduce((acc, item) => acc + item.price * item.quantity, 0),
+    () =>
+      order.items.reduce((acc, item) => acc + item.price * item.quantity, 0),
     [order.items]
   )
 
@@ -134,10 +135,10 @@ export default function PosScreen() {
 
     setIsSubmitting(true)
     try {
-      const response = await createOrder(payload)
+      await createOrder(payload)
 
       showToast('Orden creada correctamente', 'success')
-
+      /*  
       const { success: printSuccess, error: printError } = await printKitchenOrder(
         {
           order_number: response.order_number,
@@ -162,6 +163,7 @@ export default function PosScreen() {
       } else {
         showToast(`Orden #${response.order_number} guardada. Error al imprimir: ${printError}`, 'error')
       }
+         */
 
       setOrder({
         type: 'TAKEAWAY',

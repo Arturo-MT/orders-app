@@ -29,7 +29,13 @@ export function useCreateOrder(config = {}) {
   })
 }
 
-export function useOrderQuery({ order_id, enabled = true }: { order_id: string; enabled?: boolean }) {
+export function useOrderQuery({
+  order_id,
+  enabled = true
+}: {
+  order_id: string
+  enabled?: boolean
+}) {
   const { client } = useFetch()
 
   return useQuery({
@@ -45,10 +51,14 @@ export function useOrderQuery({ order_id, enabled = true }: { order_id: string; 
           order_number,
           type,
           status,
+          payment_status,
           customer_name,
           table_id,
           created_at,
+          opened_at,
           closed_at,
+          dispatched_at,
+          prepared_at,
           dining_table (
             name
           ),
@@ -75,10 +85,14 @@ export function useOrderQuery({ order_id, enabled = true }: { order_id: string; 
         order_number: data.order_number,
         type: data.type,
         status: data.status,
+        payment_status: data.payment_status,
         customer_name: data.customer_name,
         table_name: (data.dining_table as any)?.name ?? null,
         created_at: data.created_at,
+        opened_at: data.opened_at,
         closed_at: data.closed_at,
+        dispatched_at: data.dispatched_at,
+        prepared_at: data.prepared_at,
         items: data.order_item.map((item: any) => ({
           id: item.id,
           product_id: item.product_id,
@@ -103,9 +117,11 @@ export function useOpenOrderIds() {
     queryFn: async () => {
       const { data, error } = await client
         .from('order')
-        .select('id, order_number, type, status, customer_name, table_id, dining_table (id, name), created_at')
+        .select(
+          'id, order_number, type, status, payment_status, customer_name, table_id, dining_table (id, name), created_at, opened_at'
+        )
         .eq('store_id', activeStore!.id)
-        .in('status', ['OPEN', 'UNPAID'])
+        .in('status', ['OPEN', 'PREPARING', 'DISPATCHED'])
 
       if (error) throw error
 
@@ -121,18 +137,20 @@ export function useOrdersQuery({
   page,
   pageSize = 5,
   search,
-  status
+  status,
+  payment_status
 }: {
   page: number
   pageSize?: number
   search?: string
-  status?: 'OPEN' | 'CLOSED' | 'UNPAID'
+  status?: 'OPEN' | 'CLOSED'
+  payment_status?: 'PAID' | 'UNPAID'
 }) {
   const { client } = useFetch()
   const { activeStore } = useStore()
 
   return useQuery({
-    queryKey: [ORDERS_KEY, page, pageSize, search, status, activeStore?.id],
+    queryKey: [ORDERS_KEY, page, pageSize, search, status, payment_status, activeStore?.id],
 
     queryFn: async () => {
       const from = (page - 1) * pageSize
@@ -158,6 +176,10 @@ export function useOrdersQuery({
 
       if (status) {
         query = query.eq('status', status)
+      }
+
+      if (payment_status) {
+        query = query.eq('payment_status', payment_status)
       }
 
       query = query.order('created_at', { ascending: false })
@@ -196,6 +218,7 @@ export function useCloseOrderMutation() {
         .from('order')
         .update({
           status: 'CLOSED',
+          payment_status: 'PAID',
           closed_at: new Date().toISOString()
         })
         .eq('id', order_id)
@@ -279,18 +302,24 @@ export function useReopenOrderMutation() {
   return useMutation({
     mutationFn: async ({
       order_id,
-      order_type,
-      table_id
+      table_id,
+      prepared_at,
+      dispatched_at
     }: {
       order_id: string
-      order_type: 'DINE_IN' | 'TAKEAWAY'
       table_id?: string | null
+      prepared_at?: string | null
+      dispatched_at?: string | null
     }) => {
-      const newStatus = order_type === 'DINE_IN' ? 'OPEN' : 'UNPAID'
+      const status = dispatched_at ? 'DISPATCHED' : prepared_at ? 'PREPARING' : 'OPEN'
 
       const { error } = await client
         .from('order')
-        .update({ status: newStatus, closed_at: null })
+        .update({
+          status,
+          payment_status: 'PENDING',
+          closed_at: null
+        })
         .eq('id', order_id)
 
       if (error) throw error

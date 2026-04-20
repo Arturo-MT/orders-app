@@ -41,15 +41,14 @@ export async function orderCreate({
       throw new Error('DINE_IN requiere mesa o nombre del cliente')
     }
 
-    const status = payload.is_paid ? 'CLOSED' : 'OPEN'
-
     const { data, error }: any = await client
       .rpc('create_order', {
         p_store_id: storeId,
         p_type: 'DINE_IN',
         p_table_id: hasTable ? payload.table_id : null,
         p_customer_name: hasCustomerName ? payload.customer_name : null,
-        p_status: status
+        p_status: 'OPEN',
+        p_payment_status: payload.is_paid ? 'PAID' : 'PENDING'
       })
       .single()
 
@@ -69,15 +68,14 @@ export async function orderCreate({
       throw new Error('TAKEAWAY requiere nombre del cliente')
     }
 
-    const status = payload.is_paid ? 'CLOSED' : 'UNPAID'
-
     const { data, error }: any = await client
       .rpc('create_order', {
         p_store_id: storeId,
         p_type: 'TAKEAWAY',
         p_table_id: null,
         p_customer_name: payload.customer_name,
-        p_status: status
+        p_status: 'OPEN',
+        p_payment_status: payload.is_paid ? 'PAID' : 'PENDING'
       })
       .single()
 

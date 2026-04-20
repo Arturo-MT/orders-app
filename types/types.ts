@@ -66,12 +66,18 @@ export type OrderDraft = {
 
 export interface OrderResponse {
   id: string
-  customer_name: string
+  customer_name: string | null
   type: string
   items: OrderItem[]
   order_number: string
   status: string
+  payment_status: string | null
   created_at: string
+  opened_at?: string | null
+  closed_at?: string | null
+  dispatched_at?: string | null
+  prepared_at?: string | null
+  updated_at?: string | null
 }
 
 export interface OrderUpdate {

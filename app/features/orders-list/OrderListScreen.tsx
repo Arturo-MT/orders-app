@@ -24,15 +24,26 @@ export default function OrdersListScreen() {
   const { theme } = useTheme()
   const styles = makeStyles(theme)
 
-  const { data: ordersListData, isLoading, isFetching, refetch } = useOrdersQuery({
+  const {
+    data: ordersListData,
+    isLoading,
+    isFetching,
+    refetch
+  } = useOrdersQuery({
     page,
     search: debouncedSearch,
     status: 'CLOSED'
   })
 
-  useFocusEffect(useCallback(() => { refetch() }, [refetch]))
+  useFocusEffect(
+    useCallback(() => {
+      refetch()
+    }, [refetch])
+  )
 
-  React.useEffect(() => { setPage(1) }, [debouncedSearch])
+  React.useEffect(() => {
+    setPage(1)
+  }, [debouncedSearch])
 
   const orders = ordersListData?.orders || []
   const pageSize = 5
@@ -58,26 +69,36 @@ export default function OrdersListScreen() {
             <OpenOrdersList />
             <Text style={styles.sectionTitle}>HISTORIAL</Text>
             <View style={styles.searchContainer}>
-              <Ionicons name='search-outline' size={18} color={theme.textMuted} />
+              <Ionicons
+                name='search-outline'
+                size={18}
+                color={theme.textMuted}
+              />
               <TextInput
                 placeholder='Buscar por cliente'
                 placeholderTextColor={theme.textMuted}
                 style={styles.searchInput}
                 value={search}
                 onChangeText={setSearch}
-                onSubmitEditing={() => { setPage(1); refetch() }}
+                onSubmitEditing={() => {
+                  setPage(1)
+                  refetch()
+                }}
               />
             </View>
-            {isFetching && [...Array(6)].map((_, i) => (
-              <View key={i} style={styles.orderSkeleton}>
-                <View style={styles.skeletonRow}>
-                  <View style={[styles.skeleton, { width: '50%' }]} />
-                  <View style={[styles.skeleton, { width: 24, height: 24 }]} />
+            {isFetching &&
+              [...Array(6)].map((_, i) => (
+                <View key={i} style={styles.orderSkeleton}>
+                  <View style={styles.skeletonRow}>
+                    <View style={[styles.skeleton, { width: '50%' }]} />
+                    <View
+                      style={[styles.skeleton, { width: 24, height: 24 }]}
+                    />
+                  </View>
+                  <View style={styles.skeleton} />
+                  <View style={[styles.skeleton, { width: '30%' }]} />
                 </View>
-                <View style={styles.skeleton} />
-                <View style={[styles.skeleton, { width: '30%' }]} />
-              </View>
-            ))}
+              ))}
           </>
         }
         contentContainerStyle={{ paddingBottom: 16, paddingHorizontal: 16 }}
@@ -93,14 +114,23 @@ export default function OrdersListScreen() {
           <Ionicons name='chevron-back' size={20} color={theme.textOnPrimary} />
         </TouchableOpacity>
 
-        <Text style={styles.pageText}>Página {page} de {totalPages}</Text>
+        <Text style={styles.pageText}>
+          Página {page} de {totalPages}
+        </Text>
 
         <TouchableOpacity
           onPress={() => setPage((p) => p + 1)}
           disabled={page >= totalPages}
-          style={[styles.pageButton, page >= totalPages && styles.disabledButton]}
+          style={[
+            styles.pageButton,
+            page >= totalPages && styles.disabledButton
+          ]}
         >
-          <Ionicons name='chevron-forward' size={20} color={theme.textOnPrimary} />
+          <Ionicons
+            name='chevron-forward'
+            size={20}
+            color={theme.textOnPrimary}
+          />
         </TouchableOpacity>
       </View>
     </View>
@@ -124,7 +154,14 @@ const makeStyles = (theme: Theme) =>
       gap: 8
     },
     searchInput: { flex: 1, color: theme.textPrimary },
-    sectionTitle: { fontSize: 11, fontWeight: '700', color: theme.textMuted, letterSpacing: 1, marginBottom: 12, marginHorizontal: 16 },
+    sectionTitle: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: theme.textMuted,
+      letterSpacing: 1,
+      marginBottom: 12,
+      marginHorizontal: 16
+    },
     pagination: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -145,7 +182,12 @@ const makeStyles = (theme: Theme) =>
     },
     disabledButton: { backgroundColor: theme.disabled },
     pageText: { fontSize: 16, fontWeight: '500', color: theme.textPrimary },
-    skeleton: { height: 16, backgroundColor: theme.borderLight, borderRadius: 4, marginBottom: 8 },
+    skeleton: {
+      height: 16,
+      backgroundColor: theme.borderLight,
+      borderRadius: 4,
+      marginBottom: 8
+    },
     orderSkeleton: {
       backgroundColor: theme.surface,
       padding: 12,
@@ -153,5 +195,10 @@ const makeStyles = (theme: Theme) =>
       marginBottom: 10,
       marginHorizontal: 16
     },
-    skeletonRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }
+    skeletonRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8
+    }
   })
