@@ -3,7 +3,8 @@
     "allow": [
       "WebSearch",
       "Bash(claude mcp *)",
-      "mcp__supabase__execute_sql"
+      "mcp__supabase__execute_sql",
+      "Read(//c/Users/artur/.claude/plans//**)"
     ]
   },
   "enabledMcpjsonServers": [

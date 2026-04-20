@@ -5,6 +5,7 @@ import { OrderDraft } from '@/types/types'
 import { useStore } from '@/app/context/StoreContext'
 import { findOpenOrderByTable, orderCreate } from './mutations'
 import { clearOrderState } from '@/app/features/orders-list/orderStates'
+import { useRealtimeInvalidate } from './useRealtimeInvalidate'
 
 export function useCreateOrder(config = {}) {
   const { client } = useFetch()
@@ -37,6 +38,20 @@ export function useOrderQuery({
   enabled?: boolean
 }) {
   const { client } = useFetch()
+
+  useRealtimeInvalidate({
+    table: 'order',
+    filter: order_id ? `id=eq.${order_id}` : undefined,
+    queryKey: ['order', order_id],
+    enabled: !!order_id && enabled
+  })
+
+  useRealtimeInvalidate({
+    table: 'order_item',
+    filter: order_id ? `order_id=eq.${order_id}` : undefined,
+    queryKey: ['order', order_id],
+    enabled: !!order_id && enabled
+  })
 
   return useQuery({
     queryKey: ['order', order_id],
@@ -110,6 +125,13 @@ export function useOrderQuery({
 export function useOpenOrderIds() {
   const { client } = useFetch()
   const { activeStore } = useStore()
+
+  useRealtimeInvalidate({
+    table: 'order',
+    filter: activeStore?.id ? `store_id=eq.${activeStore.id}` : undefined,
+    queryKey: ['openOrderIds', activeStore?.id],
+    enabled: !!activeStore?.id
+  })
 
   return useQuery({
     queryKey: ['openOrderIds', activeStore?.id],
