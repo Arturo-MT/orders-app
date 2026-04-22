@@ -83,7 +83,7 @@ const makeStyles = (theme: Theme) =>
       gap: 6
     },
     rank: {
-      width: 22,
+      width: 18,
       textAlign: 'center',
       fontSize: 16
     },
@@ -91,16 +91,17 @@ const makeStyles = (theme: Theme) =>
       fontSize: 14,
       fontWeight: '500',
       color: theme.textPrimary,
-      flexShrink: 1
+      flexShrink: 1,
+      flex: 1,
     },
     quantity: {
-      width: 50,
+      width: 40,
       textAlign: 'center',
       color: theme.textSecondary,
       fontWeight: '500'
     },
     total: {
-      width: 80,
+      width: 64,
       textAlign: 'right',
       fontWeight: '600',
       color: theme.textPrimary

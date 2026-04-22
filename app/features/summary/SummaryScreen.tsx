@@ -121,18 +121,18 @@ export default function SummaryScreen() {
           {!isLoading && data?.summary && (
             <View style={styles.kpiRow}>
               <View style={[styles.kpiCard, styles.kpiPrimary]}>
-                <Text style={styles.kpiValue}>
+                <Text style={styles.kpiValue} numberOfLines={1} adjustsFontSizeToFit>
                   ${Number(totalRevenue).toLocaleString()}
                 </Text>
-                <Text style={styles.kpiLabel}>Total vendido</Text>
+                <Text style={styles.kpiLabel} numberOfLines={2}>Total vendido</Text>
               </View>
               <View style={styles.kpiCard}>
-                <Text style={styles.kpiValue}>{totalOrders}</Text>
-                <Text style={styles.kpiLabel}>Órdenes</Text>
+                <Text style={styles.kpiValue} numberOfLines={1} adjustsFontSizeToFit>{totalOrders}</Text>
+                <Text style={styles.kpiLabel} numberOfLines={2}>Órdenes</Text>
               </View>
               <View style={styles.kpiCard}>
-                <Text style={styles.kpiValue}>${avgTicket}</Text>
-                <Text style={styles.kpiLabel}>Ticket promedio</Text>
+                <Text style={styles.kpiValue} numberOfLines={1} adjustsFontSizeToFit>${avgTicket}</Text>
+                <Text style={styles.kpiLabel} numberOfLines={2}>Ticket promedio</Text>
               </View>
             </View>
           )}

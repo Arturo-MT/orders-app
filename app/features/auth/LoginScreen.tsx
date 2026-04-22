@@ -10,7 +10,8 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  ScrollView
+  ScrollView,
+  useWindowDimensions
 } from 'react-native'
 import { useAuth } from '../../context/AuthContext'
 import { Href, router } from 'expo-router'
@@ -20,7 +21,8 @@ import { Theme } from '@/constants/Colors'
 export default function LoginScreen() {
   const { loginWithPassword } = useAuth()
   const { theme } = useTheme()
-  const styles = makeStyles(theme)
+  const { width } = useWindowDimensions()
+  const styles = makeStyles(theme, width)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -92,10 +94,11 @@ export default function LoginScreen() {
   )
 }
 
-const makeStyles = (theme: Theme) =>
-  StyleSheet.create({
+const makeStyles = (theme: Theme, screenWidth: number) => {
+  const logoSize = Math.min(screenWidth * 0.4, 180)
+  return StyleSheet.create({
     container: { flex: 1, padding: 20, backgroundColor: theme.background, justifyContent: 'center' },
-    headerImage: { height: 220, width: 220, alignSelf: 'center', marginBottom: 24 },
+    headerImage: { height: logoSize, width: logoSize, alignSelf: 'center', marginBottom: 16 },
     formContainer: { width: '100%', alignSelf: 'center' },
     label: { fontSize: 16, marginBottom: 6, color: theme.textPrimary, fontWeight: '600' },
     input: {
@@ -113,3 +116,4 @@ const makeStyles = (theme: Theme) =>
     buttonDisabled: { opacity: 0.6 },
     buttonText: { color: theme.textOnPrimary, fontSize: 16, fontWeight: 'bold' }
   })
+}

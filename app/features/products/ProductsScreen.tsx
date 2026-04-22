@@ -19,7 +19,8 @@ import { useCategoriesQuery } from '@/hooks/api/categories'
 import { Picker } from '@react-native-picker/picker'
 import { useTheme } from '@/app/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
-import { AppBottomSheet, AppBottomSheetRef, BottomSheetTextInput } from '@/app/components/ui/BottomSheet'
+import { AppBottomSheet, AppBottomSheetRef, BottomSheetTextInput, SHEET_SNAP } from '@/app/components/ui/BottomSheet'
+import { useFabBottomInset } from '@/app/hooks/useOrientation'
 
 export default function ProductsScreen() {
   const { data, isLoading, isRefetching, refetch } = useProductsQuery({ showAll: true })
@@ -28,6 +29,7 @@ export default function ProductsScreen() {
   const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct()
   const { theme } = useTheme()
   const styles = makeStyles(theme)
+  const fabBottom = useFabBottomInset()
 
   const createSheetRef = useRef<AppBottomSheetRef>(null)
   const editSheetRef = useRef<AppBottomSheetRef>(null)
@@ -142,12 +144,12 @@ export default function ProductsScreen() {
         />
       )}
 
-      <Pressable style={styles.fab} onPress={() => createSheetRef.current?.open()}>
+      <Pressable style={[styles.fab, { bottom: fabBottom }]} onPress={() => createSheetRef.current?.open()}>
         <Ionicons name='add' size={32} color={theme.surface} />
       </Pressable>
 
       {/* Create product sheet */}
-      <AppBottomSheet ref={createSheetRef} snapPoints={['75%', '95%']} scrollable>
+      <AppBottomSheet ref={createSheetRef} snapPoints={SHEET_SNAP.form} scrollable>
         <Text style={styles.sheetTitle}>Nuevo producto</Text>
         <BottomSheetTextInput
           value={name}
@@ -193,7 +195,7 @@ export default function ProductsScreen() {
       {/* Edit product sheet */}
       <AppBottomSheet
         ref={editSheetRef}
-        snapPoints={['75%', '95%']}
+        snapPoints={SHEET_SNAP.form}
         scrollable
         onDismiss={() => { setEditingProduct(null); setEditName(''); setEditCategory(null); setEditPrice(0) }}
       >

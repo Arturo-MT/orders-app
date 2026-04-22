@@ -19,8 +19,9 @@ import { useTheme } from '@/app/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
 import OrderItemComponent, { EditField } from '@/app/components/OrderItemComponent'
 import { useToast } from '@/app/context/ToastContext'
-import { AppBottomSheet, AppBottomSheetRef, BottomSheetTextInput } from '@/app/components/ui/BottomSheet'
+import { AppBottomSheet, AppBottomSheetRef, BottomSheetTextInput, SHEET_SNAP } from '@/app/components/ui/BottomSheet'
 import { useOrientation } from '@/app/hooks/useOrientation'
+import { BREAKPOINTS, radius, spacing, typography } from '@/app/theme/tokens'
 
 interface Props {
   order: OrderDraft
@@ -40,7 +41,7 @@ export default function OrderPanel({
   // layout-only: wrap controls en paneles estrechos
   const { isPortrait, width } = useOrientation()
   const panelWidth = isPortrait ? width : width / 2
-  const isNarrow = panelWidth < 400
+  const isNarrow = panelWidth < BREAKPOINTS.sm
   const { theme } = useTheme()
   const styles = makeStyles(theme)
   const headerHeight = useHeaderHeight()
@@ -185,7 +186,7 @@ export default function OrderPanel({
             style={[styles.segmentButton, styles.segmentLeft, order.type === 'TAKEAWAY' && styles.segmentActive]}
             onPress={() => onChange({ ...order, type: 'TAKEAWAY', table_id: null, table_name: '' })}
           >
-            <Text style={[styles.segmentText, order.type === 'TAKEAWAY' && styles.segmentTextActive]}>
+            <Text style={[styles.segmentText, order.type === 'TAKEAWAY' && styles.segmentTextActive]} allowFontScaling={false}>
               Para llevar
             </Text>
           </TouchableOpacity>
@@ -194,7 +195,7 @@ export default function OrderPanel({
             style={[styles.segmentButton, styles.segmentRight, order.type === 'DINE_IN' && styles.segmentActive]}
             onPress={() => onChange({ ...order, type: 'DINE_IN' })}
           >
-            <Text style={[styles.segmentText, order.type === 'DINE_IN' && styles.segmentTextActive]}>
+            <Text style={[styles.segmentText, order.type === 'DINE_IN' && styles.segmentTextActive]} allowFontScaling={false}>
               Comer aquí
             </Text>
           </TouchableOpacity>
@@ -210,7 +211,7 @@ export default function OrderPanel({
             color={order.is_paid ? theme.surface : theme.textSecondary}
             style={{ marginRight: 4 }}
           />
-          <Text style={[styles.paidText, order.is_paid && styles.paidTextActive]}>Pagado</Text>
+          <Text style={[styles.paidText, order.is_paid && styles.paidTextActive]} allowFontScaling={false}>Pagado</Text>
         </TouchableOpacity>
       </View>
 
@@ -287,7 +288,7 @@ export default function OrderPanel({
       {/* Item field editor */}
       <AppBottomSheet
         ref={editSheetRef}
-        snapPoints={editing?.field === 'notes' ? ['50%', '90%'] : ['38%', '70%']}
+        snapPoints={editing?.field === 'notes' ? SHEET_SNAP.editLong : SHEET_SNAP.editShort}
         onDismiss={() => { setEditing(null); setDraftValue('') }}
       >
         <Text style={styles.sheetTitle}>
@@ -327,7 +328,7 @@ export default function OrderPanel({
       </AppBottomSheet>
 
       {/* Table picker bottom sheet */}
-      <AppBottomSheet ref={tableSheetRef} snapPoints={['50%', '80%']} scrollable>
+      <AppBottomSheet ref={tableSheetRef} snapPoints={SHEET_SNAP.list} scrollable>
         <View style={styles.sheetHeader}>
           <Text style={styles.sheetTitle}>Selecciona una mesa</Text>
           <TouchableOpacity onPress={() => tableSheetRef.current?.close()}>
@@ -380,63 +381,62 @@ const makeStyles = (theme: Theme) =>
       alignItems: 'center',
       borderWidth: 1,
       borderColor: theme.border,
-      borderRadius: 8,
+      borderRadius: radius.md,
       backgroundColor: theme.surface,
-      marginBottom: 6,
+      marginBottom: spacing.sm,
       paddingHorizontal: 10
     },
-    inputIcon: { marginRight: 8 },
-    nameInput: { flex: 1, paddingVertical: 8, fontSize: 14, color: theme.textPrimary },
-    inputDivider: { width: 1, height: '60%', backgroundColor: theme.border, marginHorizontal: 8 },
-    tableButton: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 8 },
-    tableButtonText: { fontSize: 13, color: theme.textSecondary },
-    tableSelected: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 8, maxWidth: 110 },
-    tableSelectedText: { fontSize: 13, fontWeight: '600', color: theme.textPrimary, flex: 1 },
-    controlsRow: { flexDirection: 'row', alignItems: 'stretch', gap: 8, marginBottom: 6 },
+    inputIcon: { marginRight: spacing.md },
+    nameInput: { flex: 1, flexShrink: 1, paddingVertical: spacing.md, ...typography.body, color: theme.textPrimary },
+    inputDivider: { width: 1, height: '60%', backgroundColor: theme.border, marginHorizontal: spacing.md },
+    tableButton: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.md },
+    tableButtonText: { ...typography.bodySm, color: theme.textSecondary },
+    tableSelected: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.md, maxWidth: 90, flexShrink: 1 },
+    tableSelectedText: { ...typography.bodySm, fontWeight: '600', color: theme.textPrimary, flex: 1 },
+    controlsRow: { flexDirection: 'row', alignItems: 'stretch', gap: spacing.md, marginBottom: spacing.sm },
     controlsRowNarrow: { flexWrap: 'wrap' },
     segmentedControl: {
       flex: 1,
       flexDirection: 'row',
-      borderRadius: 8,
+      borderRadius: radius.md,
       borderWidth: 1,
       borderColor: theme.border,
       backgroundColor: theme.surface,
       overflow: 'hidden'
     },
-    segmentButton: { flex: 1, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' },
+    segmentButton: { flex: 1, paddingVertical: spacing.sm, alignItems: 'center', justifyContent: 'center' },
     segmentLeft: { borderRightWidth: 1, borderRightColor: theme.border },
     segmentRight: {},
     segmentActive: { backgroundColor: theme.primary },
-    segmentText: { fontSize: 13, fontWeight: '600', color: theme.textSecondary },
+    segmentText: { ...typography.bodySm, fontWeight: '600', color: theme.textSecondary },
     segmentTextActive: { color: theme.textOnPrimary },
     paidToggle: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: 6,
+      paddingVertical: spacing.sm,
       paddingHorizontal: 10,
-      borderRadius: 8,
+      borderRadius: radius.md,
       borderWidth: 1,
       borderColor: theme.border,
       backgroundColor: theme.surface
     },
     paidToggleActive: { backgroundColor: theme.success, borderColor: theme.success },
-    paidText: { fontSize: 13, fontWeight: '600', color: theme.textSecondary },
+    paidText: { ...typography.bodySm, fontWeight: '600', color: theme.textSecondary },
     paidTextActive: { color: theme.surface },
     scrollWrapper: {
       flex: 1,
-      borderRadius: 8,
+      borderRadius: radius.md,
       backgroundColor: theme.surface,
       borderWidth: 1,
       borderColor: theme.border,
       overflow: 'hidden'
     },
-    orderItemContainer: { padding: 8, flexGrow: 1 },
-    emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 8 },
+    orderItemContainer: { padding: spacing.md, flexGrow: 1 },
+    emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing.md },
     emptyStateText: { fontSize: 15, color: theme.textMuted },
-    footer: { marginTop: 8, flexDirection: 'row', alignItems: 'stretch', gap: 8 },
+    footer: { marginTop: spacing.md, flexDirection: 'row', alignItems: 'stretch', gap: spacing.md },
     totalAmount: {
-      fontSize: 20,
-      fontWeight: 'bold',
+      ...typography.display,
       color: theme.textPrimary,
       minWidth: 80,
       textAlign: 'right',
@@ -445,7 +445,7 @@ const makeStyles = (theme: Theme) =>
     printButton: {
       flex: 1,
       backgroundColor: theme.primary,
-      borderRadius: 8,
+      borderRadius: radius.md,
       paddingVertical: 10,
       flexDirection: 'row',
       alignItems: 'center',
@@ -453,27 +453,27 @@ const makeStyles = (theme: Theme) =>
     },
     printButtonText: { color: theme.textOnPrimary, fontWeight: 'bold', fontSize: 15 },
     disabledText: { color: theme.disabledText },
-    clearButton: { width: 46, backgroundColor: theme.destructive, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+    clearButton: { width: 46, backgroundColor: theme.destructive, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
     disabled: { backgroundColor: theme.disabled, opacity: 0.7 },
     sheetHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: 12,
+      paddingVertical: spacing.lg,
       borderBottomWidth: 1,
       borderBottomColor: theme.border,
-      marginBottom: 8,
+      marginBottom: spacing.md,
     },
-    sheetTitle: { fontSize: 17, fontWeight: 'bold', color: theme.textPrimary },
-    tableList: { gap: 8 },
+    sheetTitle: { ...typography.title, color: theme.textPrimary },
+    tableList: { gap: spacing.md },
     tableItem: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
-      paddingVertical: 12,
+      paddingVertical: spacing.lg,
       paddingHorizontal: 14,
       backgroundColor: theme.surface,
-      borderRadius: 10,
+      borderRadius: radius.lg,
       borderWidth: 1,
       borderColor: theme.border
     },
@@ -481,11 +481,11 @@ const makeStyles = (theme: Theme) =>
     tableItemText: { flex: 1, fontSize: 15, fontWeight: '600', color: theme.textPrimary },
     tableItemTextActive: { color: theme.textOnPrimary },
     occupiedBadge: { fontSize: 11, color: theme.textMuted, fontStyle: 'italic' },
-    editSubtitle: { fontSize: 13, color: theme.textSecondary, marginBottom: 12 },
+    editSubtitle: { ...typography.bodySm, color: theme.textSecondary, marginBottom: spacing.lg },
     editInput: {
-      borderWidth: 1, borderColor: theme.border, borderRadius: 10,
-      padding: 12, backgroundColor: theme.background,
-      color: theme.textPrimary, fontSize: 16, marginBottom: 16,
+      borderWidth: 1, borderColor: theme.border, borderRadius: radius.lg,
+      padding: spacing.lg, backgroundColor: theme.background,
+      color: theme.textPrimary, fontSize: 16, marginBottom: spacing.xl,
     },
     editInputMultiline: { minHeight: 80, textAlignVertical: 'top' },
     editActions: {

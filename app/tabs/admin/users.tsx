@@ -18,7 +18,8 @@ import { useFocusEffect } from 'expo-router'
 import { useAuth } from '@/app/context/AuthContext'
 import { useTheme } from '@/app/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
-import { AppBottomSheet, AppBottomSheetRef, BottomSheetTextInput } from '@/app/components/ui/BottomSheet'
+import { AppBottomSheet, AppBottomSheetRef, BottomSheetTextInput, SHEET_SNAP } from '@/app/components/ui/BottomSheet'
+import { useFabBottomInset } from '@/app/hooks/useOrientation'
 
 interface UsersScreenProps {
   id: string
@@ -35,6 +36,7 @@ export default function UsersScreen() {
   const { mutate: updateMember } = useUpdateStoreMember()
   const { theme } = useTheme()
   const styles = makeStyles(theme)
+  const fabBottom = useFabBottomInset()
 
   const createSheetRef = useRef<AppBottomSheetRef>(null)
 
@@ -87,14 +89,14 @@ export default function UsersScreen() {
         />
       )}
 
-      <Pressable style={styles.fab} onPress={() => createSheetRef.current?.open()}>
+      <Pressable style={[styles.fab, { bottom: fabBottom }]} onPress={() => createSheetRef.current?.open()}>
         <Ionicons name='add' size={32} color={theme.surface} />
       </Pressable>
 
       {/* Add user sheet */}
       <AppBottomSheet
         ref={createSheetRef}
-        snapPoints={['60%', '95%']}
+        snapPoints={SHEET_SNAP.form}
         onDismiss={() => { setEmail(''); setRole('staff') }}
       >
         <Text style={styles.sheetTitle}>Agregar usuario</Text>

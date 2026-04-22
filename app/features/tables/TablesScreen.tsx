@@ -13,7 +13,8 @@ import Skeleton from '@/app/components/Skeleton'
 import { useTablesQuery, useCreateTable, useUpdateTable } from '@/hooks/api/tables'
 import { useTheme } from '@/app/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
-import { AppBottomSheet, AppBottomSheetRef, BottomSheetTextInput } from '@/app/components/ui/BottomSheet'
+import { AppBottomSheet, AppBottomSheetRef, BottomSheetTextInput, SHEET_SNAP } from '@/app/components/ui/BottomSheet'
+import { useFabBottomInset } from '@/app/hooks/useOrientation'
 
 export default function TablesScreen() {
   const { data, isLoading, isRefetching, refetch } = useTablesQuery()
@@ -21,6 +22,7 @@ export default function TablesScreen() {
   const { mutate: updateTable, isPending: isUpdating } = useUpdateTable()
   const { theme } = useTheme()
   const styles = makeStyles(theme)
+  const fabBottom = useFabBottomInset()
 
   const createSheetRef = useRef<AppBottomSheetRef>(null)
   const editSheetRef = useRef<AppBottomSheetRef>(null)
@@ -85,12 +87,12 @@ export default function TablesScreen() {
         />
       )}
 
-      <Pressable style={styles.fab} onPress={() => createSheetRef.current?.open()}>
+      <Pressable style={[styles.fab, { bottom: fabBottom }]} onPress={() => createSheetRef.current?.open()}>
         <Ionicons name='add' size={32} color={theme.surface} />
       </Pressable>
 
       {/* Create table sheet */}
-      <AppBottomSheet ref={createSheetRef} snapPoints={['45%', '85%']}>
+      <AppBottomSheet ref={createSheetRef} snapPoints={SHEET_SNAP.form}>
         <Text style={styles.sheetTitle}>Nueva mesa</Text>
         <BottomSheetTextInput
           value={name}
@@ -117,7 +119,7 @@ export default function TablesScreen() {
       {/* Edit table sheet */}
       <AppBottomSheet
         ref={editSheetRef}
-        snapPoints={['45%', '85%']}
+        snapPoints={SHEET_SNAP.form}
         onDismiss={() => { setEditingTable(null) }}
       >
         <Text style={styles.sheetTitle}>Editar mesa</Text>

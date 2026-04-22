@@ -17,7 +17,8 @@ import Skeleton from '@/app/components/Skeleton'
 import { useFocusEffect } from 'expo-router'
 import { useTheme } from '@/app/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
-import { AppBottomSheet, AppBottomSheetRef, BottomSheetTextInput } from '@/app/components/ui/BottomSheet'
+import { AppBottomSheet, AppBottomSheetRef, BottomSheetTextInput, SHEET_SNAP } from '@/app/components/ui/BottomSheet'
+import { useFabBottomInset } from '@/app/hooks/useOrientation'
 
 export default function CategoriesScreen() {
   const { data, isLoading, isRefetching, refetch } = useCategoriesQuery({ showAll: true })
@@ -25,6 +26,7 @@ export default function CategoriesScreen() {
   const { mutate: updateCategory, isPending: isUpdating } = useUpdateCategory()
   const { theme } = useTheme()
   const styles = makeStyles(theme)
+  const fabBottom = useFabBottomInset()
 
   const createSheetRef = useRef<AppBottomSheetRef>(null)
   const editSheetRef = useRef<AppBottomSheetRef>(null)
@@ -87,12 +89,12 @@ export default function CategoriesScreen() {
         />
       )}
 
-      <Pressable style={styles.fab} onPress={() => createSheetRef.current?.open()}>
+      <Pressable style={[styles.fab, { bottom: fabBottom }]} onPress={() => createSheetRef.current?.open()}>
         <Ionicons name='add' size={32} color={theme.surface} />
       </Pressable>
 
       {/* Create category sheet */}
-      <AppBottomSheet ref={createSheetRef} snapPoints={['40%', '80%']}>
+      <AppBottomSheet ref={createSheetRef} snapPoints={SHEET_SNAP.form}>
         <Text style={styles.sheetTitle}>Nueva categoría</Text>
         <BottomSheetTextInput
           value={name}
@@ -119,7 +121,7 @@ export default function CategoriesScreen() {
       {/* Edit category sheet */}
       <AppBottomSheet
         ref={editSheetRef}
-        snapPoints={['40%', '80%']}
+        snapPoints={SHEET_SNAP.form}
         onDismiss={() => { setEditingCategory(null); setEditName('') }}
       >
         <Text style={styles.sheetTitle}>Editar categoría</Text>

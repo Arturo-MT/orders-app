@@ -20,6 +20,13 @@ export interface AppBottomSheetRef {
   close: () => void
 }
 
+export const SHEET_SNAP: Record<string, (string | number)[]> = {
+  editShort: ['42%', '70%'],
+  editLong:  ['55%', '92%'],
+  form:      ['60%', '92%'],
+  list:      ['50%', '85%'],
+}
+
 interface AppBottomSheetProps {
   snapPoints?: (string | number)[]
   children: React.ReactNode

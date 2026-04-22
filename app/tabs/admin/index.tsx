@@ -1,13 +1,15 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native'
+import { View, Text, Pressable, StyleSheet, useWindowDimensions } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useTheme } from '@/app/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
+import { BREAKPOINTS } from '@/app/theme/tokens'
 
 export default function AdminHomeScreen() {
   const router = useRouter()
   const { theme } = useTheme()
-  const styles = makeStyles(theme)
+  const { width } = useWindowDimensions()
+  const styles = makeStyles(theme, width)
 
   return (
     <View style={styles.container}>
@@ -36,19 +38,22 @@ export default function AdminHomeScreen() {
   )
 }
 
-const makeStyles = (theme: Theme) =>
-  StyleSheet.create({
+const makeStyles = (theme: Theme, screenWidth: number) => {
+  const isSmall = screenWidth <= BREAKPOINTS.md
+  const cardWidth = isSmall ? '48%' : '31%'
+  return StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background, padding: 16 },
     grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     card: {
-      width: '31%',
+      width: cardWidth,
       backgroundColor: theme.surface,
       borderRadius: 16,
-      paddingVertical: 28,
+      paddingVertical: isSmall ? 20 : 28,
       alignItems: 'center',
       justifyContent: 'center',
       gap: 12,
       elevation: 2
     },
-    title: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, textAlign: 'center' }
+    title: { fontSize: 15, fontWeight: '600', color: theme.textPrimary, textAlign: 'center' }
   })
+}

@@ -565,9 +565,9 @@ const makeStyles = (theme: Theme) =>
     itemPrice: { fontSize: 14, fontWeight: '600', color: theme.textPrimary },
     actions: {
       marginTop: 8,
-      display: 'flex',
       justifyContent: 'flex-end',
       flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: 6
     },
     closeButton: {

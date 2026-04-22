@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { OrderItemDraft } from '@/types/types'
 import { useTheme } from '@/app/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
+import { spacing, typography } from '@/app/theme/tokens'
 
 export type EditField = 'qty' | 'price' | 'notes'
 
@@ -90,39 +91,39 @@ export default function OrderItemComponent({ item, onUpdate, onRemove, onEditFie
 const makeStyles = (theme: Theme) =>
   StyleSheet.create({
     container: {
-      paddingVertical: 6,
-      paddingHorizontal: 8,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
       borderBottomWidth: 1,
       borderBottomColor: theme.borderLight,
-      gap: 4,
+      gap: spacing.xs,
     },
     mainRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 6,
+      gap: spacing.sm,
     },
-    iconButton: { padding: 4 },
+    iconButton: { padding: spacing.xs },
     name: {
       flex: 1,
-      fontSize: 14,
+      ...typography.body,
       fontWeight: '500',
       color: theme.textPrimary,
       flexShrink: 1,
       minWidth: 0,
     },
-    quantityControls: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    quantityControls: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
     qtyText: {
       minWidth: 32,
       textAlign: 'center',
-      fontSize: 14,
+      ...typography.body,
       fontWeight: '600',
       color: theme.textPrimary,
-      paddingVertical: 4,
-      paddingHorizontal: 6,
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.sm,
     },
-    priceButton: { paddingVertical: 2, paddingHorizontal: 4 },
+    priceButton: { paddingVertical: 2, paddingHorizontal: spacing.xs },
     priceText: {
-      fontSize: 13,
+      ...typography.bodySm,
       color: theme.textPrimary,
       fontWeight: '500',
       minWidth: 48,
@@ -131,8 +132,8 @@ const makeStyles = (theme: Theme) =>
     notesText: {
       fontSize: 12,
       color: theme.textSecondary,
-      paddingVertical: 4,
-      paddingHorizontal: 4,
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.xs,
     },
     notesPlaceholder: {
       color: theme.textMuted,

@@ -12,6 +12,7 @@ import Card from '@/app/components/Card'
 import { Product } from '@/types/types'
 import { useTheme } from '@/app/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
+import { radius, spacing, typography } from '@/app/theme/tokens'
 import CategorySkeleton from './CategorySkeleton'
 import ProductGridSkeleton from './ProductGridSkeleton'
 
@@ -42,7 +43,7 @@ export default function ProductsPanel({
   const { theme } = useTheme()
   const styles = makeStyles(theme)
 
-  const [panelWidth, setPanelWidth] = useState(0)
+  const [panelWidth, setPanelWidth] = useState(width)
   const columns = panelWidth < 360 ? 2 : panelWidth < 560 ? 3 : 4
 
   const [searchText, setSearchText] = useState('')
@@ -160,7 +161,7 @@ export default function ProductsPanel({
             showsVerticalScrollIndicator
           >
             {(isProductsLoading || isProductsRefetching) && (
-              <ProductGridSkeleton columns={columns} />
+              <ProductGridSkeleton columns={columns} panelWidth={panelWidth} />
             )}
 
             {!isProductsLoading && filteredProductsBySearch.length === 0 && (
@@ -203,9 +204,9 @@ const makeStyles = (theme: Theme) =>
       gap: 10
     },
     categoryButton: {
-      paddingHorizontal: 15,
-      paddingVertical: 10,
-      borderRadius: 20,
+      paddingHorizontal: 12,
+      paddingVertical: spacing.md,
+      borderRadius: radius.pill,
       backgroundColor: theme.surface,
       width: 'auto',
       alignItems: 'center'
@@ -214,7 +215,7 @@ const makeStyles = (theme: Theme) =>
       backgroundColor: theme.primary
     },
     categoryText: {
-      fontSize: 16,
+      fontSize: 15,
       color: theme.textSecondary
     },
     selectedCategoryText: {
@@ -228,10 +229,11 @@ const makeStyles = (theme: Theme) =>
     searchInput: {
       borderWidth: 1,
       borderColor: theme.border,
-      borderRadius: 5,
-      padding: 8,
+      borderRadius: radius.md,
+      padding: spacing.md,
       backgroundColor: theme.surface,
-      color: theme.textPrimary
+      color: theme.textPrimary,
+      ...typography.body,
     },
     searchWrapper: {
       padding: 10

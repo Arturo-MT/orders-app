@@ -1,9 +1,8 @@
 import Skeleton from '@/app/components/Skeleton'
-import { useWindowDimensions, View } from 'react-native'
+import { View } from 'react-native'
 
-export default function ProductGridSkeleton({ columns }: { columns: number }) {
-  const { width } = useWindowDimensions()
-  const cardWidth = width / columns - 12
+export default function ProductGridSkeleton({ columns, panelWidth }: { columns: number; panelWidth: number }) {
+  const cardWidth = panelWidth / columns - 12
 
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
