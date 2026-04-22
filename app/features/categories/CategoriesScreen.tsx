@@ -1,24 +1,23 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import {
   View,
   Text,
   FlatList,
   Pressable,
-  Modal,
-  TextInput,
   StyleSheet,
-  Switch
+  Switch,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import {
   useCategoriesQuery,
   useCreateCategory,
-  useUpdateCategory
+  useUpdateCategory,
 } from '@/hooks/api/categories'
 import Skeleton from '@/app/components/Skeleton'
 import { useFocusEffect } from 'expo-router'
 import { useTheme } from '@/app/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
+import { AppBottomSheet, AppBottomSheetRef, BottomSheetTextInput } from '@/app/components/ui/BottomSheet'
 
 export default function CategoriesScreen() {
   const { data, isLoading, isRefetching, refetch } = useCategoriesQuery({ showAll: true })
@@ -27,9 +26,10 @@ export default function CategoriesScreen() {
   const { theme } = useTheme()
   const styles = makeStyles(theme)
 
-  const [open, setOpen] = useState(false)
+  const createSheetRef = useRef<AppBottomSheetRef>(null)
+  const editSheetRef = useRef<AppBottomSheetRef>(null)
+
   const [name, setName] = useState('')
-  const [editOpen, setEditOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<{ id: string; name: string; is_active: boolean } | null>(null)
   const [editName, setEditName] = useState('')
 
@@ -39,7 +39,7 @@ export default function CategoriesScreen() {
   const handleCreate = () => {
     if (saveDisabled) return
     createCategory(name.trim(), {
-      onSuccess: () => { setName(''); setOpen(false) }
+      onSuccess: () => { setName(''); createSheetRef.current?.close() }
     })
   }
 
@@ -76,7 +76,7 @@ export default function CategoriesScreen() {
                 />
                 <Pressable
                   style={styles.iconButton}
-                  onPress={() => { setEditingCategory(item); setEditName(item.name); setEditOpen(true) }}
+                  onPress={() => { setEditingCategory(item); setEditName(item.name); editSheetRef.current?.open() }}
                 >
                   <Ionicons name='pencil-outline' size={20} color={theme.textOnPrimary} />
                 </Pressable>
@@ -87,67 +87,67 @@ export default function CategoriesScreen() {
         />
       )}
 
-      <Pressable style={styles.fab} onPress={() => setOpen(true)}>
+      <Pressable style={styles.fab} onPress={() => createSheetRef.current?.open()}>
         <Ionicons name='add' size={32} color={theme.surface} />
       </Pressable>
 
-      <Modal visible={open} transparent animationType='fade'>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modal}>
-            <Text style={styles.modalTitle}>Nueva categoría</Text>
-            <TextInput
-              value={name}
-              onChangeText={setName}
-              placeholder='Nombre'
-              placeholderTextColor={theme.textMuted}
-              style={styles.input}
-            />
-            <View style={styles.actions}>
-              <Pressable onPress={() => setOpen(false)}>
-                <Text style={styles.cancel}>Cancelar</Text>
-              </Pressable>
-              <Pressable onPress={handleCreate} disabled={saveDisabled}>
-                <Text style={[styles.save, saveDisabled && styles.saveDisabled]}>
-                  {isCreating ? 'Guardando...' : 'Guardar'}
-                </Text>
-              </Pressable>
-            </View>
-          </View>
+      {/* Create category sheet */}
+      <AppBottomSheet ref={createSheetRef} snapPoints={['40%', '80%']}>
+        <Text style={styles.sheetTitle}>Nueva categoría</Text>
+        <BottomSheetTextInput
+          value={name}
+          onChangeText={setName}
+          placeholder='Nombre'
+          placeholderTextColor={theme.textMuted}
+          style={styles.input}
+          autoFocus
+          returnKeyType='done'
+          onSubmitEditing={handleCreate}
+        />
+        <View style={styles.actions}>
+          <Pressable onPress={() => createSheetRef.current?.close()}>
+            <Text style={styles.cancel}>Cancelar</Text>
+          </Pressable>
+          <Pressable onPress={handleCreate} disabled={saveDisabled}>
+            <Text style={[styles.save, saveDisabled && styles.saveDisabled]}>
+              {isCreating ? 'Guardando...' : 'Guardar'}
+            </Text>
+          </Pressable>
         </View>
-      </Modal>
+      </AppBottomSheet>
 
-      <Modal visible={editOpen} transparent animationType='fade'>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modal}>
-            <Text style={styles.modalTitle}>Editar categoría</Text>
-            <TextInput
-              value={editName}
-              onChangeText={setEditName}
-              placeholderTextColor={theme.textMuted}
-              style={styles.input}
-            />
-            <View style={styles.actions}>
-              <Pressable onPress={() => setEditOpen(false)}>
-                <Text style={styles.cancel}>Cancelar</Text>
-              </Pressable>
-              <Pressable
-                disabled={editDisabled}
-                onPress={() => {
-                  if (!editingCategory) return
-                  updateCategory({ id: editingCategory.id, name: editName.trim() })
-                  setEditOpen(false)
-                  setEditingCategory(null)
-                  setEditName('')
-                }}
-              >
-                <Text style={[styles.save, editDisabled && styles.saveDisabled]}>
-                  {isUpdating ? 'Guardando...' : 'Guardar'}
-                </Text>
-              </Pressable>
-            </View>
-          </View>
+      {/* Edit category sheet */}
+      <AppBottomSheet
+        ref={editSheetRef}
+        snapPoints={['40%', '80%']}
+        onDismiss={() => { setEditingCategory(null); setEditName('') }}
+      >
+        <Text style={styles.sheetTitle}>Editar categoría</Text>
+        <BottomSheetTextInput
+          value={editName}
+          onChangeText={setEditName}
+          placeholderTextColor={theme.textMuted}
+          style={styles.input}
+          returnKeyType='done'
+        />
+        <View style={styles.actions}>
+          <Pressable onPress={() => editSheetRef.current?.close()}>
+            <Text style={styles.cancel}>Cancelar</Text>
+          </Pressable>
+          <Pressable
+            disabled={editDisabled}
+            onPress={() => {
+              if (!editingCategory) return
+              updateCategory({ id: editingCategory.id, name: editName.trim() })
+              editSheetRef.current?.close()
+            }}
+          >
+            <Text style={[styles.save, editDisabled && styles.saveDisabled]}>
+              {isUpdating ? 'Guardando...' : 'Guardar'}
+            </Text>
+          </Pressable>
         </View>
-      </Modal>
+      </AppBottomSheet>
     </View>
   )
 }
@@ -161,20 +161,6 @@ const makeStyles = (theme: Theme) =>
       backgroundColor: theme.textPrimary, width: 56, height: 56,
       borderRadius: 28, alignItems: 'center', justifyContent: 'center'
     },
-    modalOverlay: { flex: 1, backgroundColor: theme.overlay, justifyContent: 'center', padding: 24 },
-    modal: { backgroundColor: theme.surface, borderRadius: 16, padding: 20, gap: 16 },
-    modalTitle: { fontSize: 18, fontWeight: '600', color: theme.textPrimary },
-    input: {
-      borderWidth: 1, borderColor: theme.border, borderRadius: 12,
-      padding: 12, backgroundColor: theme.background, color: theme.textPrimary
-    },
-    actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16 },
-    cancel: { color: theme.textPrimary, fontSize: 16, backgroundColor: theme.border, padding: 8, borderRadius: 6 },
-    save: {
-      color: theme.textOnPrimary, fontSize: 16, fontWeight: '600',
-      backgroundColor: theme.primary, padding: 8, borderRadius: 6
-    },
-    saveDisabled: { backgroundColor: theme.primaryMuted, opacity: 0.6 },
     row: {
       backgroundColor: theme.surface, paddingHorizontal: 16, paddingVertical: 12,
       borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'
@@ -186,5 +172,18 @@ const makeStyles = (theme: Theme) =>
     iconButton: {
       width: 36, height: 36, borderRadius: 6,
       alignItems: 'center', justifyContent: 'center', backgroundColor: theme.primary
-    }
+    },
+    sheetTitle: { fontSize: 18, fontWeight: '600', color: theme.textPrimary, marginBottom: 16 },
+    input: {
+      borderWidth: 1, borderColor: theme.border, borderRadius: 12,
+      padding: 12, backgroundColor: theme.background, color: theme.textPrimary,
+      marginBottom: 12,
+    },
+    actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16 },
+    cancel: { color: theme.textPrimary, fontSize: 16, backgroundColor: theme.border, padding: 8, borderRadius: 6 },
+    save: {
+      color: theme.textOnPrimary, fontSize: 16, fontWeight: '600',
+      backgroundColor: theme.primary, padding: 8, borderRadius: 6
+    },
+    saveDisabled: { backgroundColor: theme.primaryMuted, opacity: 0.6 },
   })

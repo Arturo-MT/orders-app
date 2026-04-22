@@ -1,25 +1,24 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import {
   View,
   Text,
   FlatList,
   Pressable,
-  Modal,
-  TextInput,
   StyleSheet,
-  Switch
+  Switch,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import {
   useStoreMembersQuery,
   useCreateStoreMember,
-  useUpdateStoreMember
+  useUpdateStoreMember,
 } from '@/hooks/api/store-members'
 import Skeleton from '@/app/components/Skeleton'
 import { useFocusEffect } from 'expo-router'
 import { useAuth } from '@/app/context/AuthContext'
 import { useTheme } from '@/app/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
+import { AppBottomSheet, AppBottomSheetRef, BottomSheetTextInput } from '@/app/components/ui/BottomSheet'
 
 interface UsersScreenProps {
   id: string
@@ -37,7 +36,8 @@ export default function UsersScreen() {
   const { theme } = useTheme()
   const styles = makeStyles(theme)
 
-  const [open, setOpen] = useState(false)
+  const createSheetRef = useRef<AppBottomSheetRef>(null)
+
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<'admin' | 'staff'>('staff')
 
@@ -87,58 +87,60 @@ export default function UsersScreen() {
         />
       )}
 
-      <Pressable style={styles.fab} onPress={() => setOpen(true)}>
+      <Pressable style={styles.fab} onPress={() => createSheetRef.current?.open()}>
         <Ionicons name='add' size={32} color={theme.surface} />
       </Pressable>
 
-      <Modal visible={open} transparent animationType='fade'>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modal}>
-            <Text style={styles.modalTitle}>Agregar usuario</Text>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder='Email'
-              placeholderTextColor={theme.textMuted}
-              autoCapitalize='none'
-              keyboardType='email-address'
-              style={styles.input}
-            />
-            <View style={styles.roleSelector}>
-              <Pressable
-                onPress={() => setRole('staff')}
-                style={[styles.roleOption, role === 'staff' && styles.roleSelected]}
-              >
-                <Text style={styles.roleText}>Staff</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setRole('admin')}
-                style={[styles.roleOption, role === 'admin' && styles.roleSelected]}
-              >
-                <Text style={styles.roleText}>Admin</Text>
-              </Pressable>
-            </View>
-            <View style={styles.actionsRight}>
-              <Pressable onPress={() => setOpen(false)}>
-                <Text style={styles.cancel}>Cancelar</Text>
-              </Pressable>
-              <Pressable
-                disabled={saveDisabled}
-                onPress={() => {
-                  createMember(
-                    { email, role },
-                    { onSuccess: () => { setEmail(''); setRole('staff'); setOpen(false) } }
-                  )
-                }}
-              >
-                <Text style={[styles.save, saveDisabled && styles.saveDisabled]}>
-                  {isCreating ? 'Agregando...' : 'Agregar'}
-                </Text>
-              </Pressable>
-            </View>
-          </View>
+      {/* Add user sheet */}
+      <AppBottomSheet
+        ref={createSheetRef}
+        snapPoints={['60%', '95%']}
+        onDismiss={() => { setEmail(''); setRole('staff') }}
+      >
+        <Text style={styles.sheetTitle}>Agregar usuario</Text>
+        <BottomSheetTextInput
+          value={email}
+          onChangeText={setEmail}
+          placeholder='Email'
+          placeholderTextColor={theme.textMuted}
+          autoCapitalize='none'
+          keyboardType='email-address'
+          style={styles.input}
+          returnKeyType='done'
+        />
+        <View style={styles.roleSelector}>
+          <Pressable
+            onPress={() => setRole('staff')}
+            style={[styles.roleOption, role === 'staff' && styles.roleSelected]}
+          >
+            <Text style={styles.roleOptionText}>Staff</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setRole('admin')}
+            style={[styles.roleOption, role === 'admin' && styles.roleSelected]}
+          >
+            <Text style={styles.roleOptionText}>Admin</Text>
+          </Pressable>
         </View>
-      </Modal>
+        <View style={styles.actionsRight}>
+          <Pressable onPress={() => createSheetRef.current?.close()}>
+            <Text style={styles.cancel}>Cancelar</Text>
+          </Pressable>
+          <Pressable
+            disabled={saveDisabled}
+            onPress={() => {
+              createMember(
+                { email, role },
+                { onSuccess: () => { setEmail(''); setRole('staff'); createSheetRef.current?.close() } }
+              )
+            }}
+          >
+            <Text style={[styles.save, saveDisabled && styles.saveDisabled]}>
+              {isCreating ? 'Agregando...' : 'Agregar'}
+            </Text>
+          </Pressable>
+        </View>
+      </AppBottomSheet>
     </View>
   )
 }
@@ -156,22 +158,22 @@ const makeStyles = (theme: Theme) =>
     rowText: { fontSize: 16, color: theme.textPrimary },
     rowTextDisabled: { color: theme.textMuted },
     rowActions: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-    roleText: { fontWeight: '600', color: theme.textOnPrimary },
+    roleText: { fontSize: 13, color: theme.textSecondary },
     fab: {
       position: 'absolute', right: 16, bottom: 16,
       backgroundColor: theme.textPrimary, width: 56, height: 56,
       borderRadius: 28, alignItems: 'center', justifyContent: 'center', elevation: 3
     },
-    modalOverlay: { flex: 1, backgroundColor: theme.overlay, justifyContent: 'center', padding: 24 },
-    modal: { backgroundColor: theme.surface, borderRadius: 16, padding: 20, gap: 16 },
-    modalTitle: { fontSize: 18, fontWeight: '600', color: theme.textPrimary },
+    sheetTitle: { fontSize: 18, fontWeight: '600', color: theme.textPrimary, marginBottom: 16 },
     input: {
       borderWidth: 1, borderColor: theme.border, borderRadius: 12,
-      padding: 12, backgroundColor: theme.background, color: theme.textPrimary
+      padding: 12, backgroundColor: theme.background, color: theme.textPrimary,
+      marginBottom: 12,
     },
-    roleSelector: { flexDirection: 'row', gap: 12 },
+    roleSelector: { flexDirection: 'row', gap: 12, marginBottom: 12 },
     roleOption: { flex: 1, paddingVertical: 12, borderRadius: 10, backgroundColor: theme.borderLight, alignItems: 'center' },
     roleSelected: { backgroundColor: theme.primary },
+    roleOptionText: { fontWeight: '600', color: theme.textOnPrimary },
     actionsRight: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 12, marginTop: 12 },
     cancel: { color: theme.textPrimary, fontSize: 16 },
     save: {

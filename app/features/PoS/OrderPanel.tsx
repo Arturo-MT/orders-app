@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useLayoutEffect, useState } from 'react'
+import React, { useRef, useLayoutEffect, useState } from 'react'
 import {
   View,
   Text,
@@ -8,16 +8,19 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  Modal,
-  useWindowDimensions
+  Platform,
+  KeyboardAvoidingView,
 } from 'react-native'
+import { useHeaderHeight } from '@react-navigation/elements'
 import { Ionicons } from '@expo/vector-icons'
 import { OrderDraft, OrderItemDraft } from '@/types/types'
 import { useTablesQuery } from '@/hooks/api/tables'
 import { useTheme } from '@/app/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
-import OrderItemComponent from '@/app/components/OrderItemComponent'
+import OrderItemComponent, { EditField } from '@/app/components/OrderItemComponent'
 import { useToast } from '@/app/context/ToastContext'
+import { AppBottomSheet, AppBottomSheetRef, BottomSheetTextInput } from '@/app/components/ui/BottomSheet'
+import { useOrientation } from '@/app/hooks/useOrientation'
 
 interface Props {
   order: OrderDraft
@@ -34,15 +37,46 @@ export default function OrderPanel({
   onPrint,
   isLoading
 }: Props) {
-  const { width, height } = useWindowDimensions()
-  const isPortrait = height >= width
+  // layout-only: wrap controls en paneles estrechos
+  const { isPortrait, width } = useOrientation()
   const panelWidth = isPortrait ? width : width / 2
   const isNarrow = panelWidth < 400
   const { theme } = useTheme()
   const styles = makeStyles(theme)
+  const headerHeight = useHeaderHeight()
 
   const { showToast } = useToast()
-  const [tableModalVisible, setTableModalVisible] = useState(false)
+  const tableSheetRef = useRef<AppBottomSheetRef>(null)
+  const editSheetRef = useRef<AppBottomSheetRef>(null)
+
+  const [editing, setEditing] = useState<{ index: number; field: EditField } | null>(null)
+  const [draftValue, setDraftValue] = useState('')
+
+  const openEditor = (index: number, field: EditField) => {
+    const item = order.items[index]
+    if (!item) return
+    setEditing({ index, field })
+    setDraftValue(
+      field === 'qty' ? String(item.quantity) :
+      field === 'price' ? String(item.price) :
+      item.notes ?? ''
+    )
+    editSheetRef.current?.open()
+  }
+
+  const saveEdit = () => {
+    if (!editing) return
+    const { index, field } = editing
+    if (field === 'qty') {
+      handleUpdateItem(index, { quantity: Math.max(1, Number(draftValue) || 1) })
+    } else if (field === 'price') {
+      const value = Number(draftValue) || 0
+      handleUpdateItem(index, { price: value, base_price: value })
+    } else {
+      handleUpdateItem(index, { notes: draftValue })
+    }
+    editSheetRef.current?.close()
+  }
 
   const { data: tables } = useTablesQuery()
 
@@ -94,7 +128,7 @@ export default function OrderPanel({
 
   const handleSelectTable = (table: { id: string; name: string }) => {
     onChange({ ...order, table_id: table.id, table_name: table.name, type: 'DINE_IN' })
-    setTableModalVisible(false)
+    tableSheetRef.current?.close()
   }
 
   const handleClearTable = () => {
@@ -106,7 +140,11 @@ export default function OrderPanel({
     (order.customer_name?.trim() !== '' || order.table_id !== null)
 
   return (
-    <View style={styles.wrapper}>
+    <KeyboardAvoidingView
+      style={styles.wrapper}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={headerHeight}
+    >
       {/* Input combinado: nombre + mesa */}
       <View style={styles.combinedInput}>
         <Ionicons name='person-outline' size={18} color={theme.textMuted} style={styles.inputIcon} />
@@ -116,6 +154,7 @@ export default function OrderPanel({
           onChangeText={(text) => onChange({ ...order, customer_name: text })}
           placeholder='Nombre del cliente'
           placeholderTextColor={theme.textMuted}
+          returnKeyType='done'
         />
 
         {order.type === 'DINE_IN' && (
@@ -130,7 +169,7 @@ export default function OrderPanel({
                 </TouchableOpacity>
               </View>
             ) : (
-              <TouchableOpacity style={styles.tableButton} onPress={() => setTableModalVisible(true)}>
+              <TouchableOpacity style={styles.tableButton} onPress={() => tableSheetRef.current?.open()}>
                 <Ionicons name='restaurant-outline' size={15} color={theme.textSecondary} />
                 <Text style={styles.tableButtonText}>Mesa...</Text>
               </TouchableOpacity>
@@ -180,6 +219,8 @@ export default function OrderPanel({
         <ScrollView
           ref={scrollRef}
           contentContainerStyle={styles.orderItemContainer}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           onContentSizeChange={() => {
             if (shouldScrollRef.current) {
               scrollRef.current?.scrollToEnd({ animated: true })
@@ -199,6 +240,7 @@ export default function OrderPanel({
                 item={item}
                 onUpdate={(updates) => handleUpdateItem(index, updates)}
                 onRemove={() => handleRemoveItem(index)}
+                onEditField={(field) => openEditor(index, field)}
               />
             ))
           )}
@@ -242,58 +284,91 @@ export default function OrderPanel({
         </TouchableOpacity>
       </View>
 
-      {/* Modal de mesas */}
-      <Modal
-        visible={tableModalVisible}
-        transparent
-        animationType='slide'
-        onRequestClose={() => setTableModalVisible(false)}
+      {/* Item field editor */}
+      <AppBottomSheet
+        ref={editSheetRef}
+        snapPoints={editing?.field === 'notes' ? ['50%', '90%'] : ['38%', '70%']}
+        onDismiss={() => { setEditing(null); setDraftValue('') }}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Selecciona una mesa</Text>
-              <TouchableOpacity onPress={() => setTableModalVisible(false)}>
-                <Ionicons name='close' size={24} color={theme.textPrimary} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView contentContainerStyle={styles.tableList}>
-              {tables?.map((table) => (
-                <TouchableOpacity
-                  key={table.id}
-                  style={[
-                    styles.tableItem,
-                    order.table_id === table.id && styles.tableItemActive
-                  ]}
-                  onPress={() => handleSelectTable({ id: table.id, name: table.name })}
-                >
-                  <Ionicons
-                    name='restaurant-outline'
-                    size={20}
-                    color={order.table_id === table.id ? theme.textPrimary : theme.textSecondary}
-                  />
-                  <Text
-                    style={[
-                      styles.tableItemText,
-                      order.table_id === table.id && styles.tableItemTextActive
-                    ]}
-                  >
-                    {table.name}
-                  </Text>
-                  {table.is_occupied && order.table_id !== table.id && (
-                    <Text style={styles.occupiedBadge}>ocupada</Text>
-                  )}
-                  {order.table_id === table.id && (
-                    <Ionicons name='checkmark-circle' size={18} color={theme.textPrimary} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
+        <Text style={styles.sheetTitle}>
+          {editing?.field === 'qty' ? 'Cantidad' : editing?.field === 'price' ? 'Precio' : 'Notas'}
+        </Text>
+        {editing && (
+          <Text style={styles.editSubtitle} numberOfLines={1}>
+            {order.items[editing.index]?.name}
+          </Text>
+        )}
+        <BottomSheetTextInput
+          value={draftValue}
+          onChangeText={setDraftValue}
+          keyboardType={
+            editing?.field === 'qty' ? 'number-pad' :
+            editing?.field === 'price' ? 'decimal-pad' :
+            'default'
+          }
+          multiline={editing?.field === 'notes'}
+          placeholder={editing?.field === 'notes' ? 'Sin especificaciones' : undefined}
+          placeholderTextColor={theme.textMuted}
+          autoFocus
+          style={[styles.editInput, editing?.field === 'notes' && styles.editInputMultiline]}
+          returnKeyType={editing?.field === 'notes' ? 'default' : 'done'}
+          onSubmitEditing={editing?.field === 'notes' ? undefined : saveEdit}
+          blurOnSubmit={editing?.field !== 'notes'}
+          selectTextOnFocus
+        />
+        <View style={styles.editActions}>
+          <TouchableOpacity onPress={() => editSheetRef.current?.close()}>
+            <Text style={styles.editCancel}>Cancelar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={saveEdit}>
+            <Text style={styles.editSave}>Guardar</Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
-    </View>
+      </AppBottomSheet>
+
+      {/* Table picker bottom sheet */}
+      <AppBottomSheet ref={tableSheetRef} snapPoints={['50%', '80%']} scrollable>
+        <View style={styles.sheetHeader}>
+          <Text style={styles.sheetTitle}>Selecciona una mesa</Text>
+          <TouchableOpacity onPress={() => tableSheetRef.current?.close()}>
+            <Ionicons name='close' size={24} color={theme.textPrimary} />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.tableList}>
+          {tables?.map((table) => (
+            <TouchableOpacity
+              key={table.id}
+              style={[
+                styles.tableItem,
+                order.table_id === table.id && styles.tableItemActive
+              ]}
+              onPress={() => handleSelectTable({ id: table.id, name: table.name })}
+            >
+              <Ionicons
+                name='restaurant-outline'
+                size={20}
+                color={order.table_id === table.id ? theme.textPrimary : theme.textSecondary}
+              />
+              <Text
+                style={[
+                  styles.tableItemText,
+                  order.table_id === table.id && styles.tableItemTextActive
+                ]}
+              >
+                {table.name}
+              </Text>
+              {table.is_occupied && order.table_id !== table.id && (
+                <Text style={styles.occupiedBadge}>ocupada</Text>
+              )}
+              {order.table_id === table.id && (
+                <Ionicons name='checkmark-circle' size={18} color={theme.textPrimary} />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      </AppBottomSheet>
+    </KeyboardAvoidingView>
   )
 }
 
@@ -380,24 +455,17 @@ const makeStyles = (theme: Theme) =>
     disabledText: { color: theme.disabledText },
     clearButton: { width: 46, backgroundColor: theme.destructive, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
     disabled: { backgroundColor: theme.disabled, opacity: 0.7 },
-    modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: theme.overlay },
-    modalContent: {
-      backgroundColor: theme.background,
-      borderTopLeftRadius: 16,
-      borderTopRightRadius: 16,
-      maxHeight: '60%',
-      paddingBottom: 20
-    },
-    modalHeader: {
+    sheetHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      padding: 16,
+      paddingVertical: 12,
       borderBottomWidth: 1,
-      borderBottomColor: theme.border
+      borderBottomColor: theme.border,
+      marginBottom: 8,
     },
-    modalTitle: { fontSize: 17, fontWeight: 'bold', color: theme.textPrimary },
-    tableList: { padding: 12, gap: 8 },
+    sheetTitle: { fontSize: 17, fontWeight: 'bold', color: theme.textPrimary },
+    tableList: { gap: 8 },
     tableItem: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -410,9 +478,24 @@ const makeStyles = (theme: Theme) =>
       borderColor: theme.border
     },
     tableItemActive: { backgroundColor: theme.primary, borderColor: theme.primary },
-    tableItemOccupied: { opacity: 0.5 },
     tableItemText: { flex: 1, fontSize: 15, fontWeight: '600', color: theme.textPrimary },
     tableItemTextActive: { color: theme.textOnPrimary },
-    tableItemTextOccupied: { color: theme.textMuted },
-    occupiedBadge: { fontSize: 11, color: theme.textMuted, fontStyle: 'italic' }
+    occupiedBadge: { fontSize: 11, color: theme.textMuted, fontStyle: 'italic' },
+    editSubtitle: { fontSize: 13, color: theme.textSecondary, marginBottom: 12 },
+    editInput: {
+      borderWidth: 1, borderColor: theme.border, borderRadius: 10,
+      padding: 12, backgroundColor: theme.background,
+      color: theme.textPrimary, fontSize: 16, marginBottom: 16,
+    },
+    editInputMultiline: { minHeight: 80, textAlignVertical: 'top' },
+    editActions: {
+      flexDirection: 'row', justifyContent: 'flex-end',
+      alignItems: 'center', gap: 16,
+    },
+    editCancel: { fontSize: 16, color: theme.textSecondary },
+    editSave: {
+      fontSize: 16, fontWeight: '600', color: theme.textOnPrimary,
+      backgroundColor: theme.primary, paddingVertical: 8, paddingHorizontal: 20,
+      borderRadius: 8,
+    },
   })

@@ -1,13 +1,11 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import {
   View,
   Text,
   FlatList,
   Pressable,
-  Modal,
-  TextInput,
   StyleSheet,
-  Switch
+  Switch,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import Skeleton from '@/app/components/Skeleton'
@@ -16,25 +14,25 @@ import {
   useCreateProduct,
   useProductsQuery,
   useUpdateProduct,
-  useRefetchProducts
 } from '@/hooks/api/products'
 import { useCategoriesQuery } from '@/hooks/api/categories'
 import { Picker } from '@react-native-picker/picker'
 import { useTheme } from '@/app/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
+import { AppBottomSheet, AppBottomSheetRef, BottomSheetTextInput } from '@/app/components/ui/BottomSheet'
 
 export default function ProductsScreen() {
   const { data, isLoading, isRefetching, refetch } = useProductsQuery({ showAll: true })
   const { data: categoriesData } = useCategoriesQuery()
   const { mutate: createProduct, isPending: isCreating } = useCreateProduct()
   const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct()
-  const refetchProducts = useRefetchProducts()
   const { theme } = useTheme()
   const styles = makeStyles(theme)
 
+  const createSheetRef = useRef<AppBottomSheetRef>(null)
+  const editSheetRef = useRef<AppBottomSheetRef>(null)
+
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({})
-  const [open, setOpen] = useState(false)
-  const [editOpen, setEditOpen] = useState(false)
   const [name, setName] = useState('')
   const [price, setPrice] = useState(0)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -77,7 +75,7 @@ export default function ProductsScreen() {
     if (saveDisabled || !selectedCategory) return
     createProduct(
       { name: name.trim(), price, category_id: selectedCategory },
-      { onSuccess: () => { setName(''); setPrice(0); setSelectedCategory(null); setOpen(false) } }
+      { onSuccess: () => { setName(''); setPrice(0); setSelectedCategory(null); createSheetRef.current?.close() } }
     )
   }
 
@@ -129,7 +127,7 @@ export default function ProductsScreen() {
                           setEditName(product.name)
                           setEditCategory(product.category_id)
                           setEditPrice(product.price)
-                          setEditOpen(true)
+                          editSheetRef.current?.open()
                         }}
                       >
                         <Ionicons name='pencil-outline' size={20} color={theme.textOnPrimary} />
@@ -144,99 +142,107 @@ export default function ProductsScreen() {
         />
       )}
 
-      <Pressable style={styles.fab} onPress={() => setOpen(true)}>
+      <Pressable style={styles.fab} onPress={() => createSheetRef.current?.open()}>
         <Ionicons name='add' size={32} color={theme.surface} />
       </Pressable>
 
-      <Modal visible={open} transparent animationType='fade'>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modal}>
-            <Text style={styles.modalTitle}>Nuevo producto</Text>
-            <TextInput value={name} onChangeText={setName} placeholder='Nombre' placeholderTextColor={theme.textMuted} style={styles.input} />
-            <TextInput
-              value={price === 0 ? '' : String(price)}
-              onChangeText={(text) => setPrice(Number(text.replace(',', '.')) || 0)}
-              placeholder='Precio'
-              placeholderTextColor={theme.textMuted}
-              keyboardType='numeric'
-              style={styles.input}
-            />
-            <View style={styles.pickerWrapper}>
-              <Picker
-                selectedValue={selectedCategory}
-                onValueChange={(value) => setSelectedCategory(value)}
-                style={{ color: theme.textPrimary }}
-                dropdownIconColor={theme.textSecondary}
-              >
-                <Picker.Item label='Selecciona una categoría' value={null} color={theme.textPrimary} style={{ backgroundColor: theme.surface }} />
-                {categoriesData?.map((cat) => (
-                  <Picker.Item key={cat.id} label={cat.name} value={cat.id} color={theme.textPrimary} style={{ backgroundColor: theme.surface }} />
-                ))}
-              </Picker>
-            </View>
-            <View style={styles.actionsRight}>
-              <Pressable onPress={() => setOpen(false)}>
-                <Text style={styles.cancel}>Cancelar</Text>
-              </Pressable>
-              <Pressable disabled={saveDisabled} onPress={handleCreate}>
-                <Text style={[styles.save, saveDisabled && styles.saveDisabled]}>
-                  {isCreating ? 'Guardando...' : 'Guardar'}
-                </Text>
-              </Pressable>
-            </View>
-          </View>
+      {/* Create product sheet */}
+      <AppBottomSheet ref={createSheetRef} snapPoints={['75%', '95%']} scrollable>
+        <Text style={styles.sheetTitle}>Nuevo producto</Text>
+        <BottomSheetTextInput
+          value={name}
+          onChangeText={setName}
+          placeholder='Nombre'
+          placeholderTextColor={theme.textMuted}
+          style={styles.input}
+          autoFocus
+        />
+        <BottomSheetTextInput
+          value={price === 0 ? '' : String(price)}
+          onChangeText={(text) => setPrice(Number(text.replace(',', '.')) || 0)}
+          placeholder='Precio'
+          placeholderTextColor={theme.textMuted}
+          keyboardType='numeric'
+          style={styles.input}
+        />
+        <View style={styles.pickerWrapper}>
+          <Picker
+            selectedValue={selectedCategory}
+            onValueChange={(value) => setSelectedCategory(value)}
+            style={{ color: theme.textPrimary }}
+            dropdownIconColor={theme.textSecondary}
+          >
+            <Picker.Item label='Selecciona una categoría' value={null} color={theme.textPrimary} style={{ backgroundColor: theme.surface }} />
+            {categoriesData?.map((cat) => (
+              <Picker.Item key={cat.id} label={cat.name} value={cat.id} color={theme.textPrimary} style={{ backgroundColor: theme.surface }} />
+            ))}
+          </Picker>
         </View>
-      </Modal>
+        <View style={styles.actionsRight}>
+          <Pressable onPress={() => createSheetRef.current?.close()}>
+            <Text style={styles.cancel}>Cancelar</Text>
+          </Pressable>
+          <Pressable disabled={saveDisabled} onPress={handleCreate}>
+            <Text style={[styles.save, saveDisabled && styles.saveDisabled]}>
+              {isCreating ? 'Guardando...' : 'Guardar'}
+            </Text>
+          </Pressable>
+        </View>
+      </AppBottomSheet>
 
-      <Modal visible={editOpen} transparent animationType='fade'>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modal}>
-            <Text style={styles.modalTitle}>Editar producto</Text>
-            <TextInput value={editName} onChangeText={setEditName} placeholder='Nombre' placeholderTextColor={theme.textMuted} style={styles.input} />
-            <TextInput
-              value={editPrice === 0 ? '' : String(editPrice)}
-              onChangeText={(text) => setEditPrice(Number(text.replace(',', '.')) || 0)}
-              placeholder='Precio'
-              placeholderTextColor={theme.textMuted}
-              keyboardType='numeric'
-              style={styles.input}
-            />
-            <View style={styles.pickerWrapper}>
-              <Picker
-                selectedValue={editCategory}
-                onValueChange={(value) => setEditCategory(value)}
-                style={{ color: theme.textPrimary }}
-                dropdownIconColor={theme.textSecondary}
-              >
-                <Picker.Item label='Selecciona una categoría' value={null} color={theme.textPrimary} style={{ backgroundColor: theme.surface }} />
-                {categoriesData?.map((cat) => (
-                  <Picker.Item key={cat.id} label={cat.name} value={cat.id} color={theme.textPrimary} style={{ backgroundColor: theme.surface }} />
-                ))}
-              </Picker>
-            </View>
-            <View style={styles.actionsRight}>
-              <Pressable onPress={() => setEditOpen(false)}>
-                <Text style={styles.cancel}>Cancelar</Text>
-              </Pressable>
-              <Pressable
-                disabled={editDisabled}
-                onPress={() => {
-                  updateProduct({ id: editingProduct.id, data: { name: editName.trim(), category_id: editCategory ?? undefined, price: editPrice } })
-                  setEditOpen(false)
-                  setEditingProduct(null)
-                  setEditName('')
-                  setEditCategory(null)
-                  setEditPrice(0)
-                }}
-              >
-                <Text style={[styles.save, editDisabled && styles.saveDisabled]}>
-                  {isUpdating ? 'Guardando...' : 'Guardar'}
-                </Text>
-              </Pressable>
-            </View>
-          </View>
+      {/* Edit product sheet */}
+      <AppBottomSheet
+        ref={editSheetRef}
+        snapPoints={['75%', '95%']}
+        scrollable
+        onDismiss={() => { setEditingProduct(null); setEditName(''); setEditCategory(null); setEditPrice(0) }}
+      >
+        <Text style={styles.sheetTitle}>Editar producto</Text>
+        <BottomSheetTextInput
+          value={editName}
+          onChangeText={setEditName}
+          placeholder='Nombre'
+          placeholderTextColor={theme.textMuted}
+          style={styles.input}
+        />
+        <BottomSheetTextInput
+          value={editPrice === 0 ? '' : String(editPrice)}
+          onChangeText={(text) => setEditPrice(Number(text.replace(',', '.')) || 0)}
+          placeholder='Precio'
+          placeholderTextColor={theme.textMuted}
+          keyboardType='numeric'
+          style={styles.input}
+        />
+        <View style={styles.pickerWrapper}>
+          <Picker
+            selectedValue={editCategory}
+            onValueChange={(value) => setEditCategory(value)}
+            style={{ color: theme.textPrimary }}
+            dropdownIconColor={theme.textSecondary}
+          >
+            <Picker.Item label='Selecciona una categoría' value={null} color={theme.textPrimary} style={{ backgroundColor: theme.surface }} />
+            {categoriesData?.map((cat) => (
+              <Picker.Item key={cat.id} label={cat.name} value={cat.id} color={theme.textPrimary} style={{ backgroundColor: theme.surface }} />
+            ))}
+          </Picker>
         </View>
-      </Modal>
+        <View style={styles.actionsRight}>
+          <Pressable onPress={() => editSheetRef.current?.close()}>
+            <Text style={styles.cancel}>Cancelar</Text>
+          </Pressable>
+          <Pressable
+            disabled={editDisabled}
+            onPress={() => {
+              updateProduct({ id: editingProduct.id, data: { name: editName.trim(), category_id: editCategory ?? undefined, price: editPrice } })
+              editSheetRef.current?.close()
+            }}
+          >
+            <Text style={[styles.save, editDisabled && styles.saveDisabled]}>
+              {isUpdating ? 'Guardando...' : 'Guardar'}
+            </Text>
+          </Pressable>
+        </View>
+      </AppBottomSheet>
     </View>
   )
 }
@@ -269,12 +275,11 @@ const makeStyles = (theme: Theme) =>
       width: 36, height: 36, borderRadius: 6,
       alignItems: 'center', justifyContent: 'center', backgroundColor: theme.primary
     },
-    modalOverlay: { flex: 1, backgroundColor: theme.overlay, justifyContent: 'center', padding: 24 },
-    modal: { backgroundColor: theme.surface, borderRadius: 16, padding: 20, gap: 16 },
-    modalTitle: { fontSize: 18, fontWeight: '600', color: theme.textPrimary },
+    sheetTitle: { fontSize: 18, fontWeight: '600', color: theme.textPrimary, marginBottom: 16 },
     input: {
       borderWidth: 1, borderColor: theme.border, borderRadius: 12,
-      padding: 12, backgroundColor: theme.background, color: theme.textPrimary
+      padding: 12, backgroundColor: theme.background, color: theme.textPrimary,
+      marginBottom: 12,
     },
     actionsRight: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 12, marginTop: 12 },
     cancel: { color: theme.textPrimary, fontSize: 16 },
@@ -285,6 +290,6 @@ const makeStyles = (theme: Theme) =>
     saveDisabled: { opacity: 0.6 },
     pickerWrapper: {
       borderWidth: 1, borderColor: theme.border, borderRadius: 12,
-      overflow: 'hidden', backgroundColor: theme.background
+      overflow: 'hidden', backgroundColor: theme.background, marginBottom: 12,
     }
   })

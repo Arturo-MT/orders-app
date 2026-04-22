@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react'
-import { View, StyleSheet, useWindowDimensions, ViewStyle } from 'react-native'
+import { View, StyleSheet, ViewStyle } from 'react-native'
+import { useOrientation } from '@/app/hooks/useOrientation'
 import { useFocusEffect } from '@react-navigation/native'
 
 import { useCategoriesQuery } from '@/hooks/api/categories'
@@ -82,8 +83,7 @@ export default function PosScreen() {
 
   /* ---------- layout ---------- */
 
-  const { width, height } = useWindowDimensions()
-  const isPortrait = height >= width
+  const { isPortrait } = useOrientation()
 
   const containerStyle: ViewStyle[] = [
     styles.container,

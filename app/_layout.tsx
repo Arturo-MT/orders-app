@@ -6,25 +6,31 @@ import { StoreProvider } from './context/StoreContext'
 import { ToastProvider } from './context/ToastContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
 
 const queryClient = new QueryClient()
 
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <AuthProvider>
-            <StoreProvider>
-              <FetchProvider>
-                <ToastProvider>
-                  <Slot />
-                </ToastProvider>
-              </FetchProvider>
-            </StoreProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
+      <SafeAreaProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider>
+            <AuthProvider>
+              <StoreProvider>
+                <FetchProvider>
+                  <ToastProvider>
+                    <BottomSheetModalProvider>
+                      <Slot />
+                    </BottomSheetModalProvider>
+                  </ToastProvider>
+                </FetchProvider>
+              </StoreProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   )
 }

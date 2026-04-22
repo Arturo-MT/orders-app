@@ -1,13 +1,11 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import {
   View,
   Text,
   FlatList,
   Pressable,
-  Modal,
-  TextInput,
   StyleSheet,
-  Switch
+  Switch,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useFocusEffect } from 'expo-router'
@@ -15,6 +13,7 @@ import Skeleton from '@/app/components/Skeleton'
 import { useTablesQuery, useCreateTable, useUpdateTable } from '@/hooks/api/tables'
 import { useTheme } from '@/app/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
+import { AppBottomSheet, AppBottomSheetRef, BottomSheetTextInput } from '@/app/components/ui/BottomSheet'
 
 export default function TablesScreen() {
   const { data, isLoading, isRefetching, refetch } = useTablesQuery()
@@ -23,8 +22,9 @@ export default function TablesScreen() {
   const { theme } = useTheme()
   const styles = makeStyles(theme)
 
-  const [open, setOpen] = useState(false)
-  const [editOpen, setEditOpen] = useState(false)
+  const createSheetRef = useRef<AppBottomSheetRef>(null)
+  const editSheetRef = useRef<AppBottomSheetRef>(null)
+
   const [name, setName] = useState('')
   const [editingTable, setEditingTable] = useState<{ id: string; name: string; is_active: boolean } | null>(null)
   const [editName, setEditName] = useState('')
@@ -35,7 +35,7 @@ export default function TablesScreen() {
 
   const handleCreate = () => {
     if (saveDisabled) return
-    createTable(name.trim(), { onSuccess: () => { setName(''); setOpen(false) } })
+    createTable(name.trim(), { onSuccess: () => { setName(''); createSheetRef.current?.close() } })
   }
 
   useFocusEffect(useCallback(() => { refetch() }, [refetch]))
@@ -73,7 +73,7 @@ export default function TablesScreen() {
                     setEditingTable(item)
                     setEditName(item.name)
                     setEditActive(item.is_active)
-                    setEditOpen(true)
+                    editSheetRef.current?.open()
                   }}
                 >
                   <Ionicons name='pencil-outline' size={20} color={theme.textOnPrimary} />
@@ -85,71 +85,72 @@ export default function TablesScreen() {
         />
       )}
 
-      <Pressable style={styles.fab} onPress={() => setOpen(true)}>
+      <Pressable style={styles.fab} onPress={() => createSheetRef.current?.open()}>
         <Ionicons name='add' size={32} color={theme.surface} />
       </Pressable>
 
-      <Modal visible={open} transparent animationType='fade'>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modal}>
-            <Text style={styles.modalTitle}>Nueva mesa</Text>
-            <TextInput
-              value={name}
-              onChangeText={setName}
-              placeholder='Nombre de la mesa'
-              placeholderTextColor={theme.textMuted}
-              style={styles.input}
-            />
-            <View style={styles.actionsRight}>
-              <Pressable onPress={() => setOpen(false)}>
-                <Text style={styles.cancel}>Cancelar</Text>
-              </Pressable>
-              <Pressable disabled={saveDisabled} onPress={handleCreate}>
-                <Text style={[styles.save, saveDisabled && styles.saveDisabled]}>
-                  {isCreating ? 'Guardando...' : 'Guardar'}
-                </Text>
-              </Pressable>
-            </View>
-          </View>
+      {/* Create table sheet */}
+      <AppBottomSheet ref={createSheetRef} snapPoints={['45%', '85%']}>
+        <Text style={styles.sheetTitle}>Nueva mesa</Text>
+        <BottomSheetTextInput
+          value={name}
+          onChangeText={setName}
+          placeholder='Nombre de la mesa'
+          placeholderTextColor={theme.textMuted}
+          style={styles.input}
+          autoFocus
+          returnKeyType='done'
+          onSubmitEditing={handleCreate}
+        />
+        <View style={styles.actionsRight}>
+          <Pressable onPress={() => createSheetRef.current?.close()}>
+            <Text style={styles.cancel}>Cancelar</Text>
+          </Pressable>
+          <Pressable disabled={saveDisabled} onPress={handleCreate}>
+            <Text style={[styles.save, saveDisabled && styles.saveDisabled]}>
+              {isCreating ? 'Guardando...' : 'Guardar'}
+            </Text>
+          </Pressable>
         </View>
-      </Modal>
+      </AppBottomSheet>
 
-      <Modal visible={editOpen} transparent animationType='fade'>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modal}>
-            <Text style={styles.modalTitle}>Editar mesa</Text>
-            <TextInput
-              value={editName}
-              onChangeText={setEditName}
-              placeholder='Nombre'
-              placeholderTextColor={theme.textMuted}
-              style={styles.input}
-            />
-            <View style={styles.switchRow}>
-              <Text style={styles.switchLabel}>Activa</Text>
-              <Switch value={editActive} onValueChange={setEditActive} />
-            </View>
-            <View style={styles.actionsRight}>
-              <Pressable onPress={() => setEditOpen(false)}>
-                <Text style={styles.cancel}>Cancelar</Text>
-              </Pressable>
-              <Pressable
-                disabled={editDisabled}
-                onPress={() => {
-                  if (!editingTable) return
-                  updateTable({ id: editingTable.id, name: editName.trim(), is_active: editActive })
-                  setEditOpen(false)
-                  setEditingTable(null)
-                }}
-              >
-                <Text style={[styles.save, editDisabled && styles.saveDisabled]}>
-                  {isUpdating ? 'Guardando...' : 'Guardar'}
-                </Text>
-              </Pressable>
-            </View>
-          </View>
+      {/* Edit table sheet */}
+      <AppBottomSheet
+        ref={editSheetRef}
+        snapPoints={['45%', '85%']}
+        onDismiss={() => { setEditingTable(null) }}
+      >
+        <Text style={styles.sheetTitle}>Editar mesa</Text>
+        <BottomSheetTextInput
+          value={editName}
+          onChangeText={setEditName}
+          placeholder='Nombre'
+          placeholderTextColor={theme.textMuted}
+          style={styles.input}
+          returnKeyType='done'
+        />
+        <View style={styles.switchRow}>
+          <Text style={styles.switchLabel}>Activa</Text>
+          <Switch value={editActive} onValueChange={setEditActive} />
         </View>
-      </Modal>
+        <View style={styles.actionsRight}>
+          <Pressable onPress={() => editSheetRef.current?.close()}>
+            <Text style={styles.cancel}>Cancelar</Text>
+          </Pressable>
+          <Pressable
+            disabled={editDisabled}
+            onPress={() => {
+              if (!editingTable) return
+              updateTable({ id: editingTable.id, name: editName.trim(), is_active: editActive })
+              editSheetRef.current?.close()
+            }}
+          >
+            <Text style={[styles.save, editDisabled && styles.saveDisabled]}>
+              {isUpdating ? 'Guardando...' : 'Guardar'}
+            </Text>
+          </Pressable>
+        </View>
+      </AppBottomSheet>
     </View>
   )
 }
@@ -174,15 +175,14 @@ const makeStyles = (theme: Theme) =>
       width: 36, height: 36, borderRadius: 6,
       alignItems: 'center', justifyContent: 'center', backgroundColor: theme.primary
     },
-    modalOverlay: { flex: 1, backgroundColor: theme.overlay, justifyContent: 'center', padding: 24 },
-    modal: { backgroundColor: theme.surface, borderRadius: 16, padding: 20, gap: 16 },
-    modalTitle: { fontSize: 18, fontWeight: '600', color: theme.textPrimary },
+    sheetTitle: { fontSize: 18, fontWeight: '600', color: theme.textPrimary, marginBottom: 16 },
     input: {
       borderWidth: 1, borderColor: theme.border, borderRadius: 12,
-      padding: 12, backgroundColor: theme.background, color: theme.textPrimary
+      padding: 12, backgroundColor: theme.background, color: theme.textPrimary,
+      marginBottom: 12,
     },
-    switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 4 },
-    switchLabel: { color: theme.textPrimary },
+    switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, marginBottom: 12 },
+    switchLabel: { color: theme.textPrimary, fontSize: 16 },
     actionsRight: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 12, marginTop: 12 },
     cancel: { color: theme.textPrimary, fontSize: 16 },
     save: {
