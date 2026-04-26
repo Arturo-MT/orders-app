@@ -65,7 +65,7 @@ export default function TablesScreen() {
               <View style={styles.rowActions}>
                 <Switch
                   value={item.is_active}
-                  onValueChange={(value) => updateTable({ id: item.id, is_active: value })}
+                  onValueChange={(value) => updateTable({ id: item.id, isActive: value })}
                   trackColor={{ false: theme.border, true: theme.primary }}
                   thumbColor={item.is_active ? theme.textPrimary : theme.borderLight}
                 />
@@ -143,7 +143,7 @@ export default function TablesScreen() {
             disabled={editDisabled}
             onPress={() => {
               if (!editingTable) return
-              updateTable({ id: editingTable.id, name: editName.trim(), is_active: editActive })
+              updateTable({ id: editingTable.id, name: editName.trim(), isActive: editActive })
               editSheetRef.current?.close()
             }}
           >

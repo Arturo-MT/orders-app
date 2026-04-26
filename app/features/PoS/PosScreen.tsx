@@ -7,10 +7,8 @@ import { useCategoriesQuery } from '@/hooks/api/categories'
 import { useProductsQuery } from '@/hooks/api/products'
 import { useUserQuery } from '@/hooks/api/users'
 import { useCreateOrder } from '@/hooks/api/orders'
-import { useStoreQuery } from '@/hooks/api/store'
 
 import { OrderDraft, OrderItemDraft, Product } from '@/types/types'
-import { printKitchenOrder } from '../printing/print'
 
 import { useTheme } from '@/app/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
@@ -50,7 +48,6 @@ export default function PosScreen() {
   } = useProductsQuery()
 
   const { refetch: userRefetch } = useUserQuery()
-  const { data: storeData } = useStoreQuery()
 
   const { mutateAsync: createOrder, isPending: isCreatingOrder } =
     useCreateOrder({
@@ -125,7 +122,7 @@ export default function PosScreen() {
     return draft
   }
 
-  const handlePrintOrder = async () => {
+  const handleSubmitOrder = async () => {
     const payload = buildOrderPayload(order)
 
     if (!payload) {
@@ -136,35 +133,7 @@ export default function PosScreen() {
     setIsSubmitting(true)
     try {
       await createOrder(payload)
-
       showToast('Orden creada correctamente', 'success')
-      /*  
-      const { success: printSuccess, error: printError } = await printKitchenOrder(
-        {
-          order_number: response.order_number,
-          type: order.type,
-          customer_name: order.customer_name,
-          table_name: order.table_name,
-          is_paid: order.is_paid ?? false,
-          items: order.items
-            .sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }))
-            .map((i) => ({
-              name: i.name,
-              quantity: i.quantity,
-              price: i.base_price,
-              notes: i.notes
-            }))
-        },
-        storeData?.printer_address
-      )
-
-      if (printSuccess) {
-        showToast('Orden impresa correctamente', 'success')
-      } else {
-        showToast(`Orden #${response.order_number} guardada. Error al imprimir: ${printError}`, 'error')
-      }
-         */
-
       setOrder({
         type: 'TAKEAWAY',
         table_id: null,
@@ -212,7 +181,7 @@ export default function PosScreen() {
         order={order}
         total={total}
         onChange={setOrder}
-        onPrint={handlePrintOrder}
+        onSubmit={handleSubmitOrder}
         isLoading={isCreatingOrder || isSubmitting}
       />
     </View>

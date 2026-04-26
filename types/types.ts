@@ -7,11 +7,6 @@ export interface Product {
   price: number
 }
 
-export interface StoreConfig {
-  printer_name: string
-  printer_address: string
-}
-
 export interface OrderItem {
   id: string
   product: string
@@ -39,20 +34,6 @@ export type OrderItemDraft = {
   quantity: number
   notes?: string
   price: number
-}
-
-export type PrintOrder = {
-  order_number: string
-  type: 'DINE_IN' | 'TAKEAWAY'
-  customer_name: string | null
-  table_name?: string | null
-  is_paid: boolean
-  items: {
-    name: string
-    quantity: number
-    price: number
-    notes?: string
-  }[]
 }
 
 export type OrderDraft = {
@@ -98,11 +79,6 @@ export interface ProductData {
   name: string
   category: string
   price: number
-}
-
-export interface Device {
-  name: string
-  address: string
 }
 
 export type ProductInput = {

@@ -12,17 +12,15 @@ import {
 import Swipeable from 'react-native-gesture-handler/Swipeable'
 import { Ionicons } from '@expo/vector-icons'
 import {
-  useChangeTableMutation,
-  useCloseOrderMutation,
   useOrderQuery,
-  useReopenOrderMutation
+  useUpdateOrder
 } from '@/hooks/api/orders'
+import { useUpdateTable } from '@/hooks/api/tables'
 import { useElapsedTime } from '@/hooks/utils/useElapsedTime'
-import { useStoreQuery } from '@/hooks/api/store'
 import { useTablesQuery } from '@/hooks/api/tables'
-import { printKitchenOrder, PrintOrder } from '../printing/print'
 import CustomCheckbox from '@/app/components/CustomCheckbox'
 import {
+  clearOrderState,
   getOrderState,
   setOrderExpanded,
   setOrderPaidItem
@@ -101,7 +99,6 @@ export default function OrderCard({ order, onRemove }: Props) {
   const state = getOrderState(order.id)
   const [expanded, setExpanded] = useState(state.expanded)
   const [paidItems, setPaidItems] = useState(state.paidItems)
-  const [isPrinting, setIsPrinting] = useState(false)
   const [tableModalVisible, setTableModalVisible] = useState(false)
   const swipeableRef = useRef<Swipeable>(null)
   const canClose =
@@ -121,7 +118,7 @@ export default function OrderCard({ order, onRemove }: Props) {
   }
 
   const { data: orderData, isLoading } = useOrderQuery({
-    order_id: order.id,
+    orderId: order.id,
     enabled: expanded
   })
   const paidTotal =
@@ -129,26 +126,28 @@ export default function OrderCard({ order, onRemove }: Props) {
       return paidItems[item.id] ? acc + (Number(item.total_price) || 0) : acc
     }, 0) ?? 0
 
-  const { data: storeData } = useStoreQuery()
   const orderTotal =
     orderData?.items.reduce(
       (acc: number, item: any) => acc + (Number(item.total_price) || 0),
       0
     ) ?? 0
-  const closeOrderMutation = useCloseOrderMutation()
-  const reopenOrderMutation = useReopenOrderMutation()
-  const changeTableMutation = useChangeTableMutation()
+
+  const updateOrder = useUpdateOrder()
+  const updateTable = useUpdateTable()
   const { data: tables } = useTablesQuery()
 
   const handleChangeTable = async (newTableId: string) => {
     setTableModalVisible(false)
     if (newTableId === order.table_id) return
     try {
-      await changeTableMutation.mutateAsync({
-        order_id: order.id,
-        old_table_id: order.table_id,
-        new_table_id: newTableId
+      await updateOrder.mutateAsync({
+        orderId: order.id,
+        patch: { table_id: newTableId }
       })
+      if (order.table_id) {
+        await updateTable.mutateAsync({ id: order.table_id, isOccupied: false })
+      }
+      await updateTable.mutateAsync({ id: newTableId, isOccupied: true })
       showToast('Mesa actualizada', 'success')
     } catch {
       showToast('Error al cambiar la mesa', 'error')
@@ -156,14 +155,20 @@ export default function OrderCard({ order, onRemove }: Props) {
   }
 
   const handleReopenOrder = async () => {
-    if (reopenOrderMutation.isPending) return
+    if (updateOrder.isPending) return
+    const status = order.dispatched_at
+      ? 'DISPATCHED'
+      : order.prepared_at
+        ? 'PREPARING'
+        : 'OPEN'
     try {
-      await reopenOrderMutation.mutateAsync({
-        order_id: order.id,
-        table_id: order.table_id,
-        prepared_at: order.prepared_at,
-        dispatched_at: order.dispatched_at
+      await updateOrder.mutateAsync({
+        orderId: order.id,
+        patch: { status, payment_status: 'PENDING', closed_at: null }
       })
+      if (order.table_id) {
+        await updateTable.mutateAsync({ id: order.table_id, isOccupied: true })
+      }
       showToast('Orden reabierta', 'success')
     } catch {
       showToast('Error al reabrir la orden', 'error')
@@ -171,12 +176,20 @@ export default function OrderCard({ order, onRemove }: Props) {
   }
 
   const handleCloseOrder = async () => {
-    if (closeOrderMutation.isPending) return
+    if (updateOrder.isPending) return
     try {
-      await closeOrderMutation.mutateAsync({
-        order_id: order.id,
-        table_id: order.table_id
+      await updateOrder.mutateAsync({
+        orderId: order.id,
+        patch: {
+          status: 'CLOSED',
+          payment_status: 'PAID',
+          closed_at: new Date().toISOString()
+        }
       })
+      if (order.table_id) {
+        await updateTable.mutateAsync({ id: order.table_id, isOccupied: false })
+      }
+      clearOrderState(order.id)
       showToast('Orden cerrada', 'success')
       onRemove?.(order.id)
     } catch {
@@ -185,45 +198,21 @@ export default function OrderCard({ order, onRemove }: Props) {
     }
   }
 
-  const toggle = () => {
-    setExpanded((prev) => !prev)
+  const handleMarkAsPaid = async () => {
+    if (updateOrder.isPending) return
+    try {
+      await updateOrder.mutateAsync({
+        orderId: order.id,
+        patch: { payment_status: 'PAID' }
+      })
+      showToast('Orden marcada como pagada', 'success')
+    } catch {
+      showToast('Error al marcar como pagada', 'error')
+    }
   }
 
-  const handlePrint = async () => {
-    if (!orderData || isPrinting) return
-    setIsPrinting(true)
-    const printPayload: PrintOrder = {
-      order_number: orderData.order_number,
-      type: orderData.type,
-      customer_name: orderData.customer_name,
-      table_name: orderData.table_name,
-      is_paid: orderData.payment_status === 'PAID',
-      items: orderData.items
-        .sort((a: any, b: any) =>
-          a.product_name.localeCompare(b.product_name, 'es', {
-            sensitivity: 'base'
-          })
-        )
-        .map((item: any) => ({
-          name: item.product_name,
-          quantity: item.quantity,
-          price: item.base_price,
-          notes: item.notes ?? undefined
-        }))
-    }
-    try {
-      const { success, error } = await printKitchenOrder(
-        printPayload,
-        storeData?.printer_address
-      )
-      if (success) {
-        showToast('Orden impresa correctamente', 'success')
-      } else {
-        showToast(`Error al imprimir: ${error}`, 'error')
-      }
-    } finally {
-      setIsPrinting(false)
-    }
+  const toggle = () => {
+    setExpanded((prev) => !prev)
   }
 
   const displayName = order.table_name || order.customer_name
@@ -253,7 +242,7 @@ export default function OrderCard({ order, onRemove }: Props) {
     return (
       <Animated.View style={[styles.swipeAction, { opacity }]}>
         <Animated.View style={{ alignItems: 'center', transform: [{ scale }] }}>
-          {closeOrderMutation.isPending ? (
+          {updateOrder.isPending ? (
             <ActivityIndicator size='small' color='white' />
           ) : (
             <>
@@ -379,31 +368,42 @@ export default function OrderCard({ order, onRemove }: Props) {
               </Text>
 
               <View style={styles.actions}>
-                <TouchableOpacity
-                  onPress={handlePrint}
-                  style={styles.printButton}
-                  disabled={closeOrderMutation.isPending || isPrinting}
-                >
-                  {isPrinting ? (
-                    <ActivityIndicator size='small' color={theme.textPrimary} />
-                  ) : (
-                    <Ionicons
-                      name='print-outline'
-                      size={26}
-                      color={theme.textPrimary}
-                    />
+                {(orderData?.status === 'OPEN' ||
+                  orderData?.status === 'PREPARING' ||
+                  orderData?.status === 'DISPATCHED') &&
+                  orderData?.payment_status !== 'PAID' && (
+                    <TouchableOpacity
+                      onPress={handleMarkAsPaid}
+                      style={[
+                        styles.payButton,
+                        updateOrder.isPending && styles.disabledButton
+                      ]}
+                      disabled={updateOrder.isPending}
+                    >
+                      {updateOrder.isPending ? (
+                        <ActivityIndicator
+                          size='small'
+                          color={theme.textOnPrimary}
+                        />
+                      ) : (
+                        <Ionicons
+                          name='cash-outline'
+                          size={26}
+                          color={theme.textOnPrimary}
+                        />
+                      )}
+                    </TouchableOpacity>
                   )}
-                </TouchableOpacity>
                 {orderData?.status === 'CLOSED' && (
                   <TouchableOpacity
                     onPress={handleReopenOrder}
                     style={[
                       styles.reopenButton,
-                      reopenOrderMutation.isPending && styles.disabledButton
+                      updateOrder.isPending && styles.disabledButton
                     ]}
-                    disabled={reopenOrderMutation.isPending}
+                    disabled={updateOrder.isPending}
                   >
-                    {reopenOrderMutation.isPending ? (
+                    {updateOrder.isPending ? (
                       <ActivityIndicator
                         size='small'
                         color={theme.textOnPrimary}
@@ -424,7 +424,7 @@ export default function OrderCard({ order, onRemove }: Props) {
                     <TouchableOpacity
                       onPress={() => setTableModalVisible(true)}
                       style={styles.tableButton}
-                      disabled={changeTableMutation.isPending}
+                      disabled={updateTable.isPending}
                     >
                       <Ionicons
                         name='restaurant-outline'
@@ -440,9 +440,9 @@ export default function OrderCard({ order, onRemove }: Props) {
                     onPress={handleCloseOrder}
                     style={[
                       styles.closeButton,
-                      closeOrderMutation.isPending && styles.disabledButton
+                      updateOrder.isPending && styles.disabledButton
                     ]}
-                    disabled={closeOrderMutation.isPending}
+                    disabled={updateOrder.isPending}
                   >
                     <Ionicons
                       name='checkmark-done-outline'
@@ -575,7 +575,11 @@ const makeStyles = (theme: Theme) =>
       backgroundColor: theme.primary,
       borderRadius: 6
     },
-    printButton: { padding: 6, borderRadius: 6 },
+    payButton: {
+      padding: 6,
+      backgroundColor: theme.success,
+      borderRadius: 6
+    },
     itemInfo: { flex: 1, marginLeft: 6 },
     swipeAction: {
       backgroundColor: theme.primary,

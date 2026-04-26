@@ -1,25 +1,17 @@
 import { useFetch } from '@/app/context/FetchContext'
 import { useStore } from '@/app/context/StoreContext'
-import { clearOrderState } from '@/app/features/orders-list/orderStates'
 import { OrderDraft } from '@/types/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   OPEN_ORDERS_KEY,
   ORDER_KEY,
-  ORDERS_KEY,
-  TABLE_ORDER_KEY
+  ORDERS_KEY
 } from './constants'
-import {
-  changeOrderTable,
-  closeOrder,
-  orderCreate,
-  reopenOrder
-} from './mutations'
+import { createOrder, CreateOrderResponse, OrderUpdatePatch, updateOrder } from './mutations'
 import {
   openOrderIdsQuery,
   orderQuery,
-  ordersQuery,
-  tableOrderQuery
+  ordersQuery
 } from './queries'
 import { useRealtimeInvalidate } from './useRealtimeInvalidate'
 
@@ -30,8 +22,8 @@ export function useCreateOrder(config: { retry?: number; retryDelay?: number } =
 
   return useMutation({
     mutationFn: (payload: OrderDraft) =>
-      orderCreate({ client, payload, storeId: activeStore!.id }),
-    onSuccess: (data) => {
+      createOrder({ client, payload, storeId: activeStore!.id }),
+    onSuccess: (data: CreateOrderResponse) => {
       queryClient.invalidateQueries({ queryKey: [ORDERS_KEY] })
       if (data?.order_id) {
         queryClient.invalidateQueries({ queryKey: [ORDER_KEY, data.order_id] })
@@ -42,37 +34,37 @@ export function useCreateOrder(config: { retry?: number; retryDelay?: number } =
 }
 
 export function useOrderQuery({
-  order_id,
+  orderId,
   enabled = true
 }: {
-  order_id: string
+  orderId: string
   enabled?: boolean
 }) {
   const { client } = useFetch()
-  const isEnabled = !!order_id && enabled
+  const isEnabled = !!orderId && enabled
 
   useRealtimeInvalidate({
     table: 'order',
-    filter: order_id ? `id=eq.${order_id}` : undefined,
-    queryKey: [ORDER_KEY, order_id],
+    filter: orderId ? `id=eq.${orderId}` : undefined,
+    queryKey: [ORDER_KEY, orderId],
     enabled: isEnabled
   })
 
   useRealtimeInvalidate({
     table: 'order_item',
-    filter: order_id ? `order_id=eq.${order_id}` : undefined,
-    queryKey: [ORDER_KEY, order_id],
+    filter: orderId ? `order_id=eq.${orderId}` : undefined,
+    queryKey: [ORDER_KEY, orderId],
     enabled: isEnabled
   })
 
   return useQuery({
-    queryKey: [ORDER_KEY, order_id],
+    queryKey: [ORDER_KEY, orderId],
     enabled: isEnabled,
-    queryFn: () => orderQuery({ client, orderId: order_id })
+    queryFn: () => orderQuery({ client, orderId })
   })
 }
 
-export function useOpenOrderIds() {
+export function useOpenOrderIdsQuery() {
   const { client } = useFetch()
   const { activeStore } = useStore()
 
@@ -129,95 +121,23 @@ export function useOrdersQuery({
   })
 }
 
-export function useCloseOrderMutation() {
+export function useUpdateOrder() {
   const { client } = useFetch()
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: ({
-      order_id,
-      table_id
+      orderId,
+      patch
     }: {
-      order_id: string
-      table_id?: string | null
-    }) => closeOrder({ client, orderId: order_id, tableId: table_id }),
+      orderId: string
+      patch: OrderUpdatePatch
+    }) => updateOrder({ client, orderId, patch }),
 
     onSuccess: (_data, variables) => {
-      queryClient.removeQueries({ queryKey: [ORDER_KEY, variables.order_id] })
-      queryClient.invalidateQueries({ queryKey: [OPEN_ORDERS_KEY] })
-      queryClient.invalidateQueries({ queryKey: [ORDERS_KEY] })
-      clearOrderState(variables.order_id)
-    }
-  })
-}
-
-export function useChangeTableMutation() {
-  const { client } = useFetch()
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({
-      order_id,
-      old_table_id,
-      new_table_id
-    }: {
-      order_id: string
-      old_table_id: string | null
-      new_table_id: string
-    }) =>
-      changeOrderTable({
-        client,
-        orderId: order_id,
-        oldTableId: old_table_id,
-        newTableId: new_table_id
-      }),
-
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: [ORDER_KEY, variables.order_id] })
-      queryClient.invalidateQueries({ queryKey: [OPEN_ORDERS_KEY] })
-      queryClient.invalidateQueries({ queryKey: [TABLE_ORDER_KEY] })
-    }
-  })
-}
-
-export function useReopenOrderMutation() {
-  const { client } = useFetch()
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({
-      order_id,
-      table_id,
-      prepared_at,
-      dispatched_at
-    }: {
-      order_id: string
-      table_id?: string | null
-      prepared_at?: string | null
-      dispatched_at?: string | null
-    }) =>
-      reopenOrder({
-        client,
-        orderId: order_id,
-        tableId: table_id,
-        preparedAt: prepared_at,
-        dispatchedAt: dispatched_at
-      }),
-
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: [ORDER_KEY, variables.order_id] })
+      queryClient.invalidateQueries({ queryKey: [ORDER_KEY, variables.orderId] })
       queryClient.invalidateQueries({ queryKey: [OPEN_ORDERS_KEY] })
       queryClient.invalidateQueries({ queryKey: [ORDERS_KEY] })
     }
-  })
-}
-
-export function useGetTableOrder(table_id: string) {
-  const { client } = useFetch()
-
-  return useQuery({
-    queryKey: [TABLE_ORDER_KEY, table_id],
-    enabled: !!table_id,
-    queryFn: () => tableOrderQuery({ client, tableId: table_id })
   })
 }

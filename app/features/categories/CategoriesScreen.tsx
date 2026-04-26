@@ -72,7 +72,7 @@ export default function CategoriesScreen() {
               <View style={styles.rowActions}>
                 <Switch
                   value={item.is_active}
-                  onValueChange={(value) => updateCategory({ id: item.id, is_active: value })}
+                  onValueChange={(value) => updateCategory({ id: item.id, isActive: value })}
                   trackColor={{ false: theme.border, true: theme.primary }}
                   thumbColor={item.is_active ? theme.textPrimary : theme.borderLight}
                 />

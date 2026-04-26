@@ -172,21 +172,3 @@ export async function ordersQuery({
     total: count ?? 0
   }
 }
-
-export async function tableOrderQuery({
-  client,
-  tableId
-}: {
-  client: SupabaseClient
-  tableId: string
-}): Promise<{ id: string; order_number: string } | null> {
-  const { data, error } = await client
-    .from('order')
-    .select('id, order_number')
-    .eq('table_id', tableId)
-    .eq('status', 'OPEN')
-    .maybeSingle()
-
-  if (error) throw error
-  return data
-}

@@ -1,6 +1,5 @@
 import React from 'react'
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native'
-import BluetoothSettings from './BluetoothSettings'
 import { useUserQuery } from '@/hooks/api/users'
 import { useAuth } from '@/app/context/AuthContext'
 import StoreSelector from './StoreSelector'
@@ -101,10 +100,6 @@ export default function SettingsScreen() {
         {stores.length > 1 && <StoreSelector />}
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Bluetooth</Text>
-        <BluetoothSettings />
-      </View>
     </ScrollView>
   )
 }

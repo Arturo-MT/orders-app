@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 
-export async function createTableMutation({
+export async function createTable({
   client,
   storeId,
   name
@@ -25,23 +25,26 @@ export async function createTableMutation({
   return data
 }
 
-export async function updateTableMutation({
+export async function updateTable({
   client,
   storeId,
   id,
   name,
-  is_active
+  isActive,
+  isOccupied
 }: {
   client: SupabaseClient
   storeId: string
   id: string
   name?: string
-  is_active?: boolean
+  isActive?: boolean
+  isOccupied?: boolean
 }) {
   const payload: Record<string, any> = {}
 
   if (name !== undefined) payload.name = name
-  if (is_active !== undefined) payload.is_active = is_active
+  if (isActive !== undefined) payload.is_active = isActive
+  if (isOccupied !== undefined) payload.is_occupied = isOccupied
 
   const { data, error } = await client
     .from('dining_table')

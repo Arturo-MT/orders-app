@@ -3,7 +3,8 @@ import { useStore } from '@/app/context/StoreContext'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { tablesQuery } from './queries'
 import { TABLES_KEY } from './constants'
-import { createTableMutation, updateTableMutation } from './mutations'
+import { OPEN_ORDERS_KEY } from '../orders/constants'
+import { createTable, updateTable } from './mutations'
 
 export function useTablesQuery(config = {}) {
   const { client } = useFetch()
@@ -29,7 +30,7 @@ export function useCreateTable(config = {}) {
 
   return useMutation({
     mutationFn: (name: string) =>
-      createTableMutation({
+      createTable({
         client,
         storeId: activeStore!.id,
         name
@@ -49,16 +50,15 @@ export function useUpdateTable(config = {}) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (input: { id: string; name?: string; is_active?: boolean }) =>
-      updateTableMutation({
+    mutationFn: (input: { id: string; name?: string; isActive?: boolean; isOccupied?: boolean }) =>
+      updateTable({
         client,
         storeId: activeStore!.id,
         ...input
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [TABLES_KEY, activeStore?.id]
-      })
+      queryClient.invalidateQueries({ queryKey: [TABLES_KEY, activeStore?.id] })
+      queryClient.invalidateQueries({ queryKey: [OPEN_ORDERS_KEY] })
     },
     ...config
   })

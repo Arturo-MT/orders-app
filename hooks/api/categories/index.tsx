@@ -3,7 +3,7 @@ import { useStore } from '@/app/context/StoreContext'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { categoriesQuery } from './queries'
 import { CATEGORIES_KEY } from './constants'
-import { createCategoryMutation, updateCategoryMutation } from './mutations'
+import { createCategory, updateCategory } from './mutations'
 
 export function useCategoriesQuery(config = {}) {
   const { client } = useFetch()
@@ -29,7 +29,7 @@ export function useCreateCategory(config = {}) {
 
   return useMutation({
     mutationFn: (name: string) =>
-      createCategoryMutation({
+      createCategory({
         client,
         storeId: activeStore!.id,
         name
@@ -49,8 +49,8 @@ export function useUpdateCategory(config = {}) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (input: { id: string; name?: string; is_active?: boolean }) =>
-      updateCategoryMutation({
+    mutationFn: (input: { id: string; name?: string; isActive?: boolean }) =>
+      updateCategory({
         client,
         storeId: activeStore!.id,
         ...input

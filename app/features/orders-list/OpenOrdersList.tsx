@@ -1,4 +1,4 @@
-import { useOpenOrderIds } from '@/hooks/api/orders'
+import { useOpenOrderIdsQuery } from '@/hooks/api/orders'
 import { useFocusEffect } from 'expo-router'
 import React, { memo, useCallback, useEffect, useReducer } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
@@ -44,7 +44,7 @@ const OrderCardWrapper = memo(function OrderCardWrapper({
 })
 
 export default function OpenOrdersList() {
-  const { data: orderIds, isLoading, isRefetching, refetch } = useOpenOrderIds()
+  const { data: orderIds, isLoading, isRefetching, refetch } = useOpenOrderIdsQuery()
 
   useFocusEffect(useCallback(() => { refetch() }, [refetch]))
   const [orders, dispatch] = useReducer(orderListReducer, [])

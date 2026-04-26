@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 
-export async function createCategoryMutation({
+export async function createCategory({
   client,
   storeId,
   name
@@ -25,23 +25,23 @@ export async function createCategoryMutation({
   return data
 }
 
-export async function updateCategoryMutation({
+export async function updateCategory({
   client,
   storeId,
   id,
   name,
-  is_active
+  isActive
 }: {
   client: SupabaseClient
   storeId: string
   id: string
   name?: string
-  is_active?: boolean
+  isActive?: boolean
 }) {
   const payload: Record<string, any> = {}
 
   if (name !== undefined) payload.name = name
-  if (is_active !== undefined) payload.is_active = is_active
+  if (isActive !== undefined) payload.is_active = isActive
 
   const { data, error } = await client
     .from('product_category')

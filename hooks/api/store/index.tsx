@@ -1,9 +1,7 @@
 import { useFetch } from '@/app/context/FetchContext'
 import { storeQuery } from './queries'
 import { STORE_KEY } from './constants'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { StoreConfig } from '@/types/types'
-import { storeUpdateMutation } from './mutations'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useStore } from '@/app/context/StoreContext'
 
 export function useStoreQuery(config = {}) {
@@ -13,22 +11,6 @@ export function useStoreQuery(config = {}) {
     queryKey: [STORE_KEY, activeStore],
     enabled: !!activeStore,
     queryFn: () => storeQuery({ client, id: activeStore!.id }),
-    ...config
-  })
-}
-
-export function useStoreUpdateMutation(config = {}) {
-  const { client } = useFetch()
-  const { activeStore } = useStore()
-
-  return useMutation({
-    mutationFn: (payload: StoreConfig) => {
-      return storeUpdateMutation({
-        client,
-        payload,
-        id: activeStore!.id
-      })
-    },
     ...config
   })
 }

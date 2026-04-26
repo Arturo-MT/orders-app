@@ -1,12 +1,21 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import { OrderDraft } from '@/types/types'
 
-export type OrderCreateResponse = {
+export type CreateOrderResponse = {
   order_id: string
   order_number: string
 }
 
-export async function orderCreate({
+export type OrderUpdatePatch = Partial<{
+  status: 'OPEN' | 'PREPARING' | 'DISPATCHED' | 'CLOSED'
+  payment_status: 'PAID' | 'PENDING'
+  table_id: string | null
+  closed_at: string | null
+  prepared_at: string | null
+  dispatched_at: string | null
+}>
+
+export async function createOrder({
   client,
   payload,
   storeId
@@ -14,7 +23,7 @@ export async function orderCreate({
   client: SupabaseClient
   payload: OrderDraft
   storeId: string
-}): Promise<OrderCreateResponse> {
+}): Promise<CreateOrderResponse> {
   let orderId: string
   let orderNumber: string
 
@@ -75,103 +84,24 @@ export async function orderCreate({
   return { order_id: orderId, order_number: orderNumber }
 }
 
-export async function closeOrder({
+export async function updateOrder({
   client,
   orderId,
-  tableId
+  patch
 }: {
   client: SupabaseClient
   orderId: string
-  tableId?: string | null
+  patch: OrderUpdatePatch
 }) {
   const { data, error } = await client
     .from('order')
-    .update({
-      status: 'CLOSED',
-      payment_status: 'PAID',
-      closed_at: new Date().toISOString()
-    })
+    .update(patch)
     .eq('id', orderId)
     .select()
 
   if (error) throw error
   if (!data || data.length === 0) {
-    throw new Error('No se cerró ninguna orden (0 rows affected)')
+    throw new Error('No se actualizó ninguna orden (0 rows affected)')
   }
-
-  if (tableId) {
-    const { error: tableError } = await client
-      .from('dining_table')
-      .update({ is_occupied: false })
-      .eq('id', tableId)
-
-    if (tableError) throw tableError
-  }
-}
-
-export async function changeOrderTable({
-  client,
-  orderId,
-  oldTableId,
-  newTableId
-}: {
-  client: SupabaseClient
-  orderId: string
-  oldTableId: string | null
-  newTableId: string
-}) {
-  const { error } = await client
-    .from('order')
-    .update({ table_id: newTableId })
-    .eq('id', orderId)
-
-  if (error) throw error
-
-  if (oldTableId) {
-    const { error: oldTableError } = await client
-      .from('dining_table')
-      .update({ is_occupied: false })
-      .eq('id', oldTableId)
-
-    if (oldTableError) throw oldTableError
-  }
-
-  const { error: newTableError } = await client
-    .from('dining_table')
-    .update({ is_occupied: true })
-    .eq('id', newTableId)
-
-  if (newTableError) throw newTableError
-}
-
-export async function reopenOrder({
-  client,
-  orderId,
-  tableId,
-  preparedAt,
-  dispatchedAt
-}: {
-  client: SupabaseClient
-  orderId: string
-  tableId?: string | null
-  preparedAt?: string | null
-  dispatchedAt?: string | null
-}) {
-  const status = dispatchedAt ? 'DISPATCHED' : preparedAt ? 'PREPARING' : 'OPEN'
-
-  const { error } = await client
-    .from('order')
-    .update({ status, payment_status: 'PENDING', closed_at: null })
-    .eq('id', orderId)
-
-  if (error) throw error
-
-  if (tableId) {
-    const { error: tableError } = await client
-      .from('dining_table')
-      .update({ is_occupied: true })
-      .eq('id', tableId)
-
-    if (tableError) throw tableError
-  }
+  return data[0]
 }

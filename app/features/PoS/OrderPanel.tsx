@@ -27,7 +27,7 @@ interface Props {
   order: OrderDraft
   total: number
   onChange: (newOrder: OrderDraft) => void
-  onPrint: () => void
+  onSubmit: () => void
   isLoading?: boolean
 }
 
@@ -35,7 +35,7 @@ export default function OrderPanel({
   order,
   total,
   onChange,
-  onPrint,
+  onSubmit,
   isLoading
 }: Props) {
   // layout-only: wrap controls en paneles estrechos
@@ -253,21 +253,21 @@ export default function OrderPanel({
         <Text style={styles.totalAmount}>${total.toFixed(2)}</Text>
 
         <TouchableOpacity
-          onPress={onPrint}
+          onPress={onSubmit}
           disabled={!canSendToKitchen || isLoading}
-          style={[styles.printButton, (!canSendToKitchen || isLoading) && styles.disabled]}
+          style={[styles.submitButton, (!canSendToKitchen || isLoading) && styles.disabled]}
         >
           {isLoading ? (
             <ActivityIndicator size='small' color={theme.disabledText} style={{ marginRight: 6 }} />
           ) : (
             <Ionicons
-              name='print'
+              name='checkmark-outline'
               size={20}
               color={!canSendToKitchen ? theme.disabledText : theme.textOnPrimary}
               style={{ marginRight: 6 }}
             />
           )}
-          <Text style={[styles.printButtonText, (!canSendToKitchen || isLoading) && styles.disabledText]}>
+          <Text style={[styles.submitButtonText, (!canSendToKitchen || isLoading) && styles.disabledText]}>
             {isLoading ? 'Enviando...' : 'Enviar a cocina'}
           </Text>
         </TouchableOpacity>
@@ -442,7 +442,7 @@ const makeStyles = (theme: Theme) =>
       textAlign: 'right',
       textAlignVertical: 'center'
     },
-    printButton: {
+    submitButton: {
       flex: 1,
       backgroundColor: theme.primary,
       borderRadius: radius.md,
@@ -451,7 +451,7 @@ const makeStyles = (theme: Theme) =>
       alignItems: 'center',
       justifyContent: 'center'
     },
-    printButtonText: { color: theme.textOnPrimary, fontWeight: 'bold', fontSize: 15 },
+    submitButtonText: { color: theme.textOnPrimary, fontWeight: 'bold', fontSize: 15 },
     disabledText: { color: theme.disabledText },
     clearButton: { width: 46, backgroundColor: theme.destructive, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
     disabled: { backgroundColor: theme.disabled, opacity: 0.7 },
