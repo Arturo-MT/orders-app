@@ -100,6 +100,7 @@ export default function OrderCard({ order, onRemove }: Props) {
   const [expanded, setExpanded] = useState(state.expanded)
   const [paidItems, setPaidItems] = useState(state.paidItems)
   const [tableModalVisible, setTableModalVisible] = useState(false)
+  const [pendingAction, setPendingAction] = useState<'pay' | 'close' | null>(null)
   const swipeableRef = useRef<Swipeable>(null)
   const canClose =
     order.status === 'OPEN' ||
@@ -155,12 +156,13 @@ export default function OrderCard({ order, onRemove }: Props) {
   }
 
   const handleReopenOrder = async () => {
-    if (updateOrder.isPending) return
+    if (pendingAction) return
     const status = order.dispatched_at
       ? 'DISPATCHED'
       : order.prepared_at
         ? 'PREPARING'
         : 'OPEN'
+    setPendingAction('close')
     try {
       await updateOrder.mutateAsync({
         orderId: order.id,
@@ -172,11 +174,14 @@ export default function OrderCard({ order, onRemove }: Props) {
       showToast('Orden reabierta', 'success')
     } catch {
       showToast('Error al reabrir la orden', 'error')
+    } finally {
+      setPendingAction(null)
     }
   }
 
   const handleCloseOrder = async () => {
-    if (updateOrder.isPending) return
+    if (pendingAction) return
+    setPendingAction('close')
     try {
       await updateOrder.mutateAsync({
         orderId: order.id,
@@ -195,11 +200,14 @@ export default function OrderCard({ order, onRemove }: Props) {
     } catch {
       showToast('Error al cerrar la orden', 'error')
       swipeableRef.current?.close()
+    } finally {
+      setPendingAction(null)
     }
   }
 
   const handleMarkAsPaid = async () => {
-    if (updateOrder.isPending) return
+    if (pendingAction) return
+    setPendingAction('pay')
     try {
       await updateOrder.mutateAsync({
         orderId: order.id,
@@ -208,6 +216,24 @@ export default function OrderCard({ order, onRemove }: Props) {
       showToast('Orden marcada como pagada', 'success')
     } catch {
       showToast('Error al marcar como pagada', 'error')
+    } finally {
+      setPendingAction(null)
+    }
+  }
+
+  const handleMarkAsUnpaid = async () => {
+    if (pendingAction) return
+    setPendingAction('pay')
+    try {
+      await updateOrder.mutateAsync({
+        orderId: order.id,
+        patch: { payment_status: 'PENDING' }
+      })
+      showToast('Pago deshecho', 'success')
+    } catch {
+      showToast('Error al deshacer el pago', 'error')
+    } finally {
+      setPendingAction(null)
     }
   }
 
@@ -370,47 +396,33 @@ export default function OrderCard({ order, onRemove }: Props) {
               <View style={styles.actions}>
                 {(orderData?.status === 'OPEN' ||
                   orderData?.status === 'PREPARING' ||
-                  orderData?.status === 'DISPATCHED') &&
-                  orderData?.payment_status !== 'PAID' && (
-                    <TouchableOpacity
-                      onPress={handleMarkAsPaid}
-                      style={[
-                        styles.payButton,
-                        updateOrder.isPending && styles.disabledButton
-                      ]}
-                      disabled={updateOrder.isPending}
-                    >
-                      {updateOrder.isPending ? (
-                        <ActivityIndicator
-                          size='small'
-                          color={theme.textOnPrimary}
-                        />
-                      ) : (
-                        <Ionicons
-                          name='cash-outline'
-                          size={26}
-                          color={theme.textOnPrimary}
-                        />
-                      )}
-                    </TouchableOpacity>
-                  )}
-                {orderData?.status === 'CLOSED' && (
+                  orderData?.status === 'DISPATCHED') && (
                   <TouchableOpacity
-                    onPress={handleReopenOrder}
+                    onPress={
+                      orderData.payment_status === 'PAID'
+                        ? handleMarkAsUnpaid
+                        : handleMarkAsPaid
+                    }
                     style={[
-                      styles.reopenButton,
-                      updateOrder.isPending && styles.disabledButton
+                      styles.payButton,
+                      orderData.payment_status === 'PAID' &&
+                        styles.payButtonPaid,
+                      pendingAction !== null && styles.disabledButton
                     ]}
-                    disabled={updateOrder.isPending}
+                    disabled={pendingAction !== null}
                   >
-                    {updateOrder.isPending ? (
+                    {pendingAction === 'pay' ? (
                       <ActivityIndicator
                         size='small'
                         color={theme.textOnPrimary}
                       />
                     ) : (
                       <Ionicons
-                        name='arrow-undo-outline'
+                        name={
+                          orderData.payment_status === 'PAID'
+                            ? 'arrow-undo-outline'
+                            : 'cash-outline'
+                        }
                         size={26}
                         color={theme.textOnPrimary}
                       />
@@ -433,22 +445,37 @@ export default function OrderCard({ order, onRemove }: Props) {
                       />
                     </TouchableOpacity>
                   )}
-                {(orderData?.status === 'OPEN' ||
-                  orderData?.status === 'PREPARING' ||
-                  orderData?.status === 'DISPATCHED') && (
+                {orderData && (
                   <TouchableOpacity
-                    onPress={handleCloseOrder}
+                    onPress={
+                      orderData.status === 'CLOSED'
+                        ? handleReopenOrder
+                        : handleCloseOrder
+                    }
                     style={[
-                      styles.closeButton,
-                      updateOrder.isPending && styles.disabledButton
+                      orderData.status === 'CLOSED'
+                        ? styles.reopenButton
+                        : styles.closeButton,
+                      pendingAction !== null && styles.disabledButton
                     ]}
-                    disabled={updateOrder.isPending}
+                    disabled={pendingAction !== null}
                   >
-                    <Ionicons
-                      name='checkmark-done-outline'
-                      size={26}
-                      color={theme.textOnPrimary}
-                    />
+                    {pendingAction === 'close' ? (
+                      <ActivityIndicator
+                        size='small'
+                        color={theme.textOnPrimary}
+                      />
+                    ) : (
+                      <Ionicons
+                        name={
+                          orderData.status === 'CLOSED'
+                            ? 'arrow-undo-outline'
+                            : 'checkmark-done-outline'
+                        }
+                        size={26}
+                        color={theme.textOnPrimary}
+                      />
+                    )}
                   </TouchableOpacity>
                 )}
               </View>
@@ -571,14 +598,23 @@ const makeStyles = (theme: Theme) =>
       gap: 6
     },
     closeButton: {
-      padding: 6,
+      width: 42,
+      height: 42,
       backgroundColor: theme.primary,
-      borderRadius: 6
+      borderRadius: 6,
+      alignItems: 'center',
+      justifyContent: 'center'
     },
     payButton: {
-      padding: 6,
+      width: 42,
+      height: 42,
       backgroundColor: theme.success,
-      borderRadius: 6
+      borderRadius: 6,
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    payButtonPaid: {
+      backgroundColor: theme.textSecondary
     },
     itemInfo: { flex: 1, marginLeft: 6 },
     swipeAction: {
