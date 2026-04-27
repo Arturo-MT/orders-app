@@ -15,21 +15,21 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider>
-            <AuthProvider>
-              <StoreProvider>
-                <FetchProvider>
-                  <ToastProvider>
-                    <BottomSheetModalProvider>
+        <BottomSheetModalProvider>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider>
+              <AuthProvider>
+                <StoreProvider>
+                  <FetchProvider>
+                    <ToastProvider>
                       <Slot />
-                    </BottomSheetModalProvider>
-                  </ToastProvider>
-                </FetchProvider>
-              </StoreProvider>
-            </AuthProvider>
-          </ThemeProvider>
-        </QueryClientProvider>
+                    </ToastProvider>
+                  </FetchProvider>
+                </StoreProvider>
+              </AuthProvider>
+            </ThemeProvider>
+          </QueryClientProvider>
+        </BottomSheetModalProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   )

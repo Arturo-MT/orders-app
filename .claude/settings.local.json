@@ -8,7 +8,12 @@
       "Bash(npx tsc *)",
       "Bash(npx expo *)",
       "Bash(npm install *)",
-      "Bash(python -c \"import sys,json; p=json.load\\(sys.stdin\\); print\\(p['version']\\)\")"
+      "Bash(python -c \"import sys,json; p=json.load\\(sys.stdin\\); print\\(p['version']\\)\")",
+      "Bash(git -C c:/Users/artur/Documents/Github/orders-app log --oneline -20 -- app/features/PoS/OrderPanel.tsx app/components/OrderItemComponent.tsx app/components/ui/BottomSheet.tsx)",
+      "Bash(npm view *)",
+      "Bash(npx --yes expo-doctor --offline)",
+      "Bash(npx --yes expo-doctor)",
+      "Bash(npx --yes expo install --check @gorhom/bottom-sheet)"
     ]
   },
   "enabledMcpjsonServers": [
