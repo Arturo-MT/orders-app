@@ -39,6 +39,7 @@ export default function UsersScreen() {
   const fabBottom = useFabBottomInset()
 
   const createSheetRef = useRef<AppBottomSheetRef>(null)
+  const createInputRef = useRef<{ focus: () => void } | null>(null)
 
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<'admin' | 'staff'>('staff')
@@ -98,9 +99,11 @@ export default function UsersScreen() {
         ref={createSheetRef}
         snapPoints={SHEET_SNAP.form}
         onDismiss={() => { setEmail(''); setRole('staff') }}
+        onOpen={() => createInputRef.current?.focus()}
       >
         <Text style={styles.sheetTitle}>Agregar usuario</Text>
         <BottomSheetTextInput
+          ref={createInputRef}
           value={email}
           onChangeText={setEmail}
           placeholder='Email'

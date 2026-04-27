@@ -33,6 +33,8 @@ export default function ProductsScreen() {
 
   const createSheetRef = useRef<AppBottomSheetRef>(null)
   const editSheetRef = useRef<AppBottomSheetRef>(null)
+  const createInputRef = useRef<{ focus: () => void } | null>(null)
+  const editInputRef = useRef<{ focus: () => void } | null>(null)
 
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({})
   const [name, setName] = useState('')
@@ -149,15 +151,15 @@ export default function ProductsScreen() {
       </Pressable>
 
       {/* Create product sheet */}
-      <AppBottomSheet ref={createSheetRef} snapPoints={SHEET_SNAP.form} scrollable>
+      <AppBottomSheet ref={createSheetRef} snapPoints={SHEET_SNAP.form} scrollable onOpen={() => createInputRef.current?.focus()}>
         <Text style={styles.sheetTitle}>Nuevo producto</Text>
         <BottomSheetTextInput
+          ref={createInputRef}
           value={name}
           onChangeText={setName}
           placeholder='Nombre'
           placeholderTextColor={theme.textMuted}
           style={styles.input}
-          autoFocus
         />
         <BottomSheetTextInput
           value={price === 0 ? '' : String(price)}
@@ -198,9 +200,11 @@ export default function ProductsScreen() {
         snapPoints={SHEET_SNAP.form}
         scrollable
         onDismiss={() => { setEditingProduct(null); setEditName(''); setEditCategory(null); setEditPrice(0) }}
+        onOpen={() => editInputRef.current?.focus()}
       >
         <Text style={styles.sheetTitle}>Editar producto</Text>
         <BottomSheetTextInput
+          ref={editInputRef}
           value={editName}
           onChangeText={setEditName}
           placeholder='Nombre'

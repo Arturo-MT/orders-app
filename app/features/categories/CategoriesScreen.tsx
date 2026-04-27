@@ -30,6 +30,8 @@ export default function CategoriesScreen() {
 
   const createSheetRef = useRef<AppBottomSheetRef>(null)
   const editSheetRef = useRef<AppBottomSheetRef>(null)
+  const createInputRef = useRef<{ focus: () => void } | null>(null)
+  const editInputRef = useRef<{ focus: () => void } | null>(null)
 
   const [name, setName] = useState('')
   const [editingCategory, setEditingCategory] = useState<{ id: string; name: string; is_active: boolean } | null>(null)
@@ -94,15 +96,15 @@ export default function CategoriesScreen() {
       </Pressable>
 
       {/* Create category sheet */}
-      <AppBottomSheet ref={createSheetRef} snapPoints={SHEET_SNAP.form}>
+      <AppBottomSheet ref={createSheetRef} snapPoints={SHEET_SNAP.form} onOpen={() => createInputRef.current?.focus()}>
         <Text style={styles.sheetTitle}>Nueva categoría</Text>
         <BottomSheetTextInput
+          ref={createInputRef}
           value={name}
           onChangeText={setName}
           placeholder='Nombre'
           placeholderTextColor={theme.textMuted}
           style={styles.input}
-          autoFocus
           returnKeyType='done'
           onSubmitEditing={handleCreate}
         />
@@ -123,9 +125,11 @@ export default function CategoriesScreen() {
         ref={editSheetRef}
         snapPoints={SHEET_SNAP.form}
         onDismiss={() => { setEditingCategory(null); setEditName('') }}
+        onOpen={() => editInputRef.current?.focus()}
       >
         <Text style={styles.sheetTitle}>Editar categoría</Text>
         <BottomSheetTextInput
+          ref={editInputRef}
           value={editName}
           onChangeText={setEditName}
           placeholderTextColor={theme.textMuted}

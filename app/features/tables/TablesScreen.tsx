@@ -26,6 +26,8 @@ export default function TablesScreen() {
 
   const createSheetRef = useRef<AppBottomSheetRef>(null)
   const editSheetRef = useRef<AppBottomSheetRef>(null)
+  const createInputRef = useRef<{ focus: () => void } | null>(null)
+  const editInputRef = useRef<{ focus: () => void } | null>(null)
 
   const [name, setName] = useState('')
   const [editingTable, setEditingTable] = useState<{ id: string; name: string; is_active: boolean } | null>(null)
@@ -92,15 +94,15 @@ export default function TablesScreen() {
       </Pressable>
 
       {/* Create table sheet */}
-      <AppBottomSheet ref={createSheetRef} snapPoints={SHEET_SNAP.form}>
+      <AppBottomSheet ref={createSheetRef} snapPoints={SHEET_SNAP.form} onOpen={() => createInputRef.current?.focus()}>
         <Text style={styles.sheetTitle}>Nueva mesa</Text>
         <BottomSheetTextInput
+          ref={createInputRef}
           value={name}
           onChangeText={setName}
           placeholder='Nombre de la mesa'
           placeholderTextColor={theme.textMuted}
           style={styles.input}
-          autoFocus
           returnKeyType='done'
           onSubmitEditing={handleCreate}
         />
@@ -121,9 +123,11 @@ export default function TablesScreen() {
         ref={editSheetRef}
         snapPoints={SHEET_SNAP.form}
         onDismiss={() => { setEditingTable(null) }}
+        onOpen={() => editInputRef.current?.focus()}
       >
         <Text style={styles.sheetTitle}>Editar mesa</Text>
         <BottomSheetTextInput
+          ref={editInputRef}
           value={editName}
           onChangeText={setEditName}
           placeholder='Nombre'
