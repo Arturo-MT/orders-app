@@ -1,5 +1,6 @@
 import React, { forwardRef, useImperativeHandle, useMemo, useRef } from 'react'
 import {
+  Keyboard,
   Modal,
   Platform,
   StyleSheet,
@@ -66,6 +67,7 @@ const NativeBottomSheet = forwardRef<AppBottomSheetRef, AppBottomSheetProps>(
         enableDynamicSizing={!scrollable}
         onDismiss={onDismiss}
         onChange={(index) => { if (index >= 0) onOpen?.() }}
+        onAnimate={(_from, to) => { if (to === -1) Keyboard.dismiss() }}
         enablePanDownToClose
         backdropComponent={renderBackdrop}
         keyboardBehavior='interactive'
