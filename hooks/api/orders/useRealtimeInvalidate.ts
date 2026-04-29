@@ -22,7 +22,7 @@ export function useRealtimeInvalidate({
     if (!enabled || !filter) return
 
     const channel = client
-      .channel(`realtime:${table}:${filter}`)
+      .channel(`realtime:${table}:${filter}:${queryKey[0]}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table, filter },

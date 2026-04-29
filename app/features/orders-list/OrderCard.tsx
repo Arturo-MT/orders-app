@@ -34,7 +34,7 @@ interface Props {
     id: string
     order_number: string
     type: 'DINE_IN' | 'TAKEAWAY'
-    status: 'OPEN' | 'PREPARING' | 'DISPATCHED' | 'CLOSED'
+    status: 'OPEN' | 'PREPARING' | 'DISPATCHED' | 'CLOSED' | 'SCHEDULED'
     payment_status: string | null
     customer_name: string | null
     table_name: string | null
@@ -43,6 +43,7 @@ interface Props {
     opened_at?: string | null
     prepared_at?: string | null
     dispatched_at?: string | null
+    scheduled_for?: string | null
   }
   onRemove?: (orderId: string) => void
 }
@@ -52,6 +53,7 @@ const statusLabel = (status: string) => {
   if (status === 'PREPARING') return 'Preparando'
   if (status === 'DISPATCHED') return 'Despachada'
   if (status === 'CLOSED') return 'Cerrada'
+  if (status === 'SCHEDULED') return 'Programada'
   return status
 }
 
@@ -73,6 +75,11 @@ const statusBadge = (status: string, theme: Theme) => {
     return {
       container: { backgroundColor: theme.success + '22' },
       text: { color: theme.success }
+    }
+  if (status === 'SCHEDULED')
+    return {
+      container: { backgroundColor: '#7c6af722' },
+      text: { color: '#7c6af7' }
     }
   return {
     container: { backgroundColor: theme.borderLight },
@@ -174,6 +181,26 @@ export default function OrderCard({ order, onRemove }: Props) {
       showToast('Orden reabierta', 'success')
     } catch {
       showToast('Error al reabrir la orden', 'error')
+    } finally {
+      setPendingAction(null)
+    }
+  }
+
+  const handleOpenNow = async () => {
+    if (pendingAction) return
+    setPendingAction('close')
+    try {
+      await updateOrder.mutateAsync({
+        orderId: order.id,
+        patch: { status: 'OPEN', scheduled_for: null }
+      })
+      if (order.table_id) {
+        await updateTable.mutateAsync({ id: order.table_id, isOccupied: true })
+      }
+      showToast('Orden abierta', 'success')
+      onRemove?.(order.id)
+    } catch {
+      showToast('Error al abrir la orden', 'error')
     } finally {
       setPendingAction(null)
     }
@@ -296,11 +323,21 @@ export default function OrderCard({ order, onRemove }: Props) {
               <Text style={styles.subtitle}>
                 #{order.order_number} · {formatDate(order.created_at)}
               </Text>
-              {canClose && (
+              {order.status === 'SCHEDULED' && order.scheduled_for ? (
+                <View style={styles.scheduledBadge}>
+                  <Ionicons name='alarm-outline' size={11} color='#7c6af7' />
+                  <Text style={styles.scheduledText}>
+                    {new Date(order.scheduled_for).toLocaleTimeString('es', {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </Text>
+                </View>
+              ) : canClose ? (
                 <View style={styles.elapsedBadge}>
                   <Text style={styles.elapsedText}>{elapsedLabel}</Text>
                 </View>
-              )}
+              ) : null}
             </View>
             <View style={styles.badgeRow}>
               <View
@@ -450,12 +487,16 @@ export default function OrderCard({ order, onRemove }: Props) {
                     onPress={
                       orderData.status === 'CLOSED'
                         ? handleReopenOrder
-                        : handleCloseOrder
+                        : orderData.status === 'SCHEDULED'
+                          ? handleOpenNow
+                          : handleCloseOrder
                     }
                     style={[
                       orderData.status === 'CLOSED'
                         ? styles.reopenButton
-                        : styles.closeButton,
+                        : orderData.status === 'SCHEDULED'
+                          ? styles.openNowButton
+                          : styles.closeButton,
                       pendingAction !== null && styles.disabledButton
                     ]}
                     disabled={pendingAction !== null}
@@ -470,7 +511,9 @@ export default function OrderCard({ order, onRemove }: Props) {
                         name={
                           orderData.status === 'CLOSED'
                             ? 'arrow-undo-outline'
-                            : 'checkmark-done-outline'
+                            : orderData.status === 'SCHEDULED'
+                              ? 'play-outline'
+                              : 'checkmark-done-outline'
                         }
                         size={26}
                         color={theme.textOnPrimary}
@@ -644,6 +687,14 @@ const makeStyles = (theme: Theme) =>
       alignItems: 'center',
       justifyContent: 'center'
     },
+    openNowButton: {
+      width: 42,
+      height: 42,
+      backgroundColor: '#7c6af7',
+      borderRadius: 6,
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
     tableButton: {
       width: 42,
       height: 42,
@@ -723,5 +774,15 @@ const makeStyles = (theme: Theme) =>
     },
     badgeRow: { flexDirection: 'row', gap: 6, marginTop: 4 },
     badge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-    badgeText: { fontSize: 11, fontWeight: '700' }
+    badgeText: { fontSize: 11, fontWeight: '700' },
+    scheduledBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+      paddingHorizontal: 6,
+      paddingVertical: 1,
+      borderRadius: 4,
+      backgroundColor: '#7c6af722'
+    },
+    scheduledText: { fontSize: 11, fontWeight: '600', color: '#7c6af7' }
   })

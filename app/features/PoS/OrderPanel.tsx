@@ -7,8 +7,12 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  Alert
+  Alert,
+  Platform
 } from 'react-native'
+import DateTimePicker, {
+  DateTimePickerAndroid
+} from '@react-native-community/datetimepicker'
 import { Ionicons } from '@expo/vector-icons'
 import { OrderDraft, OrderItemDraft } from '@/types/types'
 import { useTablesQuery } from '@/hooks/api/tables'
@@ -52,7 +56,32 @@ export default function OrderPanel({
   const { showToast } = useToast()
   const tableSheetRef = useRef<AppBottomSheetRef>(null)
   const editSheetRef = useRef<AppBottomSheetRef>(null)
+  const scheduleSheetRef = useRef<AppBottomSheetRef>(null)
   const editInputRef = useRef<{ focus: () => void } | null>(null)
+
+  const parseScheduledDate = (): Date =>
+    order.scheduled_for ? new Date(order.scheduled_for) : new Date()
+
+  const formatScheduledTime = (): string | null => {
+    if (!order.scheduled_for) return null
+    return new Date(order.scheduled_for).toLocaleTimeString('es', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  const applySchedule = (date: Date) => {
+    date.setSeconds(0, 0)
+    const now = new Date()
+    now.setSeconds(0, 0)
+    if (date <= now) {
+      showToast('La hora ya pasó, elige una hora futura', 'error')
+      return
+    }
+    onChange({ ...order, scheduled_for: date.toISOString() })
+  }
+
+  const clearSchedule = () => onChange({ ...order, scheduled_for: null })
 
   const [editing, setEditing] = useState<{
     index: number
@@ -132,7 +161,8 @@ export default function OrderPanel({
               customer_name: '',
               table_name: '',
               is_paid: false,
-              items: []
+              items: [],
+              scheduled_for: null
             })
             showToast('Orden limpiada', 'success')
           }
@@ -331,6 +361,7 @@ export default function OrderPanel({
           disabled={!canSendToKitchen || isLoading}
           style={[
             styles.submitButton,
+            order.scheduled_for && styles.submitButtonScheduled,
             (!canSendToKitchen || isLoading) && styles.disabled
           ]}
         >
@@ -342,7 +373,7 @@ export default function OrderPanel({
             />
           ) : (
             <Ionicons
-              name='checkmark-outline'
+              name={order.scheduled_for ? 'alarm-outline' : 'checkmark-outline'}
               size={20}
               color={
                 !canSendToKitchen ? theme.disabledText : theme.textOnPrimary
@@ -356,9 +387,65 @@ export default function OrderPanel({
               (!canSendToKitchen || isLoading) && styles.disabledText
             ]}
           >
-            {isLoading ? 'Enviando...' : 'Enviar a cocina'}
+            {isLoading
+              ? 'Enviando...'
+              : order.scheduled_for
+                ? `Programar a ${formatScheduledTime()}`
+                : 'Enviar a cocina'}
           </Text>
         </TouchableOpacity>
+
+        {/* Botón de alarma: siempre visible, activo cuando hay scheduled_for */}
+        <View style={styles.scheduleButtonWrapper}>
+          <TouchableOpacity
+            onPress={() => {
+              if (Platform.OS === 'android') {
+                DateTimePickerAndroid.open({
+                  value: parseScheduledDate(),
+                  mode: 'time',
+                  is24Hour: false,
+                  onChange: (event, date) => {
+                    if (event.type === 'set' && date) applySchedule(date)
+                  }
+                })
+              } else {
+                scheduleSheetRef.current?.open()
+              }
+            }}
+            disabled={!canSendToKitchen || isLoading}
+            style={[
+              styles.scheduleButton,
+              order.scheduled_for && styles.scheduleButtonActive,
+              (!canSendToKitchen || isLoading) && styles.disabled
+            ]}
+          >
+            <Ionicons
+              name='alarm-outline'
+              size={20}
+              color={
+                !canSendToKitchen || isLoading
+                  ? theme.disabledText
+                  : order.scheduled_for
+                    ? '#7c6af7'
+                    : theme.textPrimary
+              }
+            />
+            {order.scheduled_for && (
+              <Text style={styles.scheduleButtonTime} allowFontScaling={false}>
+                {formatScheduledTime()}
+              </Text>
+            )}
+          </TouchableOpacity>
+          {order.scheduled_for && (
+            <TouchableOpacity
+              style={styles.scheduleClear}
+              onPress={clearSchedule}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name='close-circle' size={16} color='#7c6af7' />
+            </TouchableOpacity>
+          )}
+        </View>
 
         <TouchableOpacity
           disabled={order.items.length === 0}
@@ -377,6 +464,31 @@ export default function OrderPanel({
           />
         </TouchableOpacity>
       </View>
+
+      {/* Schedule time picker (iOS only — Android usa modal nativo imperativo) */}
+      <AppBottomSheet
+        ref={scheduleSheetRef}
+        snapPoints={SHEET_SNAP.editShort}
+      >
+        <Text style={styles.sheetTitle}>Programar orden</Text>
+        <Text style={[styles.editSubtitle, { marginBottom: spacing.xl }]}>
+          Elige la hora a la que esta orden debe abrirse
+        </Text>
+        <DateTimePicker
+          value={parseScheduledDate()}
+          mode='time'
+          display='spinner'
+          onChange={(_, date) => {
+            if (date) applySchedule(date)
+          }}
+          style={{ alignSelf: 'center', marginBottom: spacing.xl }}
+        />
+        <View style={styles.editActions}>
+          <TouchableOpacity onPress={() => scheduleSheetRef.current?.close()}>
+            <Text style={styles.editSave}>Listo</Text>
+          </TouchableOpacity>
+        </View>
+      </AppBottomSheet>
 
       {/* Item field editor */}
       <AppBottomSheet
@@ -638,12 +750,44 @@ const makeStyles = (theme: Theme) =>
       alignItems: 'center',
       justifyContent: 'center'
     },
+    submitButtonScheduled: {
+      backgroundColor: '#7c6af7'
+    },
     submitButtonText: {
       color: theme.textOnPrimary,
       fontWeight: 'bold',
       fontSize: 15
     },
     disabledText: { color: theme.disabledText },
+    scheduleButtonWrapper: {
+      position: 'relative'
+    },
+    scheduleButton: {
+      width: 46,
+      minHeight: 46,
+      backgroundColor: theme.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: theme.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 4
+    },
+    scheduleButtonActive: {
+      backgroundColor: '#7c6af722',
+      borderColor: '#7c6af7'
+    },
+    scheduleButtonTime: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: '#7c6af7',
+      marginTop: 2
+    },
+    scheduleClear: {
+      position: 'absolute',
+      top: -6,
+      right: -6
+    },
     clearButton: {
       width: 46,
       backgroundColor: theme.destructive,

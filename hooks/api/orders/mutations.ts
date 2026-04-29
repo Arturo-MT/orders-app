@@ -7,12 +7,13 @@ export type CreateOrderResponse = {
 }
 
 export type OrderUpdatePatch = Partial<{
-  status: 'OPEN' | 'PREPARING' | 'DISPATCHED' | 'CLOSED'
+  status: 'OPEN' | 'PREPARING' | 'DISPATCHED' | 'CLOSED' | 'SCHEDULED'
   payment_status: 'PAID' | 'PENDING'
   table_id: string | null
   closed_at: string | null
   prepared_at: string | null
   dispatched_at: string | null
+  scheduled_for: string | null
 }>
 
 export async function createOrder({
@@ -26,6 +27,9 @@ export async function createOrder({
 }): Promise<CreateOrderResponse> {
   let orderId: string
   let orderNumber: string
+
+  const isScheduled = !!payload.scheduled_for
+  const orderStatus = isScheduled ? 'SCHEDULED' : 'OPEN'
 
   if (payload.type === 'DINE_IN') {
     const hasTable = !!payload.table_id
@@ -41,8 +45,9 @@ export async function createOrder({
         p_type: 'DINE_IN',
         p_table_id: hasTable ? payload.table_id : null,
         p_customer_name: hasCustomerName ? payload.customer_name : null,
-        p_status: 'OPEN',
-        p_payment_status: payload.is_paid ? 'PAID' : 'PENDING'
+        p_status: orderStatus,
+        p_payment_status: payload.is_paid ? 'PAID' : 'PENDING',
+        p_scheduled_for: payload.scheduled_for ?? null
       })
       .single()
 
@@ -63,8 +68,9 @@ export async function createOrder({
         p_type: 'TAKEAWAY',
         p_table_id: null,
         p_customer_name: payload.customer_name,
-        p_status: 'OPEN',
-        p_payment_status: payload.is_paid ? 'PAID' : 'PENDING'
+        p_status: orderStatus,
+        p_payment_status: payload.is_paid ? 'PAID' : 'PENDING',
+        p_scheduled_for: payload.scheduled_for ?? null
       })
       .single()
 

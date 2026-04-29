@@ -43,6 +43,7 @@ export type OrderDraft = {
   table_name: string | null
   is_paid: boolean
   items: OrderItemDraft[]
+  scheduled_for?: string | null
 }
 
 export interface OrderResponse {

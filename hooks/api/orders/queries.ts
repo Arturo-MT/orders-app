@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 
-export type OrderStatus = 'OPEN' | 'CLOSED' | 'PREPARING' | 'DISPATCHED'
+export type OrderStatus = 'OPEN' | 'CLOSED' | 'PREPARING' | 'DISPATCHED' | 'SCHEDULED'
 export type PaymentStatus = 'PAID' | 'UNPAID' | 'PENDING'
 
 export type OpenOrderSummary = {
@@ -15,6 +15,20 @@ export type OpenOrderSummary = {
   table_name: string | null
   created_at: string
   opened_at?: string | null
+}
+
+export type ScheduledOrderSummary = {
+  id: string
+  order_number: string
+  type: 'DINE_IN' | 'TAKEAWAY'
+  status: 'SCHEDULED'
+  payment_status: string | null
+  customer_name: string | null
+  table_id: string | null
+  dining_table?: { id: string; name: string } | null
+  table_name: string | null
+  created_at: string
+  scheduled_for: string
 }
 
 export type OrderDetail = {
@@ -120,6 +134,30 @@ export async function openOrderIdsQuery({
     )
     .eq('store_id', storeId)
     .in('status', ['OPEN', 'PREPARING', 'DISPATCHED'])
+
+  if (error) throw error
+
+  return (data ?? []).map((order: any) => ({
+    ...order,
+    table_name: order.dining_table?.name ?? null
+  }))
+}
+
+export async function scheduledOrderIdsQuery({
+  client,
+  storeId
+}: {
+  client: SupabaseClient
+  storeId: string
+}): Promise<ScheduledOrderSummary[]> {
+  const { data, error } = await client
+    .from('order')
+    .select(
+      'id, order_number, type, status, payment_status, customer_name, table_id, dining_table (id, name), created_at, scheduled_for'
+    )
+    .eq('store_id', storeId)
+    .eq('status', 'SCHEDULED')
+    .order('scheduled_for', { ascending: true })
 
   if (error) throw error
 

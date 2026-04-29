@@ -14,6 +14,7 @@ import { useDebouncedValue } from '@/hooks/utils/useDebouncedValue'
 import { Ionicons } from '@expo/vector-icons'
 import { useOrdersQuery } from '@/hooks/api/orders'
 import OpenOrdersList from './OpenOrdersList'
+import ScheduledOrdersList from './ScheduledOrdersList'
 import { useTheme } from '@/app/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
 
@@ -67,6 +68,7 @@ export default function OrdersListScreen() {
         ListHeaderComponent={
           <>
             <OpenOrdersList />
+            <ScheduledOrdersList />
             <Text style={styles.sectionTitle}>HISTORIAL</Text>
             <View style={styles.searchContainer}>
               <Ionicons

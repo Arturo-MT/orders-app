@@ -13,7 +13,8 @@
       "Bash(npm view *)",
       "Bash(npx --yes expo-doctor --offline)",
       "Bash(npx --yes expo-doctor)",
-      "Bash(npx --yes expo install --check @gorhom/bottom-sheet)"
+      "Bash(npx --yes expo install --check @gorhom/bottom-sheet)",
+      "Bash(git stash *)"
     ]
   },
   "enabledMcpjsonServers": [

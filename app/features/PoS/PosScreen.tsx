@@ -30,7 +30,8 @@ export default function PosScreen() {
     customer_name: '',
     table_name: '',
     is_paid: false,
-    items: []
+    items: [],
+    scheduled_for: null
   })
 
   const {
@@ -133,14 +134,18 @@ export default function PosScreen() {
     setIsSubmitting(true)
     try {
       await createOrder(payload)
-      showToast('Orden creada correctamente', 'success')
+      showToast(
+        payload.scheduled_for ? 'Orden programada correctamente' : 'Orden creada correctamente',
+        'success'
+      )
       setOrder({
         type: 'TAKEAWAY',
         table_id: null,
         customer_name: '',
         table_name: '',
         is_paid: false,
-        items: []
+        items: [],
+        scheduled_for: null
       })
     } catch (error) {
       console.error('Error al crear orden:', error)
