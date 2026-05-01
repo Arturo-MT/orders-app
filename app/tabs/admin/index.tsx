@@ -1,9 +1,9 @@
 import { View, Text, Pressable, StyleSheet, useWindowDimensions } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { useTheme } from '@/app/context/ThemeContext'
+import { useTheme } from '@/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
-import { BREAKPOINTS } from '@/app/theme/tokens'
+import { BREAKPOINTS } from '@/theme/tokens'
 
 export default function AdminHomeScreen() {
   const router = useRouter()

@@ -1,8 +1,8 @@
 import { Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { useAuth } from '@/app/context/AuthContext'
+import { useAuth } from '@/context/AuthContext'
 import { useUserQuery } from '@/hooks/api/users'
-import { useTheme } from '@/app/context/ThemeContext'
+import { useTheme } from '@/context/ThemeContext'
 
 export default function TabLayout() {
   const { isSuperAdmin } = useAuth()

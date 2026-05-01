@@ -1,5 +1,5 @@
-import { useFetch } from '@/app/context/FetchContext'
-import { useStore } from '@/app/context/StoreContext'
+import { useFetch } from '@/context/FetchContext'
+import { useStore } from '@/context/StoreContext'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { categoriesQuery } from './queries'
 import { CATEGORIES_KEY } from './constants'

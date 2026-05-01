@@ -1,4 +1,4 @@
-import { useFetch } from '@/app/context/FetchContext'
+import { useFetch } from '@/context/FetchContext'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 

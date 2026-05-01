@@ -1,7 +1,7 @@
-import { useFetch } from '@/app/context/FetchContext'
+import { useFetch } from '@/context/FetchContext'
 import { useQuery } from '@tanstack/react-query'
 import { summaryQuery } from './queries'
-import { useStore } from '@/app/context/StoreContext'
+import { useStore } from '@/context/StoreContext'
 
 export type SummaryParams = {
   period: 'day' | 'week' | 'month' | 'year'

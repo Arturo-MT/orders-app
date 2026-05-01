@@ -1,0 +1,253 @@
+import React, { useState, useMemo } from 'react'
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  TextInput,
+  useWindowDimensions
+} from 'react-native'
+import Card from '@/components/Card'
+import { Product } from '@/types/types'
+import { useTheme } from '@/context/ThemeContext'
+import { Theme } from '@/constants/Colors'
+import { radius, spacing, typography } from '@/theme/tokens'
+import CategorySkeleton from './CategorySkeleton'
+import ProductGridSkeleton from './ProductGridSkeleton'
+
+export default function ProductsPanel({
+  categoriesList,
+  selectedCategory,
+  setSelectedCategory,
+  productsList,
+  isCategoriesLoading,
+  isCategoriesRefetching,
+  isProductsLoading,
+  isProductsRefetching,
+  handlePress
+}: {
+  categoriesList: string[]
+  selectedCategory: string
+  setSelectedCategory: (cat: string) => void
+  filteredProducts: Product[]
+  productsList: Product[]
+  isCategoriesLoading: boolean
+  isCategoriesRefetching: boolean
+  isProductsLoading: boolean
+  isProductsRefetching: boolean
+  handlePress: (product: Product) => void
+}) {
+  const { height, width } = useWindowDimensions()
+  const isPortrait = height >= width
+  const { theme } = useTheme()
+  const styles = makeStyles(theme)
+
+  const [panelWidth, setPanelWidth] = useState(width)
+  const columns = panelWidth < 360 ? 2 : panelWidth < 560 ? 3 : 4
+
+  const [searchText, setSearchText] = useState('')
+
+  const { filteredCategories, filteredProductsBySearch } = useMemo(() => {
+    const lowerSearch = searchText.toLowerCase()
+
+    const categoriesFromName = categoriesList.filter((cat) =>
+      cat.toLowerCase().includes(lowerSearch)
+    )
+
+    const productsMatchingByName = productsList.filter((prod) =>
+      prod.name.toLowerCase().includes(lowerSearch)
+    )
+
+    const productsMatchingByCategory = productsList.filter((prod) =>
+      prod.category.toLowerCase().includes(lowerSearch)
+    )
+
+    const productsMatching =
+      productsMatchingByName.length > 0
+        ? productsMatchingByName
+        : productsMatchingByCategory
+
+    const categoriesFromProducts = Array.from(
+      new Set(productsMatching.map((p) => p.category))
+    )
+
+    const allMatchingCategories = Array.from(
+      new Set([...categoriesFromName, ...categoriesFromProducts])
+    )
+
+    const productsToShow = productsMatching.length > 0 ? productsMatching : []
+
+    const finalProducts =
+      !selectedCategory || selectedCategory === 'Todos'
+        ? productsToShow
+        : productsToShow.filter((p) => p.category === selectedCategory)
+
+    return {
+      filteredCategories: allMatchingCategories,
+      filteredProductsBySearch: finalProducts
+    }
+  }, [searchText, categoriesList, productsList, selectedCategory])
+
+  const containerStyle = [
+    styles.categorySelector,
+    { flexDirection: isPortrait ? ('row' as const) : ('column' as const) }
+  ]
+
+  const columnWidth = 100 / columns
+
+  const CategorySelectorScrollViewStyle = {
+    flexDirection: isPortrait ? ('row' as const) : ('column' as const),
+    gap: 10,
+    padding: 10
+  }
+
+  const mainContentStyle = [
+    styles.mainContent,
+    { flexDirection: isPortrait ? ('column' as const) : ('row' as const) }
+  ]
+
+  return (
+    <View style={styles.wrapper} onLayout={(e) => setPanelWidth(e.nativeEvent.layout.width)}>
+      <View style={styles.searchWrapper}>
+        <TextInput
+          value={searchText}
+          onChangeText={setSearchText}
+          placeholder='Buscar categoría o producto'
+          placeholderTextColor={theme.textMuted}
+          style={styles.searchInput}
+        />
+      </View>
+
+      <View style={mainContentStyle}>
+        <View style={containerStyle}>
+          <ScrollView
+            horizontal={isPortrait}
+            contentContainerStyle={CategorySelectorScrollViewStyle}
+          >
+            {(isCategoriesLoading || isCategoriesRefetching) && (
+              <CategorySkeleton />
+            )}
+
+            {!isCategoriesLoading &&
+              !isCategoriesRefetching &&
+              filteredCategories.map((category) => (
+                <TouchableOpacity
+                  key={category}
+                  style={[
+                    styles.categoryButton,
+                    selectedCategory === category && styles.selectedCategory
+                  ]}
+                  onPress={() => setSelectedCategory(category)}
+                >
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      selectedCategory === category &&
+                        styles.selectedCategoryText
+                    ]}
+                  >
+                    {category}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+          </ScrollView>
+        </View>
+
+        <View style={{ flex: 1 }}>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={styles.productsContainer}
+            showsVerticalScrollIndicator
+          >
+            {(isProductsLoading || isProductsRefetching) && (
+              <ProductGridSkeleton columns={columns} panelWidth={panelWidth} />
+            )}
+
+            {!isProductsLoading && filteredProductsBySearch.length === 0 && (
+              <Text style={styles.emptyText}>
+                No hay productos en esta búsqueda
+              </Text>
+            )}
+
+            {!isProductsLoading &&
+              !isProductsRefetching &&
+              filteredProductsBySearch.length > 0 &&
+              filteredProductsBySearch.map((item) => (
+                <View
+                  key={item.id}
+                  style={{
+                    flexBasis: `${columnWidth}%`,
+                    maxWidth: `${columnWidth}%`,
+                    paddingHorizontal: 6,
+                    paddingVertical: 6,
+                    flex: 1
+                  }}
+                >
+                  <Card
+                    data={item}
+                    onPress={() => handlePress(item)}
+                    _hiddenFields={['id', 'category']}
+                  />
+                </View>
+              ))}
+          </ScrollView>
+        </View>
+      </View>
+    </View>
+  )
+}
+
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
+    categorySelector: {
+      gap: 10
+    },
+    categoryButton: {
+      paddingHorizontal: 12,
+      paddingVertical: spacing.md,
+      borderRadius: radius.pill,
+      backgroundColor: theme.surface,
+      width: 'auto',
+      alignItems: 'center'
+    },
+    selectedCategory: {
+      backgroundColor: theme.primary
+    },
+    categoryText: {
+      fontSize: 15,
+      color: theme.textSecondary
+    },
+    selectedCategoryText: {
+      color: theme.textOnPrimary
+    },
+    productsContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      paddingRight: 10
+    },
+    searchInput: {
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: radius.md,
+      padding: spacing.md,
+      backgroundColor: theme.surface,
+      color: theme.textPrimary,
+      ...typography.body,
+    },
+    searchWrapper: {
+      padding: 10
+    },
+    mainContent: {
+      flex: 1,
+      flexDirection: 'row'
+    },
+    wrapper: {
+      flex: 2,
+      backgroundColor: theme.background
+    },
+    emptyText: {
+      fontSize: 16,
+      color: theme.textSecondary
+    }
+  })

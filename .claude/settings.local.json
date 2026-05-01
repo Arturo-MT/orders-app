@@ -14,7 +14,15 @@
       "Bash(npx --yes expo-doctor --offline)",
       "Bash(npx --yes expo-doctor)",
       "Bash(npx --yes expo install --check @gorhom/bottom-sheet)",
-      "Bash(git stash *)"
+      "Bash(git stash *)",
+      "Bash(git mv *)",
+      "PowerShell(Move-Item -Path \"app\\\\components\" -Destination \"components\" -Force)",
+      "PowerShell(Move-Item -Path \"app\\\\context\" -Destination \"context\" -Force)",
+      "PowerShell(Move-Item -Path \"app\\\\features\" -Destination \"features\" -Force)",
+      "PowerShell(Move-Item -Path \"app\\\\theme\" -Destination \"theme\" -Force)",
+      "PowerShell(Move-Item -Path \"app\\\\hooks\\\\useOrientation.ts\" -Destination \"hooks\\\\useOrientation.ts\" -Force)",
+      "Bash(git rm *)",
+      "Bash(git add *)"
     ]
   },
   "enabledMcpjsonServers": [

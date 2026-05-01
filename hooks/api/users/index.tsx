@@ -1,9 +1,9 @@
-import { useFetch } from '@/app/context/FetchContext'
-import { useAuth } from '@/app/context/AuthContext'
+import { useFetch } from '@/context/FetchContext'
+import { useAuth } from '@/context/AuthContext'
 import { useQuery } from '@tanstack/react-query'
 import { USER_KEY } from './constants'
 import { userQuery } from './queries'
-import { useStore } from '@/app/context/StoreContext'
+import { useStore } from '@/context/StoreContext'
 
 export function useUserQuery(config = {}) {
   const { client } = useFetch()

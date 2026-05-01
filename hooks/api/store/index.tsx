@@ -1,8 +1,8 @@
-import { useFetch } from '@/app/context/FetchContext'
+import { useFetch } from '@/context/FetchContext'
 import { storeQuery } from './queries'
 import { STORE_KEY } from './constants'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useStore } from '@/app/context/StoreContext'
+import { useStore } from '@/context/StoreContext'
 
 export function useStoreQuery(config = {}) {
   const { client } = useFetch()

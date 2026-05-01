@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router'
-import { useTheme } from '@/app/context/ThemeContext'
+import { useTheme } from '@/context/ThemeContext'
 
 export default function AdminLayout() {
   const { theme } = useTheme()

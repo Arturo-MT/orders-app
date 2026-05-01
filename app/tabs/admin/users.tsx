@@ -13,13 +13,13 @@ import {
   useCreateStoreMember,
   useUpdateStoreMember,
 } from '@/hooks/api/store-members'
-import Skeleton from '@/app/components/Skeleton'
+import Skeleton from '@/components/Skeleton'
 import { useFocusEffect } from 'expo-router'
-import { useAuth } from '@/app/context/AuthContext'
-import { useTheme } from '@/app/context/ThemeContext'
+import { useAuth } from '@/context/AuthContext'
+import { useTheme } from '@/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
-import { AppBottomSheet, AppBottomSheetRef, BottomSheetTextInput, SHEET_SNAP } from '@/app/components/ui/BottomSheet'
-import { useFabBottomInset } from '@/app/hooks/useOrientation'
+import { AppBottomSheet, AppBottomSheetRef, BottomSheetTextInput, SHEET_SNAP } from '@/components/ui/BottomSheet'
+import { useFabBottomInset } from '@/hooks/useOrientation'
 
 interface UsersScreenProps {
   id: string

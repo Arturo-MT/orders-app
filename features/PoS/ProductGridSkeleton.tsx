@@ -1,0 +1,23 @@
+import Skeleton from '@/components/Skeleton'
+import { View } from 'react-native'
+
+export default function ProductGridSkeleton({ columns, panelWidth }: { columns: number; panelWidth: number }) {
+  const cardWidth = panelWidth / columns - 12
+
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+      {Array.from({ length: columns * 2 }).map((_, i) => (
+        <View
+          key={i}
+          style={{
+            width: cardWidth,
+            paddingHorizontal: 6,
+            paddingVertical: 6
+          }}
+        >
+          <Skeleton width='100%' height={120} radius={16} />
+        </View>
+      ))}
+    </View>
+  )
+}

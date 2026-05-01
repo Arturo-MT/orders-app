@@ -1,4 +1,4 @@
-import ProductsScreen from '@/app/features/products/ProductsScreen'
+import ProductsScreen from '@/features/products/ProductsScreen'
 import React from 'react'
 
 export default function ProductsContainer() {
