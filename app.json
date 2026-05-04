@@ -10,12 +10,12 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ECE2D0"
+      "backgroundColor": "#B6C0FF"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon_foreground.png",
-        "backgroundColor": "#ECE2D0"
+        "backgroundColor": "#B6C0FF"
       },
       "softwareKeyboardLayoutMode": "pan"
     },
