@@ -13,7 +13,7 @@ import {
   ScrollView,
   useWindowDimensions
 } from 'react-native'
-import { useAuth } from '../../context/AuthContext'
+import { useAuth } from '@/context/AuthContext'
 import { Href, router } from 'expo-router'
 import { useTheme } from '@/context/ThemeContext'
 import { Theme } from '@/constants/Colors'
@@ -97,10 +97,25 @@ export default function LoginScreen() {
 const makeStyles = (theme: Theme, screenWidth: number) => {
   const logoSize = Math.min(screenWidth * 0.4, 180)
   return StyleSheet.create({
-    container: { flex: 1, padding: 20, backgroundColor: theme.background, justifyContent: 'center' },
-    headerImage: { height: logoSize, width: logoSize, alignSelf: 'center', marginBottom: 16 },
+    container: {
+      flex: 1,
+      padding: 20,
+      backgroundColor: theme.background,
+      justifyContent: 'center'
+    },
+    headerImage: {
+      height: logoSize,
+      width: logoSize,
+      alignSelf: 'center',
+      marginBottom: 16
+    },
     formContainer: { width: '100%', alignSelf: 'center' },
-    label: { fontSize: 16, marginBottom: 6, color: theme.textPrimary, fontWeight: '600' },
+    label: {
+      fontSize: 16,
+      marginBottom: 6,
+      color: theme.textPrimary,
+      fontWeight: '600'
+    },
     input: {
       borderWidth: 1,
       borderColor: theme.border,
@@ -112,7 +127,13 @@ const makeStyles = (theme: Theme, screenWidth: number) => {
       color: theme.textPrimary,
       backgroundColor: theme.surface
     },
-    button: { backgroundColor: theme.primary, paddingVertical: 14, borderRadius: 6, alignItems: 'center', marginTop: 8 },
+    button: {
+      backgroundColor: theme.primary,
+      paddingVertical: 14,
+      borderRadius: 6,
+      alignItems: 'center',
+      marginTop: 8
+    },
     buttonDisabled: { opacity: 0.6 },
     buttonText: { color: theme.textOnPrimary, fontSize: 16, fontWeight: 'bold' }
   })
