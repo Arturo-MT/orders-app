@@ -1,15 +1,15 @@
-import { Slot } from 'expo-router'
-import { AuthProvider } from '@/context/AuthContext'
-import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
-import { FetchProvider } from '@/context/FetchContext'
-import { StoreProvider } from '@/context/StoreContext'
-import { ToastProvider } from '@/context/ToastContext'
-import { ThemeProvider } from '@/context/ThemeContext'
-import { GestureHandlerRootView } from 'react-native-gesture-handler'
-import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
+import { Slot } from "expo-router";
+import { AuthProvider } from "@/context/AuthContext";
+import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
+import { FetchProvider } from "@/context/FetchContext";
+import { StoreProvider } from "@/context/StoreContext";
+import { ToastProvider } from "@/context/ToastContext";
+import { ThemeProvider } from "@/context/ThemeContext";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient();
 
 export default function RootLayout() {
   return (
@@ -22,7 +22,9 @@ export default function RootLayout() {
                 <StoreProvider>
                   <FetchProvider>
                     <ToastProvider>
-                      <Slot />
+                      <SafeAreaView style={{ flex: 1 }}>
+                        <Slot />
+                      </SafeAreaView>
                     </ToastProvider>
                   </FetchProvider>
                 </StoreProvider>
@@ -32,5 +34,5 @@ export default function RootLayout() {
         </BottomSheetModalProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
-  )
+  );
 }
