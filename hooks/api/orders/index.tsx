@@ -1,53 +1,60 @@
-import { useFetch } from '@/context/FetchContext'
-import { useStore } from '@/context/StoreContext'
-import { OrderDraft } from '@/types/types'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useFetch } from "@/context/FetchContext";
+import { useStore } from "@/context/StoreContext";
+import { OrderDraft } from "@/types/types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   OPEN_ORDERS_KEY,
   ORDER_KEY,
   ORDERS_KEY,
-  SCHEDULED_ORDERS_KEY
-} from './constants'
-import { createOrder, CreateOrderResponse, OrderUpdatePatch, updateOrder } from './mutations'
+  SCHEDULED_ORDERS_KEY,
+} from "./constants";
+import {
+  createOrder,
+  CreateOrderResponse,
+  OrderUpdatePatch,
+  updateOrder,
+} from "./mutations";
 import {
   openOrderIdsQuery,
   orderQuery,
   ordersQuery,
-  scheduledOrderIdsQuery
-} from './queries'
-import { useRealtimeInvalidate } from './useRealtimeInvalidate'
+  scheduledOrderIdsQuery,
+} from "./queries";
+import { useRealtimeInvalidate } from "./useRealtimeInvalidate";
 
-export function useCreateOrder(config: { retry?: number; retryDelay?: number } = {}) {
-  const { client } = useFetch()
-  const { activeStore } = useStore()
-  const queryClient = useQueryClient()
+export function useCreateOrder(
+  config: { retry?: number; retryDelay?: number } = {}
+) {
+  const { client } = useFetch();
+  const { activeStore } = useStore();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (payload: OrderDraft) =>
       createOrder({ client, payload, storeId: activeStore!.id }),
     onSuccess: (data: CreateOrderResponse) => {
-      queryClient.invalidateQueries({ queryKey: [ORDERS_KEY] })
-      queryClient.invalidateQueries({ queryKey: [OPEN_ORDERS_KEY] })
-      queryClient.invalidateQueries({ queryKey: [SCHEDULED_ORDERS_KEY] })
+      queryClient.invalidateQueries({ queryKey: [ORDERS_KEY] });
+      queryClient.invalidateQueries({ queryKey: [OPEN_ORDERS_KEY] });
+      queryClient.invalidateQueries({ queryKey: [SCHEDULED_ORDERS_KEY] });
       if (data?.order_id) {
-        queryClient.invalidateQueries({ queryKey: [ORDER_KEY, data.order_id] })
+        queryClient.invalidateQueries({ queryKey: [ORDER_KEY, data.order_id] });
       }
     },
-    ...config
-  })
+    ...config,
+  });
 }
 
 export function useOrderQuery({
   orderId,
-  enabled = true
+  enabled = true,
 }: {
-  orderId: string
-  enabled?: boolean
+  orderId: string;
+  enabled?: boolean;
 }) {
-  const { client } = useFetch()
-  const isEnabled = !!orderId && enabled
+  const { client } = useFetch();
+  const isEnabled = !!orderId && enabled;
 
-  useRealtimeInvalidate({
+  /*   useRealtimeInvalidate({
     table: 'order',
     filter: orderId ? `id=eq.${orderId}` : undefined,
     queryKey: [ORDER_KEY, orderId],
@@ -59,47 +66,47 @@ export function useOrderQuery({
     filter: orderId ? `order_id=eq.${orderId}` : undefined,
     queryKey: [ORDER_KEY, orderId],
     enabled: isEnabled
-  })
+  }) */
 
   return useQuery({
     queryKey: [ORDER_KEY, orderId],
     enabled: isEnabled,
-    queryFn: () => orderQuery({ client, orderId })
-  })
+    queryFn: () => orderQuery({ client, orderId }),
+  });
 }
 
 export function useOpenOrderIdsQuery() {
-  const { client } = useFetch()
-  const { activeStore } = useStore()
+  const { client } = useFetch();
+  const { activeStore } = useStore();
 
   useRealtimeInvalidate({
-    table: 'order',
+    table: "order",
     filter: activeStore?.id ? `store_id=eq.${activeStore.id}` : undefined,
     queryKey: [OPEN_ORDERS_KEY, activeStore?.id],
-    enabled: !!activeStore?.id
-  })
+    enabled: !!activeStore?.id,
+  });
 
   return useQuery({
     queryKey: [OPEN_ORDERS_KEY, activeStore?.id],
-    queryFn: () => openOrderIdsQuery({ client, storeId: activeStore!.id })
-  })
+    queryFn: () => openOrderIdsQuery({ client, storeId: activeStore!.id }),
+  });
 }
 
 export function useScheduledOrderIdsQuery() {
-  const { client } = useFetch()
-  const { activeStore } = useStore()
+  const { client } = useFetch();
+  const { activeStore } = useStore();
 
   useRealtimeInvalidate({
-    table: 'order',
+    table: "order",
     filter: activeStore?.id ? `store_id=eq.${activeStore.id}` : undefined,
     queryKey: [SCHEDULED_ORDERS_KEY, activeStore?.id],
-    enabled: !!activeStore?.id
-  })
+    enabled: !!activeStore?.id,
+  });
 
   return useQuery({
     queryKey: [SCHEDULED_ORDERS_KEY, activeStore?.id],
-    queryFn: () => scheduledOrderIdsQuery({ client, storeId: activeStore!.id })
-  })
+    queryFn: () => scheduledOrderIdsQuery({ client, storeId: activeStore!.id }),
+  });
 }
 
 export function useOrdersQuery({
@@ -107,16 +114,16 @@ export function useOrdersQuery({
   pageSize = 5,
   search,
   status,
-  payment_status
+  payment_status,
 }: {
-  page: number
-  pageSize?: number
-  search?: string
-  status?: 'OPEN' | 'CLOSED'
-  payment_status?: 'PAID' | 'UNPAID'
+  page: number;
+  pageSize?: number;
+  search?: string;
+  status?: "OPEN" | "CLOSED";
+  payment_status?: "PAID" | "UNPAID";
 }) {
-  const { client } = useFetch()
-  const { activeStore } = useStore()
+  const { client } = useFetch();
+  const { activeStore } = useStore();
 
   return useQuery({
     queryKey: [
@@ -126,7 +133,7 @@ export function useOrdersQuery({
       search,
       status,
       payment_status,
-      activeStore?.id
+      activeStore?.id,
     ],
     queryFn: () =>
       ordersQuery({
@@ -136,30 +143,32 @@ export function useOrdersQuery({
         pageSize,
         search,
         status,
-        payment_status
+        payment_status,
       }),
-    placeholderData: (prev) => prev
-  })
+    placeholderData: (prev) => prev,
+  });
 }
 
 export function useUpdateOrder() {
-  const { client } = useFetch()
-  const queryClient = useQueryClient()
+  const { client } = useFetch();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({
       orderId,
-      patch
+      patch,
     }: {
-      orderId: string
-      patch: OrderUpdatePatch
+      orderId: string;
+      patch: OrderUpdatePatch;
     }) => updateOrder({ client, orderId, patch }),
 
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: [ORDER_KEY, variables.orderId] })
-      queryClient.invalidateQueries({ queryKey: [OPEN_ORDERS_KEY] })
-      queryClient.invalidateQueries({ queryKey: [SCHEDULED_ORDERS_KEY] })
-      queryClient.invalidateQueries({ queryKey: [ORDERS_KEY] })
-    }
-  })
+      queryClient.invalidateQueries({
+        queryKey: [ORDER_KEY, variables.orderId],
+      });
+      queryClient.invalidateQueries({ queryKey: [OPEN_ORDERS_KEY] });
+      queryClient.invalidateQueries({ queryKey: [SCHEDULED_ORDERS_KEY] });
+      queryClient.invalidateQueries({ queryKey: [ORDERS_KEY] });
+    },
+  });
 }
