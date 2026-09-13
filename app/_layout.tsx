@@ -22,7 +22,10 @@ export default function RootLayout() {
                 <StoreProvider>
                   <FetchProvider>
                     <ToastProvider>
-                      <SafeAreaView style={{ flex: 1 }}>
+                      <SafeAreaView
+                        style={{ flex: 1 }}
+                        edges={["top", "left", "right"]}
+                      >
                         <Slot />
                       </SafeAreaView>
                     </ToastProvider>
