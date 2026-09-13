@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Animated, StyleSheet, View } from "react-native";
-import Swipeable from "react-native-gesture-handler/Swipeable";
 import { useOrderQuery, useUpdateOrder } from "@/hooks/api/orders";
 import { useTablesQuery, useUpdateTable } from "@/hooks/api/tables";
 import { useTheme } from "@/context/ThemeContext";
@@ -33,7 +32,6 @@ export default function OrderCard({ order, onRemove }: Props) {
   const [pendingAction, setPendingAction] = useState<
     "pay" | "close" | "type" | null
   >(null);
-  const swipeableRef = useRef<Swipeable>(null);
   const updateOrder = useUpdateOrder();
   const updateTable = useUpdateTable();
   const { data: tables } = useTablesQuery();
@@ -162,7 +160,6 @@ export default function OrderCard({ order, onRemove }: Props) {
       }
     } catch {
       showToast("No se pudo actualizar la orden", "error");
-      swipeableRef.current?.close();
     } finally {
       setPendingAction(null);
     }
@@ -253,21 +250,7 @@ export default function OrderCard({ order, onRemove }: Props) {
 
   if (!isCloseableStatus(order.status)) return card;
 
-  return (
-    <Swipeable
-      ref={swipeableRef}
-      renderRightActions={() => (
-        <View
-          style={[styles.swipeAction, { backgroundColor: theme.primary }]}
-        />
-      )}
-      rightThreshold={80}
-      overshootRight={false}
-      onSwipeableOpen={closeOrChangeStatus}
-    >
-      {card}
-    </Swipeable>
-  );
+  return <View style={styles.card}>{card}</View>;
 }
 
 const styles = StyleSheet.create({
@@ -275,11 +258,4 @@ const styles = StyleSheet.create({
   details: { padding: 12 },
   totals: { alignItems: "flex-end" },
   totalText: { fontSize: 14 },
-  swipeAction: {
-    justifyContent: "center",
-    alignItems: "center",
-    width: 80,
-    marginBottom: 8,
-    borderRadius: 8,
-  },
 });
