@@ -13,6 +13,7 @@
     },
     "beta": {
       "distribution": "internal",
+      "channel": "beta",
       "android": {
         "buildType": "apk",
         "gradleCommand": ":app:assembleBetaRelease"

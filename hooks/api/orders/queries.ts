@@ -1,69 +1,75 @@
-import { SupabaseClient } from '@supabase/supabase-js'
+import { SupabaseClient } from "@supabase/supabase-js";
 
-export type OrderStatus = 'OPEN' | 'CLOSED' | 'PREPARING' | 'DISPATCHED' | 'SCHEDULED'
-export type PaymentStatus = 'PAID' | 'UNPAID' | 'PENDING'
+export type OrderStatus =
+  | "OPEN"
+  | "CLOSED"
+  | "PREPARING"
+  | "DISPATCHED"
+  | "SCHEDULED";
+export type PaymentStatus = "PAID" | "UNPAID" | "PENDING";
 
 export type OpenOrderSummary = {
-  id: string
-  order_number: string
-  type: 'DINE_IN' | 'TAKEAWAY'
-  status: 'OPEN' | 'PREPARING' | 'DISPATCHED'
-  payment_status: string | null
-  customer_name: string | null
-  table_id: string | null
-  dining_table?: { id: string; name: string } | null
-  table_name: string | null
-  created_at: string
-  opened_at?: string | null
-}
+  id: string;
+  order_number: string;
+  type: "DINE_IN" | "TAKEAWAY";
+  status: "OPEN" | "PREPARING" | "DISPATCHED";
+  payment_status: string | null;
+  customer_name: string | null;
+  table_id: string | null;
+  dining_table?: { id: string; name: string } | null;
+  table_name: string | null;
+  created_at: string;
+  opened_at?: string | null;
+};
 
 export type ScheduledOrderSummary = {
-  id: string
-  order_number: string
-  type: 'DINE_IN' | 'TAKEAWAY'
-  status: 'SCHEDULED'
-  payment_status: string | null
-  customer_name: string | null
-  table_id: string | null
-  dining_table?: { id: string; name: string } | null
-  table_name: string | null
-  created_at: string
-  scheduled_for: string
-}
+  id: string;
+  order_number: string;
+  type: "DINE_IN" | "TAKEAWAY";
+  status: "SCHEDULED";
+  payment_status: string | null;
+  customer_name: string | null;
+  table_id: string | null;
+  dining_table?: { id: string; name: string } | null;
+  table_name: string | null;
+  created_at: string;
+  scheduled_for: string;
+};
 
 export type OrderDetail = {
-  id: string
-  order_number: string
-  type: 'DINE_IN' | 'TAKEAWAY'
-  status: string
-  payment_status: string | null
-  customer_name: string | null
-  table_name: string | null
-  created_at: string
-  opened_at: string | null
-  closed_at: string | null
-  dispatched_at: string | null
-  prepared_at: string | null
+  id: string;
+  order_number: string;
+  type: "DINE_IN" | "TAKEAWAY";
+  status: string;
+  payment_status: string | null;
+  customer_name: string | null;
+  table_name: string | null;
+  created_at: string;
+  opened_at: string | null;
+  closed_at: string | null;
+  dispatched_at: string | null;
+  prepared_at: string | null;
   items: {
-    id: string
-    product_id: string
-    product_name: string
-    quantity: number
-    base_price: number
-    total_price: number
-    notes: string | null
-  }[]
-}
+    id: string;
+    product_id: string;
+    product_name: string;
+    quantity: number;
+    base_price: number;
+    total_price: number;
+    status: "READY" | "PENDING";
+    notes: string | null;
+  }[];
+};
 
 export async function orderQuery({
   client,
-  orderId
+  orderId,
 }: {
-  client: SupabaseClient
-  orderId: string
+  client: SupabaseClient;
+  orderId: string;
 }): Promise<OrderDetail> {
   const { data, error } = await client
-    .from('order')
+    .from("order")
     .select(
       `
         id,
@@ -86,14 +92,15 @@ export async function orderQuery({
           base_price,
           total_price,
           notes,
+          status,
           product:product_id ( name )
         )
       `
     )
-    .eq('id', orderId)
-    .single()
+    .eq("id", orderId)
+    .single();
 
-  if (error) throw error
+  if (error) throw error;
 
   return {
     id: data.id,
@@ -111,60 +118,61 @@ export async function orderQuery({
     items: data.order_item.map((item: any) => ({
       id: item.id,
       product_id: item.product_id,
-      product_name: item.product?.name ?? '',
+      product_name: item.product?.name ?? "",
       quantity: item.quantity,
       base_price: item.base_price,
       total_price: item.total_price,
-      notes: item.notes
-    }))
-  }
+      notes: item.notes,
+      status: item.status,
+    })),
+  };
 }
 
 export async function openOrderIdsQuery({
   client,
-  storeId
+  storeId,
 }: {
-  client: SupabaseClient
-  storeId: string
+  client: SupabaseClient;
+  storeId: string;
 }): Promise<OpenOrderSummary[]> {
   const { data, error } = await client
-    .from('order')
+    .from("order")
     .select(
-      'id, order_number, type, status, payment_status, customer_name, table_id, dining_table (id, name), created_at, opened_at'
+      "id, order_number, type, status, payment_status, customer_name, table_id, dining_table (id, name), created_at, opened_at"
     )
-    .eq('store_id', storeId)
-    .in('status', ['OPEN', 'PREPARING', 'DISPATCHED'])
+    .eq("store_id", storeId)
+    .in("status", ["OPEN", "PREPARING", "DISPATCHED"]);
 
-  if (error) throw error
+  if (error) throw error;
 
   return (data ?? []).map((order: any) => ({
     ...order,
-    table_name: order.dining_table?.name ?? null
-  }))
+    table_name: order.dining_table?.name ?? null,
+  }));
 }
 
 export async function scheduledOrderIdsQuery({
   client,
-  storeId
+  storeId,
 }: {
-  client: SupabaseClient
-  storeId: string
+  client: SupabaseClient;
+  storeId: string;
 }): Promise<ScheduledOrderSummary[]> {
   const { data, error } = await client
-    .from('order')
+    .from("order")
     .select(
-      'id, order_number, type, status, payment_status, customer_name, table_id, dining_table (id, name), created_at, scheduled_for'
+      "id, order_number, type, status, payment_status, customer_name, table_id, dining_table (id, name), created_at, scheduled_for"
     )
-    .eq('store_id', storeId)
-    .eq('status', 'SCHEDULED')
-    .order('scheduled_for', { ascending: true })
+    .eq("store_id", storeId)
+    .eq("status", "SCHEDULED")
+    .order("scheduled_for", { ascending: true });
 
-  if (error) throw error
+  if (error) throw error;
 
   return (data ?? []).map((order: any) => ({
     ...order,
-    table_name: order.dining_table?.name ?? null
-  }))
+    table_name: order.dining_table?.name ?? null,
+  }));
 }
 
 export async function ordersQuery({
@@ -174,39 +182,39 @@ export async function ordersQuery({
   pageSize,
   search,
   status,
-  payment_status
+  payment_status,
 }: {
-  client: SupabaseClient
-  storeId: string
-  page: number
-  pageSize: number
-  search?: string
-  status?: 'OPEN' | 'CLOSED'
-  payment_status?: 'PAID' | 'UNPAID'
+  client: SupabaseClient;
+  storeId: string;
+  page: number;
+  pageSize: number;
+  search?: string;
+  status?: "OPEN" | "CLOSED";
+  payment_status?: "PAID" | "UNPAID";
 }) {
-  const from = (page - 1) * pageSize
-  const to = from + pageSize - 1
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
   let query = client
-    .from('order')
-    .select(`*, dining_table ( id, name )`, { count: 'exact' })
-    .eq('store_id', storeId)
+    .from("order")
+    .select(`*, dining_table ( id, name )`, { count: "exact" })
+    .eq("store_id", storeId);
 
-  if (search) query = query.ilike('customer_name', `%${search}%`)
-  if (status) query = query.eq('status', status)
-  if (payment_status) query = query.eq('payment_status', payment_status)
+  if (search) query = query.ilike("customer_name", `%${search}%`);
+  if (status) query = query.eq("status", status);
+  if (payment_status) query = query.eq("payment_status", payment_status);
 
   const { data, count, error } = await query
-    .order('created_at', { ascending: false })
-    .range(from, to)
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
-  if (error) throw error
+  if (error) throw error;
 
   return {
     orders: (data ?? []).map((order: any) => ({
       ...order,
-      table_name: order.dining_table?.name ?? null
+      table_name: order.dining_table?.name ?? null,
     })),
-    total: count ?? 0
-  }
+    total: count ?? 0,
+  };
 }

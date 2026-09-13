@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react'
+import React, { useRef, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,277 +7,293 @@ import {
   ActivityIndicator,
   Animated,
   Modal,
-  ScrollView
-} from 'react-native'
-import Swipeable from 'react-native-gesture-handler/Swipeable'
-import { Ionicons } from '@expo/vector-icons'
-import {
-  useOrderQuery,
-  useUpdateOrder
-} from '@/hooks/api/orders'
-import { useUpdateTable } from '@/hooks/api/tables'
-import { useElapsedTime } from '@/hooks/utils/useElapsedTime'
-import { useTablesQuery } from '@/hooks/api/tables'
-import CustomCheckbox from '@/components/CustomCheckbox'
+  ScrollView,
+  Pressable,
+} from "react-native";
+import Swipeable from "react-native-gesture-handler/Swipeable";
+import { Ionicons } from "@expo/vector-icons";
+import { useOrderQuery, useUpdateOrder } from "@/hooks/api/orders";
+import { useUpdateTable } from "@/hooks/api/tables";
+import { useElapsedTime } from "@/hooks/utils/useElapsedTime";
+import { useTablesQuery } from "@/hooks/api/tables";
+import CustomCheckbox from "@/components/CustomCheckbox";
 import {
   clearOrderState,
   getOrderState,
   setOrderExpanded,
-  setOrderPaidItem
-} from './orderStates'
-import { useTheme } from '@/context/ThemeContext'
-import { Theme } from '@/constants/Colors'
-import { useToast } from '@/context/ToastContext'
+  setOrderPaidItem,
+} from "./orderStates";
+import { useTheme } from "@/context/ThemeContext";
+import { Theme } from "@/constants/Colors";
+import { useToast } from "@/context/ToastContext";
 
 interface Props {
   order: {
-    id: string
-    order_number: string
-    type: 'DINE_IN' | 'TAKEAWAY'
-    status: 'OPEN' | 'PREPARING' | 'DISPATCHED' | 'CLOSED' | 'SCHEDULED'
-    payment_status: string | null
-    customer_name: string | null
-    table_name: string | null
-    table_id: string | null
-    created_at: string
-    opened_at?: string | null
-    prepared_at?: string | null
-    dispatched_at?: string | null
-    scheduled_for?: string | null
-  }
-  onRemove?: (orderId: string) => void
+    id: string;
+    order_number: string;
+    type: "DINE_IN" | "TAKEAWAY";
+    status: "OPEN" | "PREPARING" | "DISPATCHED" | "CLOSED" | "SCHEDULED";
+    payment_status: string | null;
+    customer_name: string | null;
+    table_name: string | null;
+    table_id: string | null;
+    created_at: string;
+    opened_at?: string | null;
+    prepared_at?: string | null;
+    dispatched_at?: string | null;
+    scheduled_for?: string | null;
+  };
+  onRemove?: (orderId: string) => void;
 }
 
 const statusLabel = (status: string) => {
-  if (status === 'OPEN') return 'Abierta'
-  if (status === 'PREPARING') return 'Preparando'
-  if (status === 'DISPATCHED') return 'Despachada'
-  if (status === 'CLOSED') return 'Cerrada'
-  if (status === 'SCHEDULED') return 'Programada'
-  return status
+  if (status === "OPEN") return "Abierta";
+  if (status === "PREPARING") return "Preparando";
+  if (status === "DISPATCHED") return "Despachada";
+  if (status === "CLOSED") return "Cerrada";
+  if (status === "SCHEDULED") return "Programada";
+  return status;
+};
+
+interface Item {
+  id: string;
+  product_name: string;
+  quantity: number;
+  notes?: string | null;
+  total_price: number;
+  status: "PENDING" | "READY";
 }
 
 const paymentLabel = (payment: string | null) =>
-  payment === 'PAID' ? 'Pagado' : 'Pendiente'
+  payment === "PAID" ? "Pagado" : "Pendiente";
 
 const statusBadge = (status: string, theme: Theme) => {
-  if (status === 'OPEN')
+  if (status === "OPEN")
     return {
-      container: { backgroundColor: '#e0a02022' },
-      text: { color: '#e0a020' }
-    }
-  if (status === 'PREPARING')
+      container: { backgroundColor: "#e0a02022" },
+      text: { color: "#e0a020" },
+    };
+  if (status === "PREPARING")
     return {
-      container: { backgroundColor: '#5b8def22' },
-      text: { color: '#5b8def' }
-    }
-  if (status === 'DISPATCHED')
+      container: { backgroundColor: "#5b8def22" },
+      text: { color: "#5b8def" },
+    };
+  if (status === "DISPATCHED")
     return {
-      container: { backgroundColor: theme.success + '22' },
-      text: { color: theme.success }
-    }
-  if (status === 'SCHEDULED')
+      container: { backgroundColor: theme.success + "22" },
+      text: { color: theme.success },
+    };
+  if (status === "SCHEDULED")
     return {
-      container: { backgroundColor: '#7c6af722' },
-      text: { color: '#7c6af7' }
-    }
+      container: { backgroundColor: "#7c6af722" },
+      text: { color: "#7c6af7" },
+    };
   return {
     container: { backgroundColor: theme.borderLight },
-    text: { color: theme.textMuted }
-  }
-}
+    text: { color: theme.textMuted },
+  };
+};
 
 const paymentBadge = (payment: string | null, theme: Theme) => {
-  if (payment === 'PAID')
+  if (payment === "PAID")
     return {
-      container: { backgroundColor: theme.success + '22' },
-      text: { color: theme.success }
-    }
+      container: { backgroundColor: theme.success + "22" },
+      text: { color: theme.success },
+    };
   return {
-    container: { backgroundColor: '#e0a02022' },
-    text: { color: '#e0a020' }
-  }
-}
+    container: { backgroundColor: "#e0a02022" },
+    text: { color: "#e0a020" },
+  };
+};
 
 export default function OrderCard({ order, onRemove }: Props) {
-  const { showToast } = useToast()
-  const { theme } = useTheme()
-  const styles = makeStyles(theme)
-  const state = getOrderState(order.id)
-  const [expanded, setExpanded] = useState(state.expanded)
-  const [paidItems, setPaidItems] = useState(state.paidItems)
-  const [tableModalVisible, setTableModalVisible] = useState(false)
-  const [pendingAction, setPendingAction] = useState<'pay' | 'close' | null>(null)
-  const swipeableRef = useRef<Swipeable>(null)
+  const { showToast } = useToast();
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
+  const state = getOrderState(order.id);
+  const [expanded, setExpanded] = useState(state.expanded);
+  const [paidItems, setPaidItems] = useState(state.paidItems);
+  const [tableModalVisible, setTableModalVisible] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"pay" | "close" | null>(
+    null
+  );
+
+  const swipeableRef = useRef<Swipeable>(null);
   const canClose =
-    order.status === 'OPEN' ||
-    order.status === 'PREPARING' ||
-    order.status === 'DISPATCHED'
-  const elapsedLabel = useElapsedTime(order.opened_at ?? order.created_at)
+    order.status === "OPEN" ||
+    order.status === "PREPARING" ||
+    order.status === "DISPATCHED";
+  const elapsedLabel = useElapsedTime(order.opened_at ?? order.created_at);
 
   useEffect(() => {
-    setOrderExpanded(order.id, expanded)
-  }, [expanded, order.id])
+    setOrderExpanded(order.id, expanded);
+  }, [expanded, order.id]);
 
   const toggleItemPaid = (key: string) => {
-    const newValue = !paidItems[key]
-    setPaidItems((prev) => ({ ...prev, [key]: newValue }))
-    setOrderPaidItem(order.id, key, newValue)
-  }
+    const newValue = !paidItems[key];
+    setPaidItems((prev) => ({ ...prev, [key]: newValue }));
+    setOrderPaidItem(order.id, key, newValue);
+  };
 
   const { data: orderData, isLoading } = useOrderQuery({
     orderId: order.id,
-    enabled: expanded
-  })
+    enabled: expanded,
+  });
   const paidTotal =
-    orderData?.items.reduce((acc: number, item: any) => {
-      return paidItems[item.id] ? acc + (Number(item.total_price) || 0) : acc
-    }, 0) ?? 0
+    orderData?.items.reduce((acc: number, item: Item) => {
+      return paidItems[item.id] ? acc + (Number(item.total_price) || 0) : acc;
+    }, 0) ?? 0;
 
   const orderTotal =
     orderData?.items.reduce(
-      (acc: number, item: any) => acc + (Number(item.total_price) || 0),
+      (acc: number, item: Item) => acc + (Number(item.total_price) || 0),
       0
-    ) ?? 0
+    ) ?? 0;
 
-  const updateOrder = useUpdateOrder()
-  const updateTable = useUpdateTable()
-  const { data: tables } = useTablesQuery()
+  const updateOrder = useUpdateOrder();
+  const updateTable = useUpdateTable();
+  const { data: tables } = useTablesQuery();
 
   const handleChangeTable = async (newTableId: string) => {
-    setTableModalVisible(false)
-    if (newTableId === order.table_id) return
+    setTableModalVisible(false);
+    if (newTableId === order.table_id) return;
     try {
       await updateOrder.mutateAsync({
         orderId: order.id,
-        patch: { table_id: newTableId }
-      })
+        patch: { table_id: newTableId },
+      });
       if (order.table_id) {
-        await updateTable.mutateAsync({ id: order.table_id, isOccupied: false })
+        await updateTable.mutateAsync({
+          id: order.table_id,
+          isOccupied: false,
+        });
       }
-      await updateTable.mutateAsync({ id: newTableId, isOccupied: true })
-      showToast('Mesa actualizada', 'success')
+      await updateTable.mutateAsync({ id: newTableId, isOccupied: true });
+      showToast("Mesa actualizada", "success");
     } catch {
-      showToast('Error al cambiar la mesa', 'error')
+      showToast("Error al cambiar la mesa", "error");
     }
-  }
+  };
 
   const handleReopenOrder = async () => {
-    if (pendingAction) return
+    if (pendingAction) return;
     const status = order.dispatched_at
-      ? 'DISPATCHED'
+      ? "DISPATCHED"
       : order.prepared_at
-        ? 'PREPARING'
-        : 'OPEN'
-    setPendingAction('close')
+        ? "PREPARING"
+        : "OPEN";
+    setPendingAction("close");
     try {
       await updateOrder.mutateAsync({
         orderId: order.id,
-        patch: { status, payment_status: 'PENDING', closed_at: null }
-      })
+        patch: { status, payment_status: "PENDING", closed_at: null },
+      });
       if (order.table_id) {
-        await updateTable.mutateAsync({ id: order.table_id, isOccupied: true })
+        await updateTable.mutateAsync({ id: order.table_id, isOccupied: true });
       }
-      showToast('Orden reabierta', 'success')
+      showToast("Orden reabierta", "success");
     } catch {
-      showToast('Error al reabrir la orden', 'error')
+      showToast("Error al reabrir la orden", "error");
     } finally {
-      setPendingAction(null)
+      setPendingAction(null);
     }
-  }
+  };
 
   const handleOpenNow = async () => {
-    if (pendingAction) return
-    setPendingAction('close')
+    if (pendingAction) return;
+    setPendingAction("close");
     try {
       await updateOrder.mutateAsync({
         orderId: order.id,
-        patch: { status: 'OPEN', scheduled_for: null }
-      })
+        patch: { status: "OPEN", scheduled_for: null },
+      });
       if (order.table_id) {
-        await updateTable.mutateAsync({ id: order.table_id, isOccupied: true })
+        await updateTable.mutateAsync({ id: order.table_id, isOccupied: true });
       }
-      showToast('Orden abierta', 'success')
-      onRemove?.(order.id)
+      showToast("Orden abierta", "success");
+      onRemove?.(order.id);
     } catch {
-      showToast('Error al abrir la orden', 'error')
+      showToast("Error al abrir la orden", "error");
     } finally {
-      setPendingAction(null)
+      setPendingAction(null);
     }
-  }
+  };
 
   const handleCloseOrder = async () => {
-    if (pendingAction) return
-    setPendingAction('close')
+    if (pendingAction) return;
+    setPendingAction("close");
     try {
       await updateOrder.mutateAsync({
         orderId: order.id,
         patch: {
-          status: 'CLOSED',
-          payment_status: 'PAID',
-          closed_at: new Date().toISOString()
-        }
-      })
+          status: "CLOSED",
+          payment_status: "PAID",
+          closed_at: new Date().toISOString(),
+        },
+      });
       if (order.table_id) {
-        await updateTable.mutateAsync({ id: order.table_id, isOccupied: false })
+        await updateTable.mutateAsync({
+          id: order.table_id,
+          isOccupied: false,
+        });
       }
-      clearOrderState(order.id)
-      showToast('Orden cerrada', 'success')
-      onRemove?.(order.id)
+      clearOrderState(order.id);
+      showToast("Orden cerrada", "success");
+      onRemove?.(order.id);
     } catch {
-      showToast('Error al cerrar la orden', 'error')
-      swipeableRef.current?.close()
+      showToast("Error al cerrar la orden", "error");
+      swipeableRef.current?.close();
     } finally {
-      setPendingAction(null)
+      setPendingAction(null);
     }
-  }
+  };
 
   const handleMarkAsPaid = async () => {
-    if (pendingAction) return
-    setPendingAction('pay')
+    if (pendingAction) return;
+    setPendingAction("pay");
     try {
       await updateOrder.mutateAsync({
         orderId: order.id,
-        patch: { payment_status: 'PAID' }
-      })
-      showToast('Orden marcada como pagada', 'success')
+        patch: { payment_status: "PAID" },
+      });
+      showToast("Orden marcada como pagada", "success");
     } catch {
-      showToast('Error al marcar como pagada', 'error')
+      showToast("Error al marcar como pagada", "error");
     } finally {
-      setPendingAction(null)
+      setPendingAction(null);
     }
-  }
+  };
 
   const handleMarkAsUnpaid = async () => {
-    if (pendingAction) return
-    setPendingAction('pay')
+    if (pendingAction) return;
+    setPendingAction("pay");
     try {
       await updateOrder.mutateAsync({
         orderId: order.id,
-        patch: { payment_status: 'PENDING' }
-      })
-      showToast('Pago deshecho', 'success')
+        patch: { payment_status: "PENDING" },
+      });
+      showToast("Pago deshecho", "success");
     } catch {
-      showToast('Error al deshacer el pago', 'error')
+      showToast("Error al deshacer el pago", "error");
     } finally {
-      setPendingAction(null)
+      setPendingAction(null);
     }
-  }
+  };
 
   const toggle = () => {
-    setExpanded((prev) => !prev)
-  }
+    setExpanded((prev) => !prev);
+  };
 
-  const displayName = order.table_name || order.customer_name
-  const isTakeaway = order.type === 'TAKEAWAY'
+  const displayName = order.table_name || order.customer_name;
+  const isTakeaway = order.type === "TAKEAWAY";
 
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr)
-    const isToday = date.toDateString() === new Date().toDateString()
+    const date = new Date(dateStr);
+    const isToday = date.toDateString() === new Date().toDateString();
     return isToday
-      ? date.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })
-      : date.toLocaleDateString('es', { day: '2-digit', month: 'short' })
-  }
+      ? date.toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" })
+      : date.toLocaleDateString("es", { day: "2-digit", month: "short" });
+  };
 
   const renderRightActions = (
     progress: Animated.AnimatedInterpolation<number>
@@ -285,34 +301,34 @@ export default function OrderCard({ order, onRemove }: Props) {
     const scale = progress.interpolate({
       inputRange: [0, 1],
       outputRange: [0.7, 1],
-      extrapolate: 'clamp'
-    })
+      extrapolate: "clamp",
+    });
     const opacity = progress.interpolate({
       inputRange: [0, 0.5, 1],
       outputRange: [0, 0.7, 1],
-      extrapolate: 'clamp'
-    })
+      extrapolate: "clamp",
+    });
     return (
       <Animated.View style={[styles.swipeAction, { opacity }]}>
-        <Animated.View style={{ alignItems: 'center', transform: [{ scale }] }}>
+        <Animated.View style={{ alignItems: "center", transform: [{ scale }] }}>
           {updateOrder.isPending ? (
-            <ActivityIndicator size='small' color='white' />
+            <ActivityIndicator size="small" color="white" />
           ) : (
             <>
-              <Ionicons name='checkmark-done-outline' size={22} color='white' />
+              <Ionicons name="checkmark-done-outline" size={22} color="white" />
               <Text style={styles.swipeText}>Cerrar</Text>
             </>
           )}
         </Animated.View>
       </Animated.View>
-    )
-  }
+    );
+  };
 
   const card = (
     <View
       style={[
         styles.card,
-        { borderLeftColor: isTakeaway ? '#e0a020' : theme.success }
+        { borderLeftColor: isTakeaway ? "#e0a020" : theme.success },
       ]}
     >
       <TouchableOpacity onPress={toggle} style={styles.cardHeader}>
@@ -323,13 +339,13 @@ export default function OrderCard({ order, onRemove }: Props) {
               <Text style={styles.subtitle}>
                 #{order.order_number} · {formatDate(order.created_at)}
               </Text>
-              {order.status === 'SCHEDULED' && order.scheduled_for ? (
+              {order.status === "SCHEDULED" && order.scheduled_for ? (
                 <View style={styles.scheduledBadge}>
-                  <Ionicons name='alarm-outline' size={11} color='#7c6af7' />
+                  <Ionicons name="alarm-outline" size={11} color="#7c6af7" />
                   <Text style={styles.scheduledText}>
-                    {new Date(order.scheduled_for).toLocaleTimeString('es', {
-                      hour: '2-digit',
-                      minute: '2-digit'
+                    {new Date(order.scheduled_for).toLocaleTimeString("es", {
+                      hour: "2-digit",
+                      minute: "2-digit",
                     })}
                   </Text>
                 </View>
@@ -343,13 +359,13 @@ export default function OrderCard({ order, onRemove }: Props) {
               <View
                 style={[
                   styles.badge,
-                  statusBadge(order.status, theme).container
+                  statusBadge(order.status, theme).container,
                 ]}
               >
                 <Text
                   style={[
                     styles.badgeText,
-                    statusBadge(order.status, theme).text
+                    statusBadge(order.status, theme).text,
                   ]}
                 >
                   {statusLabel(order.status)}
@@ -358,13 +374,13 @@ export default function OrderCard({ order, onRemove }: Props) {
               <View
                 style={[
                   styles.badge,
-                  paymentBadge(order.payment_status, theme).container
+                  paymentBadge(order.payment_status, theme).container,
                 ]}
               >
                 <Text
                   style={[
                     styles.badgeText,
-                    paymentBadge(order.payment_status, theme).text
+                    paymentBadge(order.payment_status, theme).text,
                   ]}
                 >
                   {paymentLabel(order.payment_status)}
@@ -374,7 +390,7 @@ export default function OrderCard({ order, onRemove }: Props) {
           </View>
           <View style={styles.headerRight}>
             <Ionicons
-              name={expanded ? 'chevron-up' : 'chevron-down'}
+              name={expanded ? "chevron-up" : "chevron-down"}
               size={18}
               color={theme.textSecondary}
             />
@@ -385,42 +401,72 @@ export default function OrderCard({ order, onRemove }: Props) {
       {expanded && (
         <View style={styles.details}>
           {isLoading ? (
-            <ActivityIndicator size='small' color={theme.textPrimary} />
+            <ActivityIndicator size="small" color={theme.textPrimary} />
           ) : (
             <>
-              {orderData?.items.map((item: any) => {
-                const itemKey = item.id
-                const isPaid = !!paidItems[itemKey]
+              {orderData?.items.map((item: Item) => {
+                const itemKey = item.id;
+                const isPaid = !!paidItems[itemKey];
+                const isReady = item.status === "READY";
                 return (
-                  <View key={itemKey} style={styles.itemRow}>
-                    <CustomCheckbox
-                      value={isPaid}
-                      onChange={() => toggleItemPaid(itemKey)}
-                    />
+                  <Pressable
+                    onPress={() => toggleItemPaid(itemKey)}
+                    key={itemKey}
+                    style={styles.itemRow}
+                  >
+                    <CustomCheckbox value={isPaid} onChange={() => {}} />
                     <View style={styles.itemInfo}>
                       <Text
                         style={[styles.itemName, isPaid && styles.itemPaidText]}
                       >
                         {item.quantity} × {item.product_name}
                       </Text>
+
                       {item.notes ? (
                         <Text
                           style={[
                             styles.itemNotes,
-                            isPaid && styles.itemPaidText
+                            isPaid && styles.itemPaidText,
                           ]}
                         >
                           {item.notes}
                         </Text>
                       ) : null}
+
+                      <View
+                        style={[
+                          styles.itemStatusBadge,
+                          isReady
+                            ? styles.itemStatusReady
+                            : styles.itemStatusPending,
+                        ]}
+                      >
+                        <Ionicons
+                          name={
+                            isReady
+                              ? "checkmark-circle-outline"
+                              : "time-outline"
+                          }
+                          size={12}
+                          color={isReady ? theme.success : "#e0a020"}
+                        />
+                        <Text
+                          style={[
+                            styles.itemStatusText,
+                            { color: isReady ? theme.success : "#e0a020" },
+                          ]}
+                        >
+                          {isReady ? "Listo" : "Pendiente"}
+                        </Text>
+                      </View>
                     </View>
                     <Text
                       style={[styles.itemPrice, isPaid && styles.itemPaidText]}
                     >
                       ${(Number(item.total_price) || 0).toFixed(2)}
                     </Text>
-                  </View>
-                )
+                  </Pressable>
+                );
               })}
 
               <Text style={styles.summaryText}>
@@ -431,34 +477,34 @@ export default function OrderCard({ order, onRemove }: Props) {
               </Text>
 
               <View style={styles.actions}>
-                {(orderData?.status === 'OPEN' ||
-                  orderData?.status === 'PREPARING' ||
-                  orderData?.status === 'DISPATCHED') && (
+                {(orderData?.status === "OPEN" ||
+                  orderData?.status === "PREPARING" ||
+                  orderData?.status === "DISPATCHED") && (
                   <TouchableOpacity
                     onPress={
-                      orderData.payment_status === 'PAID'
+                      orderData.payment_status === "PAID"
                         ? handleMarkAsUnpaid
                         : handleMarkAsPaid
                     }
                     style={[
                       styles.payButton,
-                      orderData.payment_status === 'PAID' &&
+                      orderData.payment_status === "PAID" &&
                         styles.payButtonPaid,
-                      pendingAction !== null && styles.disabledButton
+                      pendingAction !== null && styles.disabledButton,
                     ]}
                     disabled={pendingAction !== null}
                   >
-                    {pendingAction === 'pay' ? (
+                    {pendingAction === "pay" ? (
                       <ActivityIndicator
-                        size='small'
+                        size="small"
                         color={theme.textOnPrimary}
                       />
                     ) : (
                       <Ionicons
                         name={
-                          orderData.payment_status === 'PAID'
-                            ? 'arrow-undo-outline'
-                            : 'cash-outline'
+                          orderData.payment_status === "PAID"
+                            ? "arrow-undo-outline"
+                            : "cash-outline"
                         }
                         size={26}
                         color={theme.textOnPrimary}
@@ -466,17 +512,17 @@ export default function OrderCard({ order, onRemove }: Props) {
                     )}
                   </TouchableOpacity>
                 )}
-                {(orderData?.status === 'OPEN' ||
-                  orderData?.status === 'PREPARING' ||
-                  orderData?.status === 'DISPATCHED') &&
-                  order.type === 'DINE_IN' && (
+                {(orderData?.status === "OPEN" ||
+                  orderData?.status === "PREPARING" ||
+                  orderData?.status === "DISPATCHED") &&
+                  order.type === "DINE_IN" && (
                     <TouchableOpacity
                       onPress={() => setTableModalVisible(true)}
                       style={styles.tableButton}
                       disabled={updateTable.isPending}
                     >
                       <Ionicons
-                        name='restaurant-outline'
+                        name="restaurant-outline"
                         size={26}
                         color={theme.textPrimary}
                       />
@@ -485,35 +531,35 @@ export default function OrderCard({ order, onRemove }: Props) {
                 {orderData && (
                   <TouchableOpacity
                     onPress={
-                      orderData.status === 'CLOSED'
+                      orderData.status === "CLOSED"
                         ? handleReopenOrder
-                        : orderData.status === 'SCHEDULED'
+                        : orderData.status === "SCHEDULED"
                           ? handleOpenNow
                           : handleCloseOrder
                     }
                     style={[
-                      orderData.status === 'CLOSED'
+                      orderData.status === "CLOSED"
                         ? styles.reopenButton
-                        : orderData.status === 'SCHEDULED'
+                        : orderData.status === "SCHEDULED"
                           ? styles.openNowButton
                           : styles.closeButton,
-                      pendingAction !== null && styles.disabledButton
+                      pendingAction !== null && styles.disabledButton,
                     ]}
                     disabled={pendingAction !== null}
                   >
-                    {pendingAction === 'close' ? (
+                    {pendingAction === "close" ? (
                       <ActivityIndicator
-                        size='small'
+                        size="small"
                         color={theme.textOnPrimary}
                       />
                     ) : (
                       <Ionicons
                         name={
-                          orderData.status === 'CLOSED'
-                            ? 'arrow-undo-outline'
-                            : orderData.status === 'SCHEDULED'
-                              ? 'play-outline'
-                              : 'checkmark-done-outline'
+                          orderData.status === "CLOSED"
+                            ? "arrow-undo-outline"
+                            : orderData.status === "SCHEDULED"
+                              ? "play-outline"
+                              : "checkmark-done-outline"
                         }
                         size={26}
                         color={theme.textOnPrimary}
@@ -530,7 +576,7 @@ export default function OrderCard({ order, onRemove }: Props) {
       <Modal
         visible={tableModalVisible}
         transparent
-        animationType='slide'
+        animationType="slide"
         onRequestClose={() => setTableModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
@@ -538,7 +584,7 @@ export default function OrderCard({ order, onRemove }: Props) {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Cambiar mesa</Text>
               <TouchableOpacity onPress={() => setTableModalVisible(false)}>
-                <Ionicons name='close' size={24} color={theme.textPrimary} />
+                <Ionicons name="close" size={24} color={theme.textPrimary} />
               </TouchableOpacity>
             </View>
             <ScrollView contentContainerStyle={styles.tableList}>
@@ -547,12 +593,12 @@ export default function OrderCard({ order, onRemove }: Props) {
                   key={table.id}
                   style={[
                     styles.tableItem,
-                    table.id === order.table_id && styles.tableItemActive
+                    table.id === order.table_id && styles.tableItemActive,
                   ]}
                   onPress={() => handleChangeTable(table.id)}
                 >
                   <Ionicons
-                    name='restaurant-outline'
+                    name="restaurant-outline"
                     size={20}
                     color={
                       table.id === order.table_id
@@ -563,7 +609,7 @@ export default function OrderCard({ order, onRemove }: Props) {
                   <Text
                     style={[
                       styles.tableItemText,
-                      table.id === order.table_id && styles.tableItemTextActive
+                      table.id === order.table_id && styles.tableItemTextActive,
                     ]}
                   >
                     {table.name}
@@ -573,7 +619,7 @@ export default function OrderCard({ order, onRemove }: Props) {
                   )}
                   {table.id === order.table_id && (
                     <Ionicons
-                      name='checkmark-circle'
+                      name="checkmark-circle"
                       size={18}
                       color={theme.textOnPrimary}
                     />
@@ -585,9 +631,9 @@ export default function OrderCard({ order, onRemove }: Props) {
         </View>
       </Modal>
     </View>
-  )
+  );
 
-  if (!canClose) return card
+  if (!canClose) return card;
 
   return (
     <Swipeable
@@ -599,7 +645,7 @@ export default function OrderCard({ order, onRemove }: Props) {
     >
       {card}
     </Swipeable>
-  )
+  );
 }
 
 const makeStyles = (theme: Theme) =>
@@ -608,75 +654,75 @@ const makeStyles = (theme: Theme) =>
       backgroundColor: theme.surface,
       borderRadius: 8,
       marginBottom: 8,
-      borderLeftWidth: 3
+      borderLeftWidth: 3,
     },
     cardHeader: { padding: 12 },
     headerRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center'
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
     },
     headerLeft: { flex: 1, marginRight: 8 },
-    headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    title: { fontSize: 15, fontWeight: '600', color: theme.textPrimary },
+    headerRight: { flexDirection: "row", alignItems: "center", gap: 8 },
+    title: { fontSize: 15, fontWeight: "600", color: theme.textPrimary },
     subtitle: { fontSize: 12, color: theme.textMuted, marginTop: 2 },
-    totalHeader: { fontSize: 14, fontWeight: '700', color: theme.textPrimary },
+    totalHeader: { fontSize: 14, fontWeight: "700", color: theme.textPrimary },
     details: { padding: 12 },
-    status: { fontWeight: '500', marginBottom: 6, color: theme.textPrimary },
-    summaryText: { textAlign: 'right', color: theme.textSecondary },
+    status: { fontWeight: "500", marginBottom: 6, color: theme.textPrimary },
+    summaryText: { textAlign: "right", color: theme.textSecondary },
     itemRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
+      flexDirection: "row",
+      justifyContent: "space-between",
       marginBottom: 6,
-      alignItems: 'center'
+      alignItems: "center",
     },
-    itemName: { fontSize: 14, fontWeight: '500', color: theme.textPrimary },
+    itemName: { fontSize: 14, fontWeight: "500", color: theme.textPrimary },
     itemNotes: { fontSize: 12, color: theme.textSecondary },
-    itemPrice: { fontSize: 14, fontWeight: '600', color: theme.textPrimary },
+    itemPrice: { fontSize: 14, fontWeight: "600", color: theme.textPrimary },
     actions: {
       marginTop: 8,
-      justifyContent: 'flex-end',
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 6
+      justifyContent: "flex-end",
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 6,
     },
     closeButton: {
       width: 42,
       height: 42,
       backgroundColor: theme.primary,
       borderRadius: 6,
-      alignItems: 'center',
-      justifyContent: 'center'
+      alignItems: "center",
+      justifyContent: "center",
     },
     payButton: {
       width: 42,
       height: 42,
       backgroundColor: theme.success,
       borderRadius: 6,
-      alignItems: 'center',
-      justifyContent: 'center'
+      alignItems: "center",
+      justifyContent: "center",
     },
     payButtonPaid: {
-      backgroundColor: theme.textSecondary
+      backgroundColor: theme.textSecondary,
     },
     itemInfo: { flex: 1, marginLeft: 6 },
     swipeAction: {
       backgroundColor: theme.primary,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: "center",
+      alignItems: "center",
       width: 80,
       marginBottom: 8,
-      borderRadius: 8
+      borderRadius: 8,
     },
     swipeText: {
-      color: 'white',
+      color: "white",
       fontSize: 11,
-      fontWeight: '600',
-      marginTop: 2
+      fontWeight: "600",
+      marginTop: 2,
     },
     itemPaidText: {
-      textDecorationLine: 'line-through',
-      color: theme.textMuted
+      textDecorationLine: "line-through",
+      color: theme.textMuted,
     },
     disabledButton: { opacity: 0.6 },
     reopenButton: {
@@ -684,105 +730,125 @@ const makeStyles = (theme: Theme) =>
       height: 42,
       backgroundColor: theme.textSecondary,
       borderRadius: 6,
-      alignItems: 'center',
-      justifyContent: 'center'
+      alignItems: "center",
+      justifyContent: "center",
     },
     openNowButton: {
       width: 42,
       height: 42,
-      backgroundColor: '#7c6af7',
+      backgroundColor: "#7c6af7",
       borderRadius: 6,
-      alignItems: 'center',
-      justifyContent: 'center'
+      alignItems: "center",
+      justifyContent: "center",
     },
     tableButton: {
       width: 42,
       height: 42,
       borderRadius: 6,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
       borderWidth: 1,
-      borderColor: theme.border
+      borderColor: theme.border,
     },
     modalOverlay: {
       flex: 1,
-      justifyContent: 'flex-end',
-      backgroundColor: theme.overlay
+      justifyContent: "flex-end",
+      backgroundColor: theme.overlay,
     },
     modalContent: {
       backgroundColor: theme.background,
       borderTopLeftRadius: 16,
       borderTopRightRadius: 16,
-      maxHeight: '60%',
-      paddingBottom: 20
+      maxHeight: "60%",
+      paddingBottom: 20,
     },
     modalHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
       padding: 16,
       borderBottomWidth: 1,
-      borderBottomColor: theme.border
+      borderBottomColor: theme.border,
     },
-    modalTitle: { fontSize: 17, fontWeight: 'bold', color: theme.textPrimary },
+    modalTitle: { fontSize: 17, fontWeight: "bold", color: theme.textPrimary },
     tableList: { padding: 12, gap: 8 },
     tableItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 10,
       paddingVertical: 12,
       paddingHorizontal: 14,
       backgroundColor: theme.surface,
       borderRadius: 10,
       borderWidth: 1,
-      borderColor: theme.border
+      borderColor: theme.border,
     },
     tableItemActive: {
       backgroundColor: theme.primary,
-      borderColor: theme.primary
+      borderColor: theme.primary,
     },
     tableItemOccupied: { opacity: 0.5 },
     tableItemText: {
       flex: 1,
       fontSize: 15,
-      fontWeight: '600',
-      color: theme.textPrimary
+      fontWeight: "600",
+      color: theme.textPrimary,
     },
     tableItemTextActive: { color: theme.textOnPrimary },
     tableItemTextMuted: { color: theme.textMuted },
     occupiedBadge: {
       fontSize: 11,
       color: theme.textMuted,
-      fontStyle: 'italic'
+      fontStyle: "italic",
     },
     subtitleRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 6,
-      marginTop: 2
+      marginTop: 2,
     },
     elapsedBadge: {
       paddingHorizontal: 6,
       paddingVertical: 1,
       borderRadius: 4,
-      backgroundColor: theme.borderLight
+      backgroundColor: theme.borderLight,
     },
     elapsedText: {
       fontSize: 11,
-      fontWeight: '600',
-      color: theme.textSecondary
+      fontWeight: "600",
+      color: theme.textSecondary,
     },
-    badgeRow: { flexDirection: 'row', gap: 6, marginTop: 4 },
+    badgeRow: { flexDirection: "row", gap: 6, marginTop: 4 },
     badge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-    badgeText: { fontSize: 11, fontWeight: '700' },
+    badgeText: { fontSize: 11, fontWeight: "700" },
     scheduledBadge: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 3,
       paddingHorizontal: 6,
       paddingVertical: 1,
       borderRadius: 4,
-      backgroundColor: '#7c6af722'
+      backgroundColor: "#7c6af722",
     },
-    scheduledText: { fontSize: 11, fontWeight: '600', color: '#7c6af7' }
-  })
+    scheduledText: { fontSize: 11, fontWeight: "600", color: "#7c6af7" },
+    itemStatusBadge: {
+      flexDirection: "row",
+      alignSelf: "flex-start",
+      alignItems: "center",
+      gap: 4,
+      marginTop: 4,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+    },
+    itemStatusReady: {
+      backgroundColor: theme.success + "22",
+    },
+    itemStatusPending: {
+      backgroundColor: "#e0a02022",
+    },
+    itemStatusText: {
+      fontSize: 10,
+      fontWeight: "700",
+    },
+  });
