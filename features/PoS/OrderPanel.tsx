@@ -101,8 +101,6 @@ export default function OrderPanel({
           ? String(item.price)
           : (item.notes ?? "")
     );
-
-    editSheetRef.current?.open();
   };
 
   const saveEdit = () => {
@@ -192,13 +190,15 @@ export default function OrderPanel({
     (order.customer_name?.trim() !== "" || order.table_id !== null);
 
   useEffect(() => {
-    if (editing) {
-      const timer = setTimeout(() => {
-        editInputRef.current?.focus();
-      }, 100);
+    if (!editing) return;
 
-      return () => clearTimeout(timer);
-    }
+    editSheetRef.current?.open();
+
+    const focusTimer = setTimeout(() => {
+      editInputRef.current?.focus();
+    }, 350);
+
+    return () => clearTimeout(focusTimer);
   }, [editing]);
 
   return (
