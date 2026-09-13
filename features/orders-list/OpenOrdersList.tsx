@@ -2,7 +2,7 @@ import { useOpenOrderIdsQuery } from "@/hooks/api/orders";
 import { useFocusEffect } from "expo-router";
 import React, { memo, useCallback, useEffect, useReducer } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import OrderCard from "./OrderCard";
+import OrderCard from "./OrderCard/OrderCard";
 import Skeleton from "@/components/Skeleton";
 import { useTheme } from "@/context/ThemeContext";
 import { Theme } from "@/constants/Colors";

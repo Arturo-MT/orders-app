@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from "react-native";
-import OrderCard from "./OrderCard";
+import OrderCard from "./OrderCard/OrderCard";
 import { useDebouncedValue } from "@/hooks/utils/useDebouncedValue";
 import { Ionicons } from "@expo/vector-icons";
 import { useOrdersQuery } from "@/hooks/api/orders";
