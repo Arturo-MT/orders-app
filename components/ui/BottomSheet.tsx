@@ -150,11 +150,11 @@ const makeStyles = (theme: Theme) =>
     },
     content: {
       paddingHorizontal: 16,
-      paddingBottom: 32,
+      paddingBottom: 16,
     },
     scrollContent: {
       paddingHorizontal: 16,
-      paddingBottom: 32,
+      paddingBottom: 16,
     },
     webOverlay: {
       flex: 1,
@@ -165,7 +165,7 @@ const makeStyles = (theme: Theme) =>
       borderTopLeftRadius: 16,
       borderTopRightRadius: 16,
       paddingHorizontal: 16,
-      paddingBottom: 32,
+      paddingBottom: 16,
       paddingTop: 12,
     },
   });
