@@ -20,7 +20,10 @@ interface Props {
 }
 
 export function OrderHeader({ order, expanded, onPress, theme }: Props) {
-  const displayName = order.customer_name || order.table_name || "Sin nombre";
+  const displayName =
+    order.type === "DINE_IN"
+      ? order.table_name || order.customer_name || "Sin mesa"
+      : order.customer_name || order.table_name || "Sin nombre";
   const elapsed = useElapsedTime(order.opened_at ?? order.created_at);
   const status = statusColors(order.status, theme);
   const payment = paymentColors(order.payment_status, theme);
