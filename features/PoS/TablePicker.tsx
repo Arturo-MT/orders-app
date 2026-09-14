@@ -47,7 +47,7 @@ export default function TablePicker({ value, onChange }: Props) {
           {tables?.map((table) => (
             <Picker.Item
               key={table.id}
-              label={table.is_occupied ? `${table.name} (ocupada)` : table.name}
+              label={table.name}
               value={table.id}
               color={theme.textPrimary}
               style={{ backgroundColor: theme.surface }}

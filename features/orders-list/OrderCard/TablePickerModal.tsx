@@ -47,11 +47,9 @@ export function TablePickerModal({
           <ScrollView contentContainerStyle={styles.list}>
             {tables?.map((table) => {
               const isSelected = table.id === selectedTableId;
-              const unavailable = table.is_occupied && !isSelected;
               return (
                 <TouchableOpacity
                   key={table.id}
-                  disabled={unavailable}
                   style={[
                     styles.item,
                     {
@@ -60,7 +58,7 @@ export function TablePickerModal({
                         : theme.surface,
                       borderColor: isSelected ? theme.primary : theme.border,
                     },
-                    unavailable && styles.unavailable,
+                    styles.unavailable,
                   ]}
                   onPress={() => onSelect(table.id)}
                 >
@@ -83,11 +81,6 @@ export function TablePickerModal({
                   >
                     {table.name}
                   </Text>
-                  {unavailable ? (
-                    <Text style={[styles.occupied, { color: theme.textMuted }]}>
-                      ocupada
-                    </Text>
-                  ) : null}
                   {isSelected ? (
                     <Ionicons
                       name="checkmark-circle"
